@@ -1,8 +1,6 @@
-# 其他现有配置保持不变
-...
-
-# 添加新的接口选项
-interface: sd_web  # 可选值: cli, gui, api, sd_web
+# 配置选项
+interface: cli  # 可选值: cli, gui, api, sd_web
+model_name: distilgpt2
 
 # Stable Diffusion Web UI 配置
 sd_web_ui:

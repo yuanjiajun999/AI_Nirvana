@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from ai_nirvana.core.ai_nirvana import AINirvana
-
+from ai_nirvana.main import AINirvana
 app = FastAPI()
 ai_nirvana = AINirvana()
 
