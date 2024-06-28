@@ -13,7 +13,7 @@ uvicorn = "^0.15.0"
 pyyaml = "^6.0"
 cryptography = "^3.4.7"
 pytest = "^6.2.5"
-pyqt5 = "5.15.2"
+pyqt5 = "^5.15.2"
 
 [tool.poetry.dev-dependencies]
 black = "^21.9b0"
