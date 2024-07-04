@@ -1,15 +1,28 @@
-# AI Nirvana
+复制# AI 文本摘要系统
 
-AI Nirvana is an advanced AI assistant capable of natural language processing, code execution, and task planning.
+这是一个使用 OpenAI API 生成文本摘要的简单系统。
 
-## Features
+## 设置
 
-- Natural language understanding and generation
-- Secure code execution in multiple programming languages
-- Context-aware conversations
-- Multiple interfaces (CLI, GUI, API)
-- Extensible plugin system
+1. 克隆仓库：
+git clone https://github.com/yuanjiajun999/AI_Nirvana 
+cd AI_Nirvana
+复制
+2. 运行设置脚本：
+chmod +x 设置.sh ./设置.sh
+复制
+3. 激活虚拟环境：
+源 venv/bin/activate
+复制
+4. 编辑 `.env` 文件，添加您的 API 密钥。
 
-## Installation
+## 运行系统
+python 主程序.py
+复制
+## 运行测试
+python 测试.py
+复制
+## 注意事项
 
-1. Clone this repository:
+- 确保您的 API 密钥有效且有足够的配额。
+- 定期更新依赖项以确保安全性。
