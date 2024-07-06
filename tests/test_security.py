@@ -1,5 +1,5 @@
 import pytest
-from ai_nirvana.utils.security import SecurityManager
+from src.utils.security import SecurityManager
 
 @pytest.fixture
 def security_manager():

@@ -1,5 +1,5 @@
 import pytest
-from ai_nirvana.core.language_model import LanguageModel
+from src.core.language_model import LanguageModel
 
 @pytest.fixture
 def language_model():

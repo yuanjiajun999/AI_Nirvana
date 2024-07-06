@@ -1,3 +1,5 @@
+my_env/
+new_env/
 *.pyc
-__pycache__
+__pycache__/
 .env

@@ -1,5 +1,5 @@
 import pytest
-from ai_nirvana.core.code_executor import CodeExecutor
+from src.core.code_executor import CodeExecutor
 
 @pytest.fixture
 def code_executor():

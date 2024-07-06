@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from main import process_input
+from src.main import process_input
 
 load_dotenv()
 
