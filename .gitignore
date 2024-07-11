@@ -1,0 +1,6 @@
+my_env/
+new_env/
+*.pyc
+__pycache__/
+.env
+claude-assistant/

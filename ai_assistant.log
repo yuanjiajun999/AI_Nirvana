@@ -1,0 +1,127 @@
+2024-07-09 15:34:06,919 - INFO - Query: 你是谁 - Best match: 你是谁 (similarity: 1.00)
+2024-07-09 15:34:06,922 - INFO - User input: 你是谁
+2024-07-09 15:34:06,922 - INFO - System response: 我是AI Nirvana智能助手，一个AI对话系统。我的目标是协助用户并回答问题。
+2024-07-09 15:34:33,098 - INFO - Query: 你知道北京吗 - No good match found. Returning default response.
+2024-07-09 15:34:33,098 - INFO - User input: 你知道北京吗
+2024-07-09 15:34:33,099 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 15:36:44,118 - INFO - Query: 请介绍一下你自己 - No good match found. Returning default response.
+2024-07-09 15:36:44,119 - INFO - User input: 请介绍一下你自己
+2024-07-09 15:36:44,124 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 15:46:43,745 - INFO - User input: 你是谁
+2024-07-09 15:46:43,745 - INFO - System response: 我是AI Nirvana智能助手，一个AI对话系统。我的目标是协助用户并回答问题。
+2024-07-09 18:18:46,027 - INFO - User input: 你是谁
+2024-07-09 18:18:46,029 - INFO - System response: 我是AI Nirvana智能助手，一个AI对话系统。我的目标是协助用户并回答问题。
+2024-07-09 18:20:05,706 - INFO - User input: 请问鲁迅打了周树人到底是是的错
+2024-07-09 18:20:05,706 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:08,292 - INFO - User input: 请检查下面代码有没有问题：
+2024-07-09 18:21:08,292 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,853 - INFO - User input: import sys
+2024-07-09 18:21:13,854 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,856 - INFO - User input: import os
+2024-07-09 18:21:13,856 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,857 - INFO - User input: 
+2024-07-09 18:21:13,857 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,860 - INFO - User input: # 将项目根目录添加到Python路径
+2024-07-09 18:21:13,860 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,872 - INFO - User input: project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+2024-07-09 18:21:13,874 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,876 - INFO - User input: sys.path.insert(0, project_root)
+2024-07-09 18:21:13,876 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,878 - INFO - User input: 
+2024-07-09 18:21:13,878 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,879 - INFO - User input: import logging
+2024-07-09 18:21:13,879 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,882 - INFO - User input: from src.core.ai_assistant import AIAssistant
+2024-07-09 18:21:13,882 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,887 - INFO - User input: from src.core.local_model import LocalModel
+2024-07-09 18:21:13,887 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,889 - INFO - User input: from src.config import Config
+2024-07-09 18:21:13,889 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,892 - INFO - User input: 
+2024-07-09 18:21:13,892 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,894 - INFO - User input: def setup_logger(log_level):
+2024-07-09 18:21:13,894 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,902 - INFO - User input:     logging.basicConfig(filename='ai_assistant.log', level=log_level, 
+2024-07-09 18:21:13,902 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,934 - INFO - User input:                         format='%(asctime)s - %(levelname)s - %(message)s')
+2024-07-09 18:21:13,934 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,936 - INFO - User input: 
+2024-07-09 18:21:13,937 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,939 - INFO - User input: def get_model(config):
+2024-07-09 18:21:13,939 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,941 - INFO - User input:     model_name = config.get('model')
+2024-07-09 18:21:13,941 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,955 - INFO - User input:     if model_name == 'local':
+2024-07-09 18:21:13,955 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,957 - INFO - User input:         return LocalModel()
+2024-07-09 18:21:13,957 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,960 - INFO - User input:     # 在这里可以添加其他模型的条件
+2024-07-09 18:21:13,960 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,971 - INFO - User input:     raise ValueError(f"Unknown model: {model_name}")
+2024-07-09 18:21:13,971 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,974 - INFO - User input: 
+2024-07-09 18:21:13,974 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,976 - INFO - User input: def main():
+2024-07-09 18:21:13,976 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,978 - INFO - User input:     config = Config()
+2024-07-09 18:21:13,978 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,981 - INFO - User input:     setup_logger(config.get('log_level'))
+2024-07-09 18:21:13,981 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,984 - INFO - User input:     
+2024-07-09 18:21:13,984 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,987 - INFO - User input:     model = get_model(config)
+2024-07-09 18:21:13,987 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,989 - INFO - User input:     assistant = AIAssistant(model)
+2024-07-09 18:21:13,989 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,992 - INFO - User input:     
+2024-07-09 18:21:13,992 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,995 - INFO - User input:     print("欢迎使用 AI Nirvana 智能助手！")
+2024-07-09 18:21:13,995 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:13,998 - INFO - User input:     print("输入 'quit' 退出程序。")
+2024-07-09 18:21:13,998 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,001 - INFO - User input:     print("您可以询问问题、请求生成内容，或者输入长文本进行摘要。")
+2024-07-09 18:21:14,002 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,005 - INFO - User input:     
+2024-07-09 18:21:14,005 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,008 - INFO - User input:     max_input_length = config.get('max_input_length')
+2024-07-09 18:21:14,009 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,012 - INFO - User input:     
+2024-07-09 18:21:14,012 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,014 - INFO - User input:     while True:
+2024-07-09 18:21:14,014 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,017 - INFO - User input:         user_input = input("\n请输入您的问题或文本（或输入 'quit' 退出）：\n")
+2024-07-09 18:21:14,017 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,021 - INFO - User input:         
+2024-07-09 18:21:14,021 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,024 - INFO - User input:         if user_input.lower() == 'quit':
+2024-07-09 18:21:14,024 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,027 - INFO - User input:             print("谢谢使用，再见！")
+2024-07-09 18:21:14,027 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,031 - INFO - User input:             break
+2024-07-09 18:21:14,031 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,035 - INFO - User input:         
+2024-07-09 18:21:14,036 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,039 - INFO - User input:         if len(user_input) > max_input_length:
+2024-07-09 18:21:14,039 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,043 - INFO - User input:             response = assistant.summarize(user_input)
+2024-07-09 18:21:14,043 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,045 - INFO - User input:             print("\n摘要：")
+2024-07-09 18:21:14,045 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,049 - INFO - User input:         else:
+2024-07-09 18:21:14,049 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,052 - INFO - User input:             response = assistant.generate_response(user_input)
+2024-07-09 18:21:14,052 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,055 - INFO - User input:             print("\n回答：")
+2024-07-09 18:21:14,055 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,058 - INFO - User input:         print(response)
+2024-07-09 18:21:14,058 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,060 - INFO - User input: 
+2024-07-09 18:21:14,061 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:21:14,063 - INFO - User input: if __name__ == "__main__":
+2024-07-09 18:21:14,063 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:36:53,203 - INFO - User input:     main()quit
+2024-07-09 18:36:53,203 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:43:01,932 - INFO - User input: 请介绍一下你自己
+2024-07-09 18:43:01,932 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？
+2024-07-09 18:49:51,847 - INFO - User input: quit 
+2024-07-09 18:49:51,848 - INFO - System response: 对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？

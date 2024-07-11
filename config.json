@@ -1,0 +1,7 @@
+{
+    "model": "local",
+    "log_level": "INFO",
+    "max_input_length": 100,
+    "api_key": "",
+    "api_url": ""
+}
