@@ -1,3 +1,6 @@
 requests==2.26.0
 python-dotenv==0.19.1
+<<<<<<< HEAD
 transformers
+=======
+>>>>>>> df302b19101ed1290fe7bf533dd80398212ef881
