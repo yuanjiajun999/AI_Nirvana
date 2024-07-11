@@ -17,3 +17,6 @@ node_modules/
 .env
 
 claude-assistant/
+ai_nirvana_env/Lib/site-packages/torch/lib/*.lib
+ai_nirvana_env/Lib/site-packages/torch/lib/*.dll
+ai_nirvana_env/Library/bin/*.dll
