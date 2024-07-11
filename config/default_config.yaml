@@ -1,0 +1,7 @@
+# 配置选项
+interface: cli  # 可选值: cli, gui, api, sd_web
+model_name: distilgpt2
+
+# Stable Diffusion Web UI 配置
+sd_web_ui:
+  url: "http://localhost:7860"  # Stable Diffusion Web UI 的地址

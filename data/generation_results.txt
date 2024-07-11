@@ -1,0 +1,4 @@
+Prompt: a sunset beach, Time: 8.53 seconds
+Prompt: a snowy mountain, Time: 8.56 seconds
+Prompt: a cityscape at night, Time: 8.54 seconds
+Prompt: a forest in autumn, Time: 8.52 seconds
