@@ -1,7 +1,9 @@
-from .model_interface import ModelInterface
-from transformers import BertTokenizer, BertModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from transformers import BertModel, BertTokenizer
+
+from .model_interface import ModelInterface
+
 
 class LocalModel(ModelInterface):
     def __init__(self):

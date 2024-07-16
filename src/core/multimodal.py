@@ -1,7 +1,9 @@
 from typing import Union
+
 import speech_recognition as sr
 from PIL import Image
 from torchvision.transforms import Resize
+
 
 class MultimodalInterface:
     def __init__(self, text_model, speech_recognizer, vision_model):

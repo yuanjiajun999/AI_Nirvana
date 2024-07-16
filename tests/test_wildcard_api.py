@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch
+
 from src.core.wildcard_api import WildCardAPI
+
 
 class TestWildCardAPI(unittest.TestCase):
     def setUp(self):

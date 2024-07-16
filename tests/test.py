@@ -1,5 +1,7 @@
 import os
+
 from dotenv import load_dotenv
+
 from src.main import process_input
 
 load_dotenv()

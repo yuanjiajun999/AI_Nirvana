@@ -1,7 +1,10 @@
-from functools import lru_cache
-from .model_interface import ModelInterface
-import requests
 import time
+from functools import lru_cache
+
+import requests
+
+from .model_interface import ModelInterface
+
 
 class APIModel(ModelInterface):
     def __init__(self, api_key, api_url, max_retries=3, retry_delay=1):

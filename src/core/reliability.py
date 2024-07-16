@@ -1,5 +1,7 @@
 import logging
+
 from src.config import Config
+
 
 def setup_logging(config: Config):
     log_level = config.get('log_level')

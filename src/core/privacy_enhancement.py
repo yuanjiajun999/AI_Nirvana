@@ -1,11 +1,20 @@
-from src.config import Config
-import differential_privacy as dp
+import random
+
 
 class PrivacyEnhancement:
-    def __init__(self, config: Config):
-        self.config = config
-        self.epsilon = config.get('privacy_epsilon')
-        self.delta = config.get('privacy_delta')
+    def __init__(self, epsilon=1.0):
+        self.epsilon = epsilon
+
+    def add_laplace_noise(self, value):
+        """Add Laplace noise to a single value."""
+        beta = 1 / self.epsilon
+        noise = random.laplace(0, beta)
+        return value + noise
 
     def apply_differential_privacy(self, data):
-        return dp.apply_dp(data, self.epsilon, self.delta)
+        """Apply differential privacy to a list of numerical data."""
+        return [self.add_laplace_noise(value) for value in data]
+
+    def set_privacy_budget(self, epsilon):
+        """Set the privacy budget (epsilon)."""
+        self.epsilon = epsilon

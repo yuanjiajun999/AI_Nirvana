@@ -1,6 +1,7 @@
 import abc
 from typing import Any
 
+
 class IntelligentAgent(abc.ABC):
     @abc.abstractmethod
     def perceive(self, observation: Any) -> Any:
