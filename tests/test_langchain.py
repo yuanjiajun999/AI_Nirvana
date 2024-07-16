@@ -1,5 +1,7 @@
 import unittest
+
 from src.core.langchain import LangChainAgent
+
 
 class TestLangChain(unittest.TestCase):
     def setUp(self):

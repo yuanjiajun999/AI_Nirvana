@@ -31,3 +31,9 @@ claude-assistant/
 ai_nirvana_env/Lib/site-packages/torch/lib/*.lib
 ai_nirvana_env/Lib/site-packages/torch/lib/*.dll
 ai_nirvana_env/Library/bin/*.dll
+
+# Ignore .ipynb_checkpoints  
+.ipynb_checkpoints/  
+
+# Ignore pyproject-checkpoint.toml  
+.ipynb_checkpoints/pyproject-checkpoint.toml

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.quantization as q
 
+
 def prepare_model_for_quantization(model):
     model.eval()
     model = q.quantize_dynamic(

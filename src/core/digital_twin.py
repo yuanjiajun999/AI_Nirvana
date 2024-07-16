@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import odeint
 
+
 class DigitalTwin:
     def __init__(self, physical_system_model):
         self.physical_system_model = physical_system_model

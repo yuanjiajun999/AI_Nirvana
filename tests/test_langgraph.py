@@ -1,5 +1,7 @@
 import unittest
+
 from src.core.langgraph import LangGraph
+
 
 class TestLangGraph(unittest.TestCase):
     def setUp(self):

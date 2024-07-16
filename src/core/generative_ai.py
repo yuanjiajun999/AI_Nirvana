@@ -1,6 +1,7 @@
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
+
 class GenerativeAI:
     def __init__(self, model_path):
         self.model = GPT2LMHeadModel.from_pretrained(model_path)

@@ -1,5 +1,7 @@
 import time
+
 import torch
+
 
 def profile_model(model, input_data):
     start_time = time.time()
