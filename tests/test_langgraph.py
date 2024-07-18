@@ -1,7 +1,8 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import unittest
-
 from src.core.langgraph import LangGraph
-
 
 class TestLangGraph(unittest.TestCase):
     def setUp(self):
@@ -22,3 +23,6 @@ class TestLangGraph(unittest.TestCase):
         context = "John went to the kitchen and opened the refrigerator."
         inference = self.graph.infer_commonsense(context)
         self.assertIsNotNone(inference)
+
+if __name__ == '__main__':
+    unittest.main()
