@@ -1,7 +1,7 @@
-from langchain_community.chat_models import ChatOpenAI  
+from langchain_openai import ChatOpenAI  
 from langchain_community.graphs import NetworkxEntityGraph  
 from langchain.chains import GraphQAChain  
-from langchain.chains import LLMChain  
+from langchain_core.runnables import RunnableSequence  
 from langchain.prompts import PromptTemplate  
 import os  
 from dotenv import load_dotenv  
@@ -23,7 +23,7 @@ class LangGraph:
             
             entity_extraction_template = "Extract entities from the following text:\n\n{text}\n\nEntities:"  
             entity_extraction_prompt = PromptTemplate(template=entity_extraction_template, input_variables=["text"])  
-            self.entity_extraction_chain = LLMChain(llm=self.llm, prompt=entity_extraction_prompt)  
+            self.entity_extraction_chain = RunnableSequence(entity_extraction_prompt, self.llm)  
             
             self.qa_chain = GraphQAChain.from_llm(  
                 llm=self.llm,  
@@ -36,7 +36,7 @@ class LangGraph:
 
     def retrieve_knowledge(self, query):  
         try:  
-            return self.qa_chain.run(query)  
+            return self.qa_chain.invoke(query)  
         except OpenAIError as e:  
             print(f"API 错误: {str(e)}")  
             return "抱歉，无法检索知识。"  
@@ -44,7 +44,7 @@ class LangGraph:
     def reason(self, premise, conclusion):  
         try:  
             query = f"Given the premise '{premise}', is the conclusion '{conclusion}' valid?"  
-            return self.qa_chain.run(query)  
+            return self.qa_chain.invoke(query)  
         except OpenAIError as e:  
             print(f"API 错误: {str(e)}")  
             return "抱歉，无法进行推理。"  
@@ -52,7 +52,7 @@ class LangGraph:
     def infer_commonsense(self, context):  
         try:  
             query = f"Based on the context '{context}', what can we infer?"  
-            return self.qa_chain.run(query)  
+            return self.qa_chain.invoke(query)  
         except OpenAIError as e:  
             print(f"API 错误: {str(e)}")  
             return "抱歉，无法进行常识推理。"
