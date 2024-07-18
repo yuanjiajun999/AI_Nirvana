@@ -18,22 +18,34 @@ AI Nirvana 是一个强大的 AI 辅助系统，集成了自然语言处理、�
 - 敏感数据加密：使用强加密算法保护敏感信息
 - 动态安全规则：支持添加和移除自定义的安全检查规则
 
-## 新增功能
+## API Integration
 
-- **强化学习**：通过与环境交互来优化决策过程。
-- **自动特征工程**：自动发现和创建有助于提高模型性能的特征。
-- **模型解释性**：提供对 AI 决策过程的深入洞察，增加透明度。
-- **主动学习**：智能选择最有价值的数据点进行标注，提高数据效率。
-- **LangChain 集成**：提供强大的语言模型链和智能代理功能
-- **LangGraph 支持**：实现基于图的知识检索和推理
-- **LangSmith 工具**：用于代码生成、重构和文本翻译
+This project now uses the latest version of LangChain with OpenAI integration. To use the API:
 
-## 使用示例
+1. Set the following environment variables:
+   - `API_KEY`: Your API key
+   - `API_BASE`: The base URL for the API (default: https://api.gptsapi.net/v1)
 
-### 基本功能
+2. Use the `get_response` function from `src.core.langchain` to interact with the API:
 
-```python
-from src.core.ai_assistant import AIAssistant
+   ```python
+   from src.core.langchain import get_response
+
+   response = get_response("Your question here")
+   print(response)
+新增功能
+
+强化学习：通过与环境交互来优化决策过程。
+自动特征工程：自动发现和创建有助于提高模型性能的特征。
+模型解释性：提供对 AI 决策过程的深入洞察，增加透明度。
+主动学习：智能选择最有价值的数据点进行标注，提高数据效率。
+LangChain 集成：提供强大的语言模型链和智能代理功能
+LangGraph 支持：实现基于图的知识检索和推理
+LangSmith 工具：用于代码生成、重构和文本翻译
+
+使用示例
+基本功能
+pythonCopyfrom src.core.ai_assistant import AIAssistant
 
 assistant = AIAssistant()
 
@@ -55,12 +67,8 @@ assistant.change_model("gpt-4")
 # 加密敏感数据
 encrypted = assistant.encrypt_sensitive_data("sensitive info")
 decrypted = assistant.decrypt_sensitive_data(encrypted)
-```
-
-### 高级功能
-
-```python
-from src.core.reinforcement_learning import ReinforcementLearningAgent
+高级功能
+pythonCopyfrom src.core.reinforcement_learning import ReinforcementLearningAgent
 from src.core.auto_feature_engineering import AutoFeatureEngineer
 from src.core.model_interpretability import ModelInterpreter
 from src.core.active_learning import ActiveLearner
@@ -95,47 +103,35 @@ knowledge = lang_graph.retrieve_knowledge("Who invented the telephone?")
 # 使用LangSmith
 lang_smith = LangSmith()
 generated_code = lang_smith.generate_code("Write a Python function to sort a list")
-```
+快速开始
 
-## 快速开始
+克隆仓库：
+Copygit clone https://github.com/yuanjiajun999/AI_Nirvana.git
+cd AI_Nirvana
 
-1. 克隆仓库：
-   ```
-   git clone https://github.com/yuanjiajun999/AI_Nirvana.git
-   cd AI_Nirvana
-   ```
+设置环境：
+Copypython -m venv venv
+source venv/bin/activate  # Windows 使用: venv\Scripts\activate
+pip install -r requirements.txt
 
-2. 设置环境：
-   ```
-   python -m venv venv
-   source venv/bin/activate  # Windows 使用: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+配置 API 密钥：
+创建 .env 文件并添加：
+CopyAPI_KEY=your_wildcard_api_key
+API_BASE=https://api.gptsapi.net/v1
 
-3. 配置 API 密钥：
-   创建 .env 文件并添加：
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   API_KEY=your_wildcard_api_key
-   API_BASE=https://api.gptsapi.net/v1
-   ```
+运行程序：
+Copypython src/main.py
 
-4. 运行程序：
-   ```
-   python src/main.py
-   ```
 
-## 安全使用指南
+安全使用指南
 
-- 所有用户输入都会经过安全检查，以防止潜在的代码注入攻击。
-- 使用 `encrypt_sensitive_data` 方法加密敏感信息 before 存储或传输。
-- 使用 `decrypt_sensitive_data` 方法解密加密的数据。
-- 定期检查和更新安全规则，以应对新的安全威胁。
+所有用户输入都会经过安全检查，以防止潜在的代码注入攻击。
+使用 encrypt_sensitive_data 方法加密敏感信息 before 存储或传输。
+使用 decrypt_sensitive_data 方法解密加密的数据。
+定期检查和更新安全规则，以应对新的安全威胁。
 
-## 项目结构
-
-```
-AI_Nirvana/
+项目结构
+CopyAI_Nirvana/
 ├── src/
 │   ├── core/
 │   │   ├── __init__.py
@@ -214,57 +210,25 @@ AI_Nirvana/
 ├── .gitattributes
 ├── .gitignore
 ├── README.md
-├── requirements-actual.txt
-└── requirements.txt
-```
-## 项目结构
+├── requirements.txt
+└── LICENSE
+详细文档
 
-```
-AI_Nirvana/
-├── src/                      # 源代码目录
-│   ├── core/                 # 核心功能模块
-│   ├── interfaces/           # 用户接口模块
-│   ├── plugins/              # 插件模块
-│   ├── utils/                # 工具函数和类
-│   ├── config.py             # 配置文件
-│   ├── dialogue_manager.py   # 对话管理器
-│   ├── main.py               # 主程序入口
-│   └── ui.py                 # 用户界面
-├── tests/                    # 测试目录
-├── docs/                     # 文档目录
-├── examples/                 # 示例代码
-├── sandbox/                  # 沙盒环境
-├── scripts/                  # 脚本文件
-├── requirements.txt          # 项目依赖
-└── README.md                 # 项目说明文档
-```
+完整用户指南
+API 参考
+开发者文档
 
-详细的项目结构可以在项目根目录下查看。
+运行测试
+Copypytest tests/
+贡献指南
 
-## 详细文档
+Fork 该仓库
+创建您的特性分支 (git checkout -b feature/AmazingFeature)
+提交您的更改 (git commit -m 'Add some AmazingFeature')
+推送到分支 (git push origin feature/AmazingFeature)
+打开一个 Pull Request
 
-- [完整用户指南](docs/user_guide.md)
-- [API 参考](docs/api_reference.md)
-- [开发者文档](docs/developer_guide.md)
-
-## 运行测试
-
-```
-pytest tests/
-```
-
-## 贡献指南
-
-1. Fork 该仓库
-2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开一个 Pull Request
-
-## 许可证
-
-该项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
-## 联系方式
-
+许可证
+该项目采用 MIT 许可证 - 查看 LICENSE 文件了解详情
+联系方式
 项目链接：https://github.com/yuanjiajun999/AI_Nirvana
