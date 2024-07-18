@@ -1,0 +1,10 @@
+{
+    "model": "gpt-3.5-turbo-0125",
+    "log_level": "INFO",
+    "max_input_length": 100,
+    "api_key": "",
+    "api_base": "https://api.gptsapi.net/v1",
+    "use_gpu": false,
+    "system_prompt": "You are a helpful AI assistant.",
+    "max_context_length": 5
+}
