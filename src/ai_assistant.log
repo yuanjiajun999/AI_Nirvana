@@ -1,0 +1,9 @@
+2024-07-18 23:53:39,092 [ERROR] ai_assistant: Unexpected error in main: __init__() got an unexpected keyword argument 'use_gpu'
+Traceback (most recent call last):
+  File "E:\AI_Nirvana-1\src\utils\error_handler.py", line 72, in wrapper
+    return func(*args, **kwargs)
+  File "E:\AI_Nirvana-1\src\main.py", line 74, in main
+    ai_nirvana = AINirvana(config)
+  File "E:\AI_Nirvana-1\src\main.py", line 42, in __init__
+    self.assistant = AIAssistant(
+TypeError: __init__() got an unexpected keyword argument 'use_gpu'

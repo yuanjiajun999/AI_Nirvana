@@ -24,37 +24,36 @@ def print_help() -> None:
     print("'sentiment' - 对下一条输入进行情感分析")
     print("'execute' - 执行 Python 代码")
     print("'summarize' - 生成文本摘要")
-    print("'rl' - 使用强化学习")
-    print("'auto_fe' - 使用自动特征工程")
-    print("'interpret' - 使用模型解释性")
-    print("'active_learn' - 使用主动学习")
     print("'change_model' - 更改使用的模型")
     print("'help' - 显示此帮助信息")
 
 class AINirvana:
     def __init__(self, config: Config):
         self.config = config
-        self.api_key = os.getenv('OPENAI_API_KEY') or self.config.get('api_key')
         self.model_name = self.config.get('model', 'gpt-3.5-turbo')
-        self.use_gpu = self.config.get('use_gpu', False)
-        self.system_prompt = self.config.get('system_prompt', '')
+        self.max_context_length = self.config.get('max_context_length', 5)
 
-        self.assistant = AIAssistant(
-            model_name=self.model_name,
-            use_gpu=self.use_gpu,
-            system_prompt=self.system_prompt,
-            api_key=self.api_key
-        )
-        self.dialogue_manager = DialogueManager(max_history=self.config.get('max_context_length', 5))
+        self.assistant = AIAssistant(model_name=self.model_name, max_context_length=self.max_context_length)
+        self.dialogue_manager = DialogueManager(max_history=self.max_context_length)
         self.security_manager = SecurityManager()
 
     @error_handler
     def process(self, input_text: str) -> str:
         """处理用户输入并生成响应"""
-        context = self.dialogue_manager.get_dialogue_context()
-        response = self.assistant.generate_response(input_text, context)
+        if not self.security_manager.is_safe_code(input_text):
+            raise AIAssistantException("Unsafe input detected")
+        response = self.assistant.generate_response(input_text)
         self.dialogue_manager.add_to_history(input_text, response)
         return response
+
+    def summarize(self, text: str) -> str:
+        return self.assistant.summarize(text)
+
+    def analyze_sentiment(self, text: str) -> Dict[str, float]:
+        return self.assistant.analyze_sentiment(text)
+
+    def change_model(self, model_name: str) -> None:
+        self.assistant.change_model(model_name)
 
 def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
     """处理特殊命令"""
@@ -67,6 +66,20 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
         return {"continue": True}
     elif command == 'quit':
         return {"message": "谢谢使用，再见！", "continue": False}
+    elif command == 'sentiment':
+        text = input("请输入要分析情感的文本：")
+        sentiment = ai_nirvana.analyze_sentiment(text)
+        print_sentiment_analysis(sentiment)
+        return {"continue": True}
+    elif command == 'summarize':
+        text = input("请输入要生成摘要的文本：")
+        summary = ai_nirvana.summarize(text)
+        print(f"摘要：{summary}")
+        return {"continue": True}
+    elif command == 'change_model':
+        model_name = input("请输入新的模型名称：")
+        ai_nirvana.change_model(model_name)
+        return {"message": f"模型已更改为 {model_name}", "continue": True}
     return {"continue": True}
 
 @error_handler
@@ -78,9 +91,9 @@ def main(config: Config):
 
     while True:
         try:
-            user_input = input("\n请输入您的问题或文本：\n").strip().lower()
+            user_input = input("\n请输入您的问题或文本：\n").strip()
             
-            command_result = handle_command(user_input, ai_nirvana)
+            command_result = handle_command(user_input.lower(), ai_nirvana)
             if not command_result.get("continue", True):
                 print(command_result.get("message", ""))
                 break

@@ -18,6 +18,15 @@ class ConfigurationError(AIAssistantException):
     """配置相关错误"""
     pass
 
+class SecurityException(Exception):
+    pass
+
+def error_handler(func):
+    # 保留现有的 error_handler 函数实现
+    pass
+
+# 如果 logger 是在这个文件中定义的，保留它的定义
+
 def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     """
     设置并返回一个logger
