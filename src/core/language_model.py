@@ -7,11 +7,10 @@ from src.utils.error_handler import error_handler, logger, ModelError
 load_dotenv()
 
 class LanguageModel:
-    def __init__(self, default_model: str = "gpt-3.5-turbo"):
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ModelError("OpenAI API key not found in environment variables")
+    def __init__(self, default_model: str = "gpt-3.5-turbo-0125"):
+        self.api_key = "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API 密钥
         openai.api_key = self.api_key
+        openai.api_base = "https://api.gptsapi.net/v1"
         self.default_model = default_model
         logger.info(f"LanguageModel initialized with model: {default_model}")
 

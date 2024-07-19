@@ -61,30 +61,16 @@ class AIAssistant:
 
     @error_handler
     def summarize(self, text: str) -> str:
-        """
-        生成给定文本的摘要。
-
-        Args:
-            text: 需要摘要的文本。
-
-        Returns:
-            str: 生成的摘要。
-
-        Raises:
-            InputValidationError: 如果输入不安全。
-            ModelError: 如果生成摘要时发生错误。
-        """
         if not self.security_manager.is_safe_code(text):
             raise InputValidationError("Unsafe code detected in text")
-        
-        summary_prompt = f"Please summarize the following text:\n\n{text}"
+    
+        summary_prompt = f"请用中文简洁地总结以下文本，不超过100字：\n\n{text}"
         summary = self.language_model.generate_response(summary_prompt)
-        
+    
         logger.info(f"Summarization request: {text[:50]}...")
         logger.info(f"Summary: {summary[:50]}...")
-        
+    
         return summary
-
     @error_handler
     def analyze_sentiment(self, text: str) -> Dict[str, float]:
         """

@@ -1,8 +1,9 @@
 import os
 import sys
 import argparse
-from typing import Dict, Any
+from typing import Dict, Any, List
 from dotenv import load_dotenv
+from io import StringIO
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -55,32 +56,88 @@ class AINirvana:
     def change_model(self, model_name: str) -> None:
         self.assistant.change_model(model_name)
 
+    def get_available_models(self) -> List[str]:
+        return self.assistant.get_available_models()
+
+def execute_code(code):
+    old_stdout = sys.stdout
+    redirected_output = sys.stdout = StringIO()
+    try:
+        exec(code)
+        sys.stdout = old_stdout
+        return redirected_output.getvalue()
+    except Exception as e:
+        sys.stdout = old_stdout
+        return f"执行错误: {str(e)}"
+
 def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
     """处理特殊命令"""
     if command == 'clear':
+        message = ai_nirvana.dialogue_manager.clear_history()
         ai_nirvana.assistant.clear_context()
-        ai_nirvana.dialogue_manager.clear_history()
-        return {"message": "对话历史已清除。", "continue": True}
+        return {"message": message + " 输入新的问题开始新的对话。", "continue": True}
     elif command == 'help':
         print_help()
-        return {"continue": True}
+        return {"message": "如需更多帮助，请具体描述您的问题。", "continue": True}
     elif command == 'quit':
-        return {"message": "谢谢使用，再见！", "continue": False}
+        return {"message": "谢谢使用 AI Nirvana 智能助手，再见！", "continue": False}
     elif command == 'sentiment':
         text = input("请输入要分析情感的文本：")
         sentiment = ai_nirvana.analyze_sentiment(text)
         print_sentiment_analysis(sentiment)
+        print("情感分析结果解释：")
+        print(f"积极情绪: {sentiment['positive']:.2f}")
+        print(f"中性情绪: {sentiment['neutral']:.2f}")
+        print(f"消极情绪: {sentiment['negative']:.2f}")
         return {"continue": True}
     elif command == 'summarize':
-        text = input("请输入要生成摘要的文本：")
+        print("请输入要生成摘要的文本（输入空行结束）：")
+        lines = []
+        while True:
+            line = input()
+            if line.strip() == "":
+                break
+            lines.append(line)
+        text = "\n".join(lines)
         summary = ai_nirvana.summarize(text)
         print(f"摘要：{summary}")
-        return {"continue": True}
+        return {"message": "摘要生成完成。需要进一步解释或重新生成吗？", "continue": True}
     elif command == 'change_model':
-        model_name = input("请输入新的模型名称：")
-        ai_nirvana.change_model(model_name)
-        return {"message": f"模型已更改为 {model_name}", "continue": True}
-    return {"continue": True}
+        while True:
+            available_models = ai_nirvana.get_available_models()
+            print(f"可用的模型有：{', '.join(available_models)}")
+            model_name = input("请输入新的模型名称（或输入 'cancel' 取消）：").strip().lower()
+            if model_name == 'cancel':
+                return {"message": "已取消更改模型。", "continue": True}
+            if model_name not in [m.lower() for m in available_models]:
+                print(f"错误：'{model_name}' 不是有效的模型名称。请检查拼写并重试。")
+                continue
+            try:
+                # 使用原始大小写的模型名称
+                original_case_model_name = next(m for m in available_models if m.lower() == model_name)
+                ai_nirvana.change_model(original_case_model_name)
+                return {"message": f"模型已更改为 {original_case_model_name}。试试问一个问题吧！", "continue": True}
+            except Exception as e:
+                print(f"更改模型失败: {str(e)}。请重试或选择其他模型。")
+    elif command == 'execute':
+        print("请输入要执行的 Python 代码（输入空行结束）：")
+        lines = []
+        while True:
+            line = input()
+            if line.strip() == "":
+                break
+            lines.append(line)
+        code = "\n".join(lines)
+        result = execute_code(code)
+        return {"message": f"执行结果:\n{result}\n需要解释结果吗？", "continue": True}
+    else:
+        # 处理一般文本输入
+        response = ai_nirvana.process(command)
+        print_user_input(command)
+        print("\n回答：")
+        print_assistant_response(response)
+        print_dialogue_context(ai_nirvana.dialogue_manager.get_dialogue_context())
+        return {"continue": True}
 
 @error_handler
 def main(config: Config):
@@ -91,22 +148,30 @@ def main(config: Config):
 
     while True:
         try:
-            user_input = input("\n请输入您的问题或文本：\n").strip()
+            print("\n请输入您的问题或文本（输入空行发送，输入特殊命令如 'help' 直接执行）：")
+            lines = []
+            while True:
+                line = input()
+                if line.strip() == "":
+                    break
+                lines.append(line)
+            user_input = "\n".join(lines)
             
-            command_result = handle_command(user_input.lower(), ai_nirvana)
+            if not user_input.strip():
+                print("您似乎没有输入任何内容。请输入一些文字或命令。")
+                continue
+            
+            if user_input.lower() in ['help', 'clear', 'quit', 'sentiment', 'summarize', 'change_model', 'execute']:
+                command_result = handle_command(user_input.lower(), ai_nirvana)
+            else:
+                command_result = handle_command(user_input, ai_nirvana)
+
             if not command_result.get("continue", True):
                 print(command_result.get("message", ""))
                 break
             
             if command_result.get("message"):
                 print(command_result["message"])
-                continue
-
-            response = ai_nirvana.process(user_input)
-            print_user_input(user_input)
-            print("\n回答：")
-            print_assistant_response(response)
-            print_dialogue_context(ai_nirvana.dialogue_manager.get_dialogue_context())
 
         except AIAssistantException as e:
             logger.error(f"AI Assistant error: {str(e)}")

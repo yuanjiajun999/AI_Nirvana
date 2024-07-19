@@ -1,0 +1,355 @@
+2024-07-18 23:53:13,018 [ERROR] ai_assistant: Unexpected error in main: main() missing 1 required positional argument: 'config'
+Traceback (most recent call last):
+  File "E:\AI_Nirvana-1\src\utils\error_handler.py", line 72, in wrapper
+    return func(*args, **kwargs)
+TypeError: main() missing 1 required positional argument: 'config'
+2024-07-19 00:14:08,525 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:14:08,525 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:14:08,526 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:14:08,526 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:14:08,526 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 00:14:28,862 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:14:28,863 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:14:28,863 [ERROR] ai_assistant: Error in generating response: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-07-19 00:14:28,865 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-07-19 00:14:28,867 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-07-19 00:14:28,868 [ERROR] ai_assistant: Model error in process: Failed to generate response: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-07-19 00:14:28,869 [ERROR] ai_assistant: AI Assistant error: Failed to generate response: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-07-19 00:16:20,314 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:16:20,315 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:16:20,315 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:16:20,316 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:16:20,316 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 00:16:37,167 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:16:37,168 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:16:38,859 [ERROR] ai_assistant: Error in generating response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:38,860 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:38,862 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:38,863 [ERROR] ai_assistant: Model error in process: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:38,865 [ERROR] ai_assistant: AI Assistant error: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:56,182 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:16:56,183 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:16:57,608 [ERROR] ai_assistant: Error in generating response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:57,609 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:57,610 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:57,610 [ERROR] ai_assistant: Model error in process: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:16:57,611 [ERROR] ai_assistant: AI Assistant error: Failed to generate response: Incorrect API key provided: sk-proj-********************************************ZgEN. You can find your API key at https://platform.openai.com/account/api-keys.
+2024-07-19 00:25:06,585 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:25:06,585 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:25:06,585 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:25:06,585 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:25:06,586 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 00:25:18,993 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:25:18,994 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:25:20,550 [ERROR] ai_assistant: Error in generating response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:25:20,551 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:25:20,553 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:25:20,554 [ERROR] ai_assistant: Model error in process: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:25:20,556 [ERROR] ai_assistant: AI Assistant error: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:31:46,241 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:31:46,241 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:31:46,241 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:31:46,242 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:31:46,242 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 00:31:55,156 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:31:55,156 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:31:56,609 [ERROR] ai_assistant: Error in generating response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:31:56,610 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:31:56,611 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:31:56,613 [ERROR] ai_assistant: Model error in process: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:31:56,614 [ERROR] ai_assistant: AI Assistant error: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:38:06,462 [INFO] ai_assistant: API Key loaded: sk-pr...MZgEN
+2024-07-19 00:38:06,463 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:38:06,463 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:38:06,463 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:38:06,463 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:38:06,464 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 00:38:17,696 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:38:17,697 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:38:19,188 [ERROR] ai_assistant: Error in generating response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:38:19,189 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:38:19,190 [ERROR] ai_assistant: Model error in generate_response: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:38:19,192 [ERROR] ai_assistant: Model error in process: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:38:19,193 [ERROR] ai_assistant: AI Assistant error: Failed to generate response: Incorrect API key provided . You can find your API key at https://bewildcard.com/.
+2024-07-19 00:42:21,032 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:42:21,033 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:42:21,033 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 00:42:21,033 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 00:42:21,033 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 00:42:36,603 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:42:36,604 [INFO] ai_assistant: Code passed safety check
+2024-07-19 00:42:38,424 [INFO] ai_assistant: Generated response for prompt: help...
+2024-07-19 00:42:38,425 [INFO] ai_assistant: User input: help...
+2024-07-19 00:42:38,426 [INFO] ai_assistant: System response: Of course! How can I assist you today?...
+2024-07-19 09:18:59,288 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:18:59,288 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:19:05,350 [INFO] ai_assistant: Generated response for prompt: 请简单介绍一下人工智能的历史...
+2024-07-19 09:19:05,352 [INFO] ai_assistant: User input: 请简单介绍一下人工智能的历史...
+2024-07-19 09:19:05,353 [INFO] ai_assistant: System response: 人工智能（AI）的历史可以追溯到上世纪的上半叶。以下是人工智能发展的一些关键时间点和里程碑：
+
+1....
+2024-07-19 09:19:41,623 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:19:42,589 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 09:19:42,591 [INFO] ai_assistant: Sentiment analysis request: 今天是个美好的日子，阳光明媚，心情愉悦。...
+2024-07-19 09:19:42,592 [INFO] ai_assistant: Sentiment analysis result: {'positive': 1.0, 'neutral': 0.0, 'negative': 0.0}
+2024-07-19 09:19:42,593 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:19:42,594 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:19:45,117 [INFO] ai_assistant: Generated response for prompt: sentiment...
+2024-07-19 09:19:45,117 [INFO] ai_assistant: User input: sentiment...
+2024-07-19 09:19:45,118 [INFO] ai_assistant: System response: 情感分析是一种人工智能技术，旨在识别和理解文本中所包含的情绪、态度和情感色彩。这种技术能够帮助分析文...
+2024-07-19 09:40:30,802 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 09:40:30,805 [INFO] ai_assistant: Default model changed to: gpt-4
+2024-07-19 09:40:30,806 [INFO] ai_assistant: Model changed to: gpt-4
+2024-07-19 09:41:03,093 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:41:07,373 [INFO] ai_assistant: Generated response for prompt: Please summarize the following text:
+
+人工智能（AI）是计算机...
+2024-07-19 09:41:07,374 [INFO] ai_assistant: Summarization request: 人工智能（AI）是计算机科学的一个分支，致力于创造智能机器。它始于1950年代，经历了多次起起落落。...
+2024-07-19 09:41:07,375 [INFO] ai_assistant: Summary: Artificial Intelligence (AI) is a branch of comput...
+2024-07-19 09:41:07,379 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:41:07,379 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:41:14,757 [INFO] ai_assistant: Generated response for prompt: summarize...
+2024-07-19 09:41:14,758 [INFO] ai_assistant: User input: summarize...
+2024-07-19 09:41:14,759 [INFO] ai_assistant: System response: 人工智能（AI）的历史从20世纪40年代起始，经历了初期的神经网络计算模型，到逻辑推理和专家系统的开...
+2024-07-19 09:57:14,812 [INFO] ai_assistant: Context cleared.
+2024-07-19 09:57:14,812 [ERROR] ai_assistant: Unexpected error: 'DialogueManager' object has no attribute 'clear_history'
+Traceback (most recent call last):
+  File "E:\AI_Nirvana-1\src\main.py", line 96, in main
+    command_result = handle_command(user_input.lower(), ai_nirvana)
+  File "E:\AI_Nirvana-1\src\main.py", line 62, in handle_command
+    ai_nirvana.dialogue_manager.clear_history()
+AttributeError: 'DialogueManager' object has no attribute 'clear_history'
+2024-07-19 09:57:36,156 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:57:36,164 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:57:39,300 [INFO] ai_assistant: Generated response for prompt: execute...
+2024-07-19 09:57:39,300 [INFO] ai_assistant: User input: execute...
+2024-07-19 09:57:39,301 [INFO] ai_assistant: System response: As an AI, I would need more specific instructions ...
+2024-07-19 09:58:08,367 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:08,367 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:15,987 [INFO] ai_assistant: Generated response for prompt: print("Hello, World!")...
+2024-07-19 09:58:15,988 [INFO] ai_assistant: User input: print("Hello, World!")...
+2024-07-19 09:58:15,989 [INFO] ai_assistant: System response: You just expressed a command typically used in pro...
+2024-07-19 09:58:16,008 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:16,008 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:20,231 [INFO] ai_assistant: Generated response for prompt: x = 5...
+2024-07-19 09:58:20,232 [INFO] ai_assistant: User input: x = 5...
+2024-07-19 09:58:20,233 [INFO] ai_assistant: System response: It seems like you're assigning the value 5 to vari...
+2024-07-19 09:58:20,254 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:20,254 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:23,553 [INFO] ai_assistant: Generated response for prompt: y = 3...
+2024-07-19 09:58:23,554 [INFO] ai_assistant: User input: y = 3...
+2024-07-19 09:58:23,555 [INFO] ai_assistant: System response: Your command is assigning the value 3 to the varia...
+2024-07-19 09:58:23,580 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:23,580 [INFO] ai_assistant: Code passed safety check
+2024-07-19 09:58:28,732 [INFO] ai_assistant: Generated response for prompt: print(f"The sum of {x} and {y} is {x + y}")...
+2024-07-19 09:58:28,733 [INFO] ai_assistant: User input: print(f"The sum of {x} and {y} is {x + y}")...
+2024-07-19 09:58:28,735 [INFO] ai_assistant: System response: It looks like you're trying to print a statement t...
+2024-07-19 10:22:12,683 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 10:22:12,684 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 10:22:12,685 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 10:22:12,685 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 10:22:12,686 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 10:22:41,580 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:22:41,580 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:22:44,459 [INFO] ai_assistant: Generated response for prompt: help...
+2024-07-19 10:22:44,459 [INFO] ai_assistant: User input: help...
+2024-07-19 10:22:44,459 [INFO] ai_assistant: System response: Of course, I'm here to help! What do you need assi...
+2024-07-19 10:22:54,096 [INFO] ai_assistant: Context cleared.
+2024-07-19 10:29:58,044 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:30:00,879 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 10:30:00,881 [INFO] ai_assistant: Sentiment analysis request: summarize...
+2024-07-19 10:30:00,883 [INFO] ai_assistant: Sentiment analysis result: {'positive': 0.2, 'neutral': 0.7, 'negative': 0.1}
+2024-07-19 10:30:00,885 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:30:00,886 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:30:02,311 [INFO] ai_assistant: Generated response for prompt: sentiment...
+2024-07-19 10:30:02,313 [INFO] ai_assistant: User input: sentiment...
+2024-07-19 10:30:02,314 [INFO] ai_assistant: System response: I'm here to assist you! How can I help you today?...
+2024-07-19 10:30:41,842 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 10:30:41,848 [ERROR] ai_assistant: Model Gpt3.5 is not available
+2024-07-19 10:30:41,849 [ERROR] ai_assistant: Model error in change_default_model: Model Gpt3.5 is not available
+2024-07-19 10:30:41,850 [ERROR] ai_assistant: Model error in change_model: Model Gpt3.5 is not available
+2024-07-19 10:30:41,850 [ERROR] ai_assistant: AI Assistant error: Model Gpt3.5 is not available
+2024-07-19 10:30:56,228 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:30:56,229 [INFO] ai_assistant: Code passed safety check
+2024-07-19 10:30:57,300 [INFO] ai_assistant: Generated response for prompt: change_model）...
+2024-07-19 10:30:57,301 [INFO] ai_assistant: User input: change_model）...
+2024-07-19 10:30:57,302 [INFO] ai_assistant: System response: I apologize for any confusion, but I am unable to ...
+2024-07-19 13:03:53,364 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 13:03:53,364 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 13:03:53,364 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 13:03:53,364 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 13:03:53,364 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 13:04:41,287 [INFO] ai_assistant: Context cleared.
+2024-07-19 13:07:53,166 [INFO] ai_assistant: Code passed safety check
+2024-07-19 13:07:56,381 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 13:07:56,381 [INFO] ai_assistant: Sentiment analysis request: 今天是个美好的日子，阳光明媚，心情愉悦。...
+2024-07-19 13:07:56,382 [INFO] ai_assistant: Sentiment analysis result: {'positive': 1.0, 'neutral': 0.0, 'negative': 0.0}
+2024-07-19 13:08:30,603 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:08:30,605 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:08:54,777 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:08:54,779 [ERROR] ai_assistant: Model Gpt4 is not available
+2024-07-19 13:08:54,779 [ERROR] ai_assistant: Model error in change_default_model: Model Gpt4 is not available
+2024-07-19 13:08:54,780 [ERROR] ai_assistant: Model error in change_model: Model Gpt4 is not available
+2024-07-19 13:10:21,124 [INFO] ai_assistant: Code passed safety check
+2024-07-19 13:10:23,616 [INFO] ai_assistant: Generated response for prompt: Please summarize the following text:
+
+人工智能（AI）是计算机...
+2024-07-19 13:10:23,616 [INFO] ai_assistant: Summarization request: 人工智能（AI）是计算机科学的一个分支，致力于创造智能机器。它始于1950年代，经历了多次起起落落。...
+2024-07-19 13:10:23,617 [INFO] ai_assistant: Summary: The text discusses artificial intelligence (AI) as...
+2024-07-19 13:28:58,865 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 13:28:58,865 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 13:28:58,865 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 13:28:58,865 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 13:28:58,865 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 13:29:14,687 [INFO] ai_assistant: Context cleared.
+2024-07-19 13:32:41,388 [INFO] ai_assistant: Code passed safety check
+2024-07-19 13:32:44,009 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 13:32:44,009 [INFO] ai_assistant: Sentiment analysis request: 今天是个美好的日子，阳光明媚，...
+2024-07-19 13:32:44,010 [INFO] ai_assistant: Sentiment analysis result: {'positive': 1.0, 'neutral': 0.0, 'negative': 0.0}
+2024-07-19 13:32:44,010 [INFO] ai_assistant: Code passed safety check
+2024-07-19 13:32:44,010 [INFO] ai_assistant: Code passed safety check
+2024-07-19 13:32:45,588 [INFO] ai_assistant: Generated response for prompt: sentiment...
+2024-07-19 13:32:45,588 [INFO] ai_assistant: User input: sentiment...
+2024-07-19 13:32:45,588 [INFO] ai_assistant: System response: I am an AI assistant, so I don't have feelings or ...
+2024-07-19 13:33:55,825 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:33:55,826 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:34:14,719 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:34:14,720 [ERROR] ai_assistant: Model Gpt-4 is not available
+2024-07-19 13:34:14,720 [ERROR] ai_assistant: Model error in change_default_model: Model Gpt-4 is not available
+2024-07-19 13:34:14,720 [ERROR] ai_assistant: Model error in change_model: Model Gpt-4 is not available
+2024-07-19 13:34:15,161 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 13:34:15,162 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:07:39,469 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:07:39,470 [ERROR] ai_assistant: Model quit is not available
+2024-07-19 14:07:39,470 [ERROR] ai_assistant: Model error in change_default_model: Model quit is not available
+2024-07-19 14:07:39,470 [ERROR] ai_assistant: Model error in change_model: Model quit is not available
+2024-07-19 14:07:40,090 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:07:40,091 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:08:03,848 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:08:03,852 [ERROR] ai_assistant: Model Gpt-4 is not available
+2024-07-19 14:08:03,852 [ERROR] ai_assistant: Model error in change_default_model: Model Gpt-4 is not available
+2024-07-19 14:08:03,852 [ERROR] ai_assistant: Model error in change_model: Model Gpt-4 is not available
+2024-07-19 14:08:04,281 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:08:04,281 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:09:21,456 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 14:09:21,456 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 14:09:21,457 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 14:09:21,457 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 14:09:21,457 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 14:09:48,144 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:09:48,145 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:09:59,563 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 14:09:59,564 [INFO] ai_assistant: Default model changed to: gpt-4
+2024-07-19 14:09:59,564 [INFO] ai_assistant: Model changed to: gpt-4
+2024-07-19 14:11:20,235 [INFO] ai_assistant: Code passed safety check
+2024-07-19 14:11:24,397 [INFO] ai_assistant: Generated response for prompt: 请用中文简洁地总结以下文本，不超过100字：
+
+人工智能（AI）是计算机科学的一...
+2024-07-19 14:11:24,398 [INFO] ai_assistant: Summarization request: 人工智能（AI）是计算机科学的一...
+2024-07-19 14:11:24,398 [INFO] ai_assistant: Summary: 部分，主要研究如何使计算机模拟和执行人类智能，从而帮助用户完成各种任务。这包括学习、推理、感知、理解...
+2024-07-19 14:13:15,636 [INFO] ai_assistant: Code passed safety check
+2024-07-19 14:13:20,483 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 14:13:20,484 [INFO] ai_assistant: Sentiment analysis request: 今天是个美好的日子，阳光明媚，心情愉悦。...
+2024-07-19 14:13:20,484 [INFO] ai_assistant: Sentiment analysis result: {'positive': 0.95, 'neutral': 0.05, 'negative': 0.0}
+2024-07-19 14:13:20,485 [INFO] ai_assistant: Code passed safety check
+2024-07-19 14:13:20,485 [INFO] ai_assistant: Code passed safety check
+2024-07-19 14:13:33,919 [INFO] ai_assistant: Generated response for prompt: sentiment...
+2024-07-19 14:13:33,919 [INFO] ai_assistant: User input: sentiment...
+2024-07-19 14:13:33,920 [INFO] ai_assistant: System response: The term "sentiment" can be used in various contex...
+2024-07-19 15:14:36,039 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 15:14:36,040 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 15:14:36,040 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 15:14:36,041 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 15:14:36,041 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 15:15:53,480 [INFO] ai_assistant: Context cleared.
+2024-07-19 15:19:30,720 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:19:30,720 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:19:33,723 [INFO] ai_assistant: Generated response for prompt: sentiment ...
+2024-07-19 15:19:33,724 [INFO] ai_assistant: User input: sentiment ...
+2024-07-19 15:19:33,724 [INFO] ai_assistant: System response: I'm just a computer program, so I don't have feeli...
+2024-07-19 15:21:04,624 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:21:06,968 [INFO] ai_assistant: Generated response for prompt: 请用中文简洁地总结以下文本，不超过100字：
+
+人工智能（AI）是计算机科学的一个分支，致力于创造智...
+2024-07-19 15:21:06,970 [INFO] ai_assistant: Summarization request: 人工智能（AI）是计算机科学的一个分支，致力于创造智能机器。它始于1950年代，经历了多次 起起落落...
+2024-07-19 15:21:06,970 [INFO] ai_assistant: Summary: 人工智能起源于1950年代，经历起起落落，发展至今。早期注重符号推理和专家系统，后来机器学习兴起。2...
+2024-07-19 15:21:42,594 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 15:21:42,595 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 15:21:53,630 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 15:21:53,633 [INFO] ai_assistant: Default model changed to: gpt-4
+2024-07-19 15:21:53,634 [INFO] ai_assistant: Model changed to: gpt-4
+2024-07-19 15:23:46,681 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:23:50,905 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 15:23:50,906 [INFO] ai_assistant: Sentiment analysis request: 今天是个美好的日子，阳光明媚，心情愉 悦。......
+2024-07-19 15:23:50,906 [INFO] ai_assistant: Sentiment analysis result: {'positive': 0.95, 'neutral': 0.04, 'negative': 0.01}
+2024-07-19 15:23:50,907 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:23:50,907 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:23:53,622 [INFO] ai_assistant: Generated response for prompt: ...
+2024-07-19 15:23:53,623 [INFO] ai_assistant: User input: ...
+2024-07-19 15:23:53,624 [INFO] ai_assistant: System response: It seems like you didn't include any text in your ...
+2024-07-19 15:34:07,615 [INFO] ai_assistant: LanguageModel initialized with model: gpt-3.5-turbo-0125
+2024-07-19 15:34:07,616 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 15:34:07,616 [INFO] ai_assistant: AI Assistant initialized with model: gpt-3.5-turbo-0125
+2024-07-19 15:34:07,616 [INFO] ai_assistant: SecurityManager initialized
+2024-07-19 15:34:07,616 [INFO] ai_assistant: AI Nirvana 智能助手启动
+2024-07-19 15:34:37,615 [INFO] ai_assistant: Context cleared.
+2024-07-19 15:35:56,046 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:35:58,732 [INFO] ai_assistant: Generated response for prompt: Analyze the sentiment of the following text and re...
+2024-07-19 15:35:58,732 [INFO] ai_assistant: Sentiment analysis request: 今天外面很热，还是在屋里吹空调凉快。...
+2024-07-19 15:35:58,733 [INFO] ai_assistant: Sentiment analysis result: {'positive': 0.3, 'neutral': 0.7, 'negative': 0.0}
+2024-07-19 15:38:55,510 [INFO] ai_assistant: Code passed safety check
+2024-07-19 15:38:58,507 [INFO] ai_assistant: Generated response for prompt: 请用中文简洁地总结以下文本，不超过100字：
+
+人工智能（AI）是计算机科学的一个分支，致力于创造智...
+2024-07-19 15:38:58,508 [INFO] ai_assistant: Summarization request: 人工智能（AI）是计算机科学的一个分支，致力于创造智能机器。它始于1950年代，经历了多次 起起落落...
+2024-07-19 15:38:58,508 [INFO] ai_assistant: Summary: 人工智能起源于20世纪50年代，经历起伏变化。早期主要注重符号推理和专家系统，后来发展出机器学习方法...
+2024-07-19 15:39:29,934 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 15:39:29,934 [INFO] ai_assistant: Available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 15:39:45,998 [INFO] ai_assistant: Retrieved available models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-instruct', 'gpt-4', 'gpt-4-0314', 'gpt-4-0613', 'gpt-4-turbo-preview', 'gpt-4-turbo', 'gpt-4-turbo-2024-04-09', 'gpt-4-0125-preview', 'gpt-4-1106-preview', 'gpt-4-vision-preview', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-32k-0613', 'gpt-4o', 'gpt-4o-2024-05-13', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620', 'tts-1', 'tts-1-hd', 'whisper-1', 'text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large', 'dall-e-3', 'dall-e-2']
+2024-07-19 15:39:45,999 [INFO] ai_assistant: Default model changed to: gpt-4
+2024-07-19 15:39:45,999 [INFO] ai_assistant: Model changed to: gpt-4
