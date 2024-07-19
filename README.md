@@ -5,8 +5,10 @@ AI Nirvana 是一个强大的 AI 辅助系统，集成了自然语言处理、�
 ## 主要功能
 
 1. 低秩适应（LoRA）：提高模型训练效率和性能
+   - 实现了 LoRALayer 和 LoRAModel，支持高效的模型微调
 2. 多模态交互：集成文本、语音、图像等多种交互方式
 3. 半监督学习：利用未标记数据进行模型训练
+   - 实现了 SemiSupervisedDataset 和 SemiSupervisedTrainer
 4. 数字孪生技术：创建物理或虚拟资产的数字模型
 5. 隐私增强技术（PETs）：在保护隐私的同时进行数据处理
 6. 智能代理系统：能够自主执行复杂任务的AI系统
@@ -19,6 +21,9 @@ AI Nirvana 是一个强大的 AI 辅助系统，集成了自然语言处理、�
 12.安全管理：提供代码安全检查和敏感数据加密功能
 13.**代码执行**：现在可以安全地执行 Python 代  码。使用 'execute' 命令来尝试。
 14.对话历史管理：保存和清除对话历史
+15.LangChain 集成：支持高级语言模型链和智能代理
+16.LangGraph 支持：实现基于图的语言处理
+17.LangSmith 集成：提供语言模型评估和优化工具
 
 ## 增安全特性
 
@@ -139,7 +144,21 @@ Copypython src/main.py
 5. 使用 'summarize' 命令可以生成文本摘要。
 6. 使用 'change_model' 命令可以切换不同的语言模型。
 7. 使用 'quit' 命令可以退出程序。
+8. 运行测试：python -m pytest
 
+##示例
+
+“examples”目录包含演示如何使用AI Nirvana各种模块的示例脚本。这些示例为使用系统的功能提供了一个起点。
+
+有关可用示例以及如何使用它们的更多信息，请参阅[示例文档]（docs/examples.md）。
+
+## 文档
+
+详细的文档可以在 `docs` 目录中找到：
+
+- [用户指南](docs/user_guide.md)
+- [API 参考](docs/api_reference.md)
+- [开发者指南](docs/developer_guide.md)
 
 安全注意事项
 
@@ -254,5 +273,12 @@ Fork 该仓库
 
 许可证
 该项目采用 MIT 许可证 - 查看 LICENSE 文件了解详情
+## 版本历史
+
+- v1.0.0: 初始版本
+- v1.1.0: 添加 LoRA 和半监督学习功能
+- v1.2.0: 集成 LangChain、LangGraph 和 LangSmith
+
+
 联系方式
 项目链接：https://github.com/yuanjiajun999/AI_Nirvana

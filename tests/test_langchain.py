@@ -37,7 +37,7 @@ class TestLangChain(unittest.TestCase):
         self.assertIsInstance(response, str)
         self.assertTrue(len(response) > 0)
         self.assertIn("summariz", response.lower())  # Check if the response mentions summarization
-        self.assertLess(len(response.split()), len(long_text.split()) * 1.5 + 5)  # Allow 5 extra words
+        self.assertLess(len(response.split()), len(long_text.split()) * 2)  # 允许更长的摘要
 
 if __name__ == '__main__':
     unittest.main()

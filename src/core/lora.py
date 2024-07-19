@@ -14,27 +14,33 @@ class LoRALayer(nn.Module):
         r (int): Rank of the update matrices. Default is 8.
 
     Attributes:
-        A (nn.Parameter): The first update matrix.
-        B (nn.Parameter): The second update matrix.
+        lora_A (nn.Parameter): The first update matrix of shape (r, in_features).
+        lora_B (nn.Parameter): The second update matrix of shape (out_features, r).
+        scale (float): Scaling factor for the LoRA update.
+        linear (nn.Linear): The original linear transformation.
     """
 
     def __init__(self, in_features, out_features, r=8):
         super().__init__()
         self.r = r
-        self.A = nn.Parameter(torch.randn(out_features, r))
-        self.B = nn.Parameter(torch.randn(r, in_features))
+        self.in_features = in_features
+        self.out_features = out_features
+        self.lora_A = nn.Parameter(torch.randn(r, in_features))
+        self.lora_B = nn.Parameter(torch.randn(out_features, r))
+        self.scale = 0.01
+        self.linear = nn.Linear(in_features, out_features)
 
     def forward(self, x):
         """
         Compute the forward pass of the LoRA layer.
 
         Args:
-            x (torch.Tensor): Input tensor.
+            x (torch.Tensor): Input tensor of shape (batch_size, in_features).
 
         Returns:
-            torch.Tensor: Output after applying the LoRA update.
+            torch.Tensor: Output tensor of shape (batch_size, out_features).
         """
-        return self.A @ self.B @ x
+        return self.linear(x) + self.scale * (self.lora_B @ self.lora_A @ x.T).T
 
 class LoRAModel(nn.Module):
     """
@@ -44,17 +50,21 @@ class LoRAModel(nn.Module):
 
     Args:
         base_model (nn.Module): The original model to be adapted.
-        lora_layers (list): A list of LoRALayer instances to be applied.
+        lora_config (list): A list of tuples, each containing (in_features, out_features, r)
+                            for each LoRA layer to be applied.
 
     Attributes:
         base_model (nn.Module): The original model.
         lora_layers (nn.ModuleList): The list of LoRA layers.
     """
 
-    def __init__(self, base_model, lora_layers):
+    def __init__(self, base_model, lora_config):
         super().__init__()
         self.base_model = base_model
-        self.lora_layers = nn.ModuleList(lora_layers)
+        self.lora_layers = nn.ModuleList([
+            LoRALayer(in_features, out_features, r)
+            for in_features, out_features, r in lora_config
+        ])
 
     def forward(self, x):
         """
@@ -68,5 +78,7 @@ class LoRAModel(nn.Module):
         """
         out = self.base_model(x)
         for lora_layer in self.lora_layers:
+            residual = out
             out = lora_layer(out)
+            out = out + residual  # Add residual connection
         return out
