@@ -9,3 +9,7 @@ class DialogueManager:
 
     def get_dialogue_context(self):
         return "\n".join([f"User: {user_input}\nAssistant: {response}" for user_input, response in self.history])
+
+    def clear_history(self):
+        self.history.clear()
+        return "对话历史已清除。"
