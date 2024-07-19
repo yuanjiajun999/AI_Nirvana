@@ -37,3 +37,4 @@ ai_nirvana_env/Library/bin/*.dll
 
 # Ignore pyproject-checkpoint.toml  
 .ipynb_checkpoints/pyproject-checkpoint.toml
+update_env
