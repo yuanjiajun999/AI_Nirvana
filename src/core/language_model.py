@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict, Optional, Any
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 from src.utils.error_handler import error_handler, logger, ModelError
 
@@ -9,9 +9,8 @@ load_dotenv()
 class LanguageModel:
     def __init__(self, default_model: str = "gpt-3.5-turbo-0125"):
         self.api_key = "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API 密钥
-        openai.api_key = self.api_key
-        openai.api_base = "https://api.gptsapi.net/v1"
         self.default_model = default_model
+        self.client = OpenAI(api_key=self.api_key, base_url="https://api.gptsapi.net/v1")
         logger.info(f"LanguageModel initialized with model: {default_model}")
 
     @error_handler
@@ -32,7 +31,7 @@ class LanguageModel:
         """
         model = model or self.default_model
         try:
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=model,
                 messages=[
                     {"role": "system", "content": context},
@@ -58,7 +57,7 @@ class LanguageModel:
             ModelError: 如果获取模型列表失败
         """
         try:
-            models = openai.Model.list()
+            models = self.client.models.list()
             model_list = [model.id for model in models.data]
             logger.info(f"Retrieved available models: {model_list}")
             return model_list
@@ -100,7 +99,7 @@ class LanguageModel:
         """
         model = model or self.default_model
         try:
-            model_info = openai.Model.retrieve(model)
+            model_info = self.client.models.retrieve(model)
             logger.info(f"Retrieved info for model: {model}")
             return {
                 "id": model_info.id,
