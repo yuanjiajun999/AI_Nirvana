@@ -1,0 +1,65 @@
+# Python cache files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+
+# Version control
+.git
+.gitignore
+.gitattributes
+.github
+
+# Environment and IDE files
+.env
+.env.example
+my_env
+myenv
+new_env
+update_env
+.vscode
+
+# Test files
+tests
+.pytest_cache
+
+# Documentation
+docs
+*.md
+TODO.md
+
+# Examples and sandbox
+examples
+sandbox
+
+# Log files
+*.log
+ai_assistant.log
+
+# Data files (if not needed in the image)
+data
+
+# Temporary files
+.tmp*
+.temp*
+.tmp.driveupload
+
+# Docker files (not needed in the image)
+Dockerfile
+Dockerfile.base
+docker-compose.yml
+
+# Configuration files (if not needed in the image)
+config.json
+
+# Requirements files (keep only the ones you need)
+requirements-*.in
+poetry.lock
+
+# Scripts (if not needed at runtime)
+scripts
+
+# Other
+.DS_Store

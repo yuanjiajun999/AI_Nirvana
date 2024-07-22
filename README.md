@@ -165,6 +165,22 @@ Copypython src/main.py
 - 所有用户输入都会经过安全检查，以防止潜在的代码注入攻击。
 - 'execute' 命令在安全的沙盒环境中执行 Python 代码。
 
+## 环境设置
+
+   1. 复制 `.env.example` 文件并重命名为 `.env`
+   2. 在 `.env` 文件中填入您的实际 API 密钥和其他敏感信息
+   3. 运行 Docker 容器时，使用以下命令注入环境变量：
+
+   ```bash
+   docker run -p 8000:8000 \
+     -e API_KEY=your_actual_api_key \
+     -e API_BASE=your_actual_api_base \
+     -e LANGSMITH_API_KEY=your_actual_langsmith_key \
+     ai_nirvana:latest
+   ```
+
+   注意：请不要将您的实际 API 密钥提交到版本控制系统中。
+   
 
 安全使用指南
 

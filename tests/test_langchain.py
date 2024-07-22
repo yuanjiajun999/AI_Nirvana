@@ -19,6 +19,7 @@ class TestLangChain(unittest.TestCase):
         generated_text = self.agent.run_generation_task(prompt)
         self.assertIsInstance(generated_text, str)
         self.assertTrue(len(generated_text) > 0)
+        self.assertIn("Once upon a time", prompt)  # 确保原始提示的一部分在生成的文本中
 
     def test_chat_completion(self):
         response = get_response("Hello, World!")

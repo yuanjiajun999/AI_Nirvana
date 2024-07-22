@@ -70,5 +70,15 @@ class LangChainAgent:
         chain = self.summarize_template | self.llm | StrOutputParser()  
         return self._run_chain(chain, {"text": text})  
 
-    def run_generation_task(self, prompt: str) -> str:  
-        return self._run_chain(self.llm | StrOutputParser(), {"text": prompt})
+    def run_generation_task(self, prompt: str) -> str:
+        try:
+            response = self.llm.invoke(prompt)
+            if isinstance(response, str):
+                return response
+            elif hasattr(response, 'content'):
+                return response.content
+            else:
+                return str(response)
+        except Exception as e:
+            print(f"Error in run_generation_task: {str(e)}")
+            return "抱歉，无法生成文本。"

@@ -1,0 +1,72 @@
+name: AI Nirvana CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        python -m pytest
+
+    - name: Run test imports
+      run: |
+        python test_imports.py
+
+    - name: Check code formatting
+      run: |
+        pip install black
+        black --check .
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 .
+
+    - name: Type check with mypy
+      run: |
+        pip install mypy
+        mypy .
+
+    - name: Check for security vulnerabilities
+      run: |
+        pip install safety
+        safety check
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
+      with:
+        name: pytest-results
+        path: pytest-results
+
+    - name: Notify on failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: 'CI pipeline failed! @channel'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+env:
+  PYTHONPATH: ${{ github.workspace }}

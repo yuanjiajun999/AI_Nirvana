@@ -1,40 +1,57 @@
-# Python
-__pycache__/
-*.py[cod]
-*.so
-*.egg
-*.egg-info/
-dist/
-build/
-.Python
+# Python  
+__pycache__/  
+*.py[cod]  
+*.so  
+*.egg  
+*.egg-info/  
+dist/  
+build/  
+.Python  
 
-# Virtual Environments
-env/
-venv/
+# Virtual Environments  
+env/  
+venv/  
+my_env/  
+myenv/  
+new_env/  
 
-# IDEs and Editors
-.vscode/
-.idea/
+# IDEs and Editors  
+.vscode/  
+.idea/  
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# OS generated files  
+.DS_Store  
+Thumbs.db  
 
-# Node.js
-node_modules/
+# Node.js  
+node_modules/  
 
-# Project specific
-.env
-claude-assistant/
+# Project specific  
+.env  
+claude-assistant/  
 
-# Large files and libraries
-ai_nirvana_env/Lib/site-packages/torch/lib/*.lib
-ai_nirvana_env/Lib/site-packages/torch/lib/*.dll
-ai_nirvana_env/Library/bin/*.dll
+# Large files and libraries  
+ai_nirvana_env/Lib/site-packages/torch/lib/*.lib  
+ai_nirvana_env/Lib/site-packages/torch/lib/*.dll  
+ai_nirvana_env/Library/bin/*.dll  
 
 # Ignore .ipynb_checkpoints  
 .ipynb_checkpoints/  
 
 # Ignore pyproject-checkpoint.toml  
-.ipynb_checkpoints/pyproject-checkpoint.toml
-update_env
+.ipynb_checkpoints/pyproject-checkpoint.toml  
+update_env  
+.pytest_cache/  
+.tmp.driveupload  
+data/generation_results.txt  
+sandbox/  
+ai_assistant.log  
+poetry.lock  
+profiling.py  
+requirements_platform.txt  
+requirements-actual.txt
+# Ignore pip-compile input files
+*.in
+
+# Don't ignore the generated requirements files
+!requirements-*.txt
