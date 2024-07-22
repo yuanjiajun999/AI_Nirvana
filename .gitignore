@@ -57,3 +57,4 @@ requirements-actual.txt
 !requirements-*.txt
 # 明确忽略所有 .log 文件  
 *.log  
+*.pyc

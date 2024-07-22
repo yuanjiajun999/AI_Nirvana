@@ -1,2 +1,46 @@
-*.dll filter=lfs diff=lfs merge=lfs -text
-torch/lib/torch_cpu.dll filter=lfs diff=lfs merge=lfs -text
+# Existing rules  
+*.dll filter=lfs diff=lfs merge=lfs -text  
+torch/lib/torch_cpu.dll filter=lfs diff=lfs merge=lfs -text  
+
+# New line ending rules  
+* text=auto eol=lf  
+
+# Explicitly declare text files you want to always be normalized and converted  
+# to native line endings on checkout.  
+*.c text  
+*.h text  
+*.cpp text  
+*.hpp text  
+*.py text  
+*.txt text  
+*.md text  
+*.yml text  
+*.yaml text  
+*.json text  
+*.xml text  
+*.html text  
+*.css text  
+*.js text  
+
+# Declare files that will always have CRLF line endings on checkout.  
+*.sln text eol=crlf  
+*.bat text eol=crlf  
+*.cmd text eol=crlf  
+
+# Denote all files that are truly binary and should not be modified.  
+*.png binary  
+*.jpg binary  
+*.jpeg binary  
+*.gif binary  
+*.ico binary  
+*.mo binary  
+*.pdf binary  
+*.exe binary  
+*.dll binary  
+*.zip binary  
+*.7z binary  
+*.ttf binary  
+*.eot binary  
+*.woff binary  
+*.woff2 binary  
+*.otf binary
