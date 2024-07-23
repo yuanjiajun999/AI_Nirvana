@@ -58,3 +58,5 @@ requirements-actual.txt
 # 明确忽略所有 .log 文件  
 *.log  
 *.pyc
+echo "ai_assistant.log" >> .gitignore
+AI_Nirvana_new
