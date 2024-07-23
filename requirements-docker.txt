@@ -106,7 +106,7 @@ jupyter-console==6.6.3
 jupyter-events==0.10.0
 jupyter-lsp==2.2.5
 jupyter-packaging==0.7.12
-jupyter_client==7.4.9  # 更新到最新版本  
+jupyter_client==7.4.9  # 更新到最新版�? 
 jupyter_core==5.7.2
 jupyter_server==2.14.2
 jupyter_server_terminals==0.5.3
@@ -150,7 +150,7 @@ nbformat==5.10.4
 nest-asyncio==1.6.0
 networkx==3.2.1
 nltk==3.8.1
-notebook==6.5.7  # 更新到最新版本  
+notebook==6.5.7  # 更新到最新版�? 
 notebook_shim==0.2.4
 numba==0.60.0
 numpy==1.26.4
@@ -191,9 +191,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==0.19.1
 python-json-logger==2.0.7
 python-multipart==0.0.7
-pywin32==306
 pytz==2024.1
-pywinpty==2.0.13
 PyYAML==6.0.1
 pyzmq==26.0.3
 qtconsole==5.5.2
@@ -253,8 +251,8 @@ tokenizers==0.19.1
 toml==0.10.2
 tomli==1.2.3
 toolz==0.12.1
-torch==2.3.1
-torchvision==0.18.1
+torch==2.3.1+cpu
+torchvision==0.18.1+cpu
 tornado==6.4.1
 tqdm==4.66.4
 traitlets==5.14.3
@@ -285,4 +283,3 @@ woodwork==0.31.0
 wrapt==1.14.1
 yarl==1.9.4
 zipp==3.19.2
-Pyro4

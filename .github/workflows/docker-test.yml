@@ -1,0 +1,13 @@
+name: Docker Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Docker image
+      run: docker build -t ai_nirvana_app .
+    - name: Run tests in Docker
+      run: docker run ai_nirvana_app python run_docker_tests.py

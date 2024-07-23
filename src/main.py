@@ -159,10 +159,14 @@ def main(config: Config):
             print("\n请输入您的问题或文本（输入空行发送，输入特殊命令如 'help' 直接执行）：")  
             lines = []  
             while True:  
-                line = input()  
-                if line.strip() == "":  
-                    break  
-                lines.append(line)  
+                try:  
+                    line = input()  
+                    if line.strip() == "":  
+                        break  
+                    lines.append(line)  
+                except EOFError:  
+                    print("检测到 EOF，退出程序")  
+                    return  
             user_input = "\n".join(lines)  
             
             if not user_input.strip():  

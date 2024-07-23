@@ -295,6 +295,122 @@ Fork 该仓库
 - v1.1.0: 添加 LoRA 和半监督学习功能
 - v1.2.0: 集成 LangChain、LangGraph 和 LangSmith
 
+依赖管理和 Docker 环境设置指南
+依赖文件说明
+
+requirements.txt: 主要依赖文件，包含所有依赖项。
+requirements-common.txt: 包含所有平台通用的依赖项。
+requirements-docker.txt: Docker 环境专用的依赖文件（由 Dockerfile 自动生成）。
+
+更新依赖
+
+更新 requirements.txt:
+
+使用 pip freeze > requirements.txt 或手动编辑以更新依赖。
+
+
+更新 requirements-common.txt:
+
+运行 python update_requirements.py 脚本以自动更新通用依赖。
+
+
+
+Docker 环境设置
+Dockerfile.base
+dockerfileCopyFROM python:3.9-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt requirements-common.txt ./
+
+RUN grep -v -E "pywin32|pywinpty|win32|wincertstore" requirements.txt > requirements-docker.txt && \
+    cat requirements-common.txt >> requirements-docker.txt
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements-docker.txt
+
+RUN apt-get purge -y --auto-remove gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV DOCKER_ENV=1
+ENV CUDA_VISIBLE_DEVICES=""
+Dockerfile
+dockerfileCopyFROM ai_nirvana_base:latest
+
+WORKDIR /app
+
+COPY . .
+
+RUN if [ -f requirements-project.txt ]; then \
+        pip install --no-cache-dir -r requirements-project.txt; \
+    fi
+
+CMD ["python", "src/main.py"]
+
+HEALTHCHECK CMD python -c "import requests; requests.get('http://localhost:8000')"
+使用说明
+对于开发者
+
+Windows 开发者：使用 requirements.txt
+macOS 开发者：使用 requirements.txt
+Linux 开发者：使用 requirements.txt
+
+使用 Docker
+
+构建基础镜像：
+Copydocker build -t ai_nirvana_base:latest -f Dockerfile.base .
+
+构建应用镜像：
+Copydocker build -t ai_nirvana_app:latest .
+
+运行容器：
+Copydocker run -it ai_nirvana_app:latest
+
+### 运行测试
+
+本项目使用 `run_docker_tests.py` 脚本运行测试。
+
+### 在 Docker 容器外运行测试
+
+如果您在本地机器上（不在 Docker 容器内），使用以下命令：
+
+1. 构建 Docker 镜像（如果尚未构建）：
+docker build -t ai_nirvana_app .
+
+2. 运行测试：
+docker run ai_nirvana_app python run_docker_tests.py
+
+### 在 Docker 容器内运行测试
+
+如果您已经在 Docker 容器内，直接运行：
+python run_docker_tests.py
+
+注意：Docker 环境测试仅包括与 Linux 环境兼容的测试。Windows 特定的测试将被排除。
+
+代码审查：
+检查您的代码，确保核心功能不依赖于 Windows 特定的模块。如果有依赖，考虑使用条件导入或跨平台替代方案。
+持续集成：
+在 CI 流程中，为不同的环境设置不同的测试任务：
+
+Windows runners 运行完整测试套件
+Linux/Docker runners 运行 Docker 兼容的测试
+
+
+依赖管理：
+再次检查 requirements-docker.txt，确保它不包含任何 Windows 特定的包。
+
+
+注意事项
+
+定期运行 update_requirements.py 以保持 requirements-common.txt 更新。
+在提交代码前，确保所有依赖文件都已更新并添加到版本控制中。
+如遇到平台特定的依赖问题，请在 issue 中报告。
 
 联系方式
 项目链接：https://github.com/yuanjiajun999/AI_Nirvana

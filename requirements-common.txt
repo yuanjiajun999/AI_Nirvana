@@ -157,3 +157,4 @@ openai==1.12.0  # 使用最新的稳定版本，您可以根据实际安装的�
 cryptography==42.0.5  # 使用最新的稳定版本，您可以根据实际安装的版本进行调整
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+matplotlib 
