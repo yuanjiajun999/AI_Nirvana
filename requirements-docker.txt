@@ -3,7 +3,7 @@ aiohttp==3.9.5
 aiosignal==1.3.1
 altair==4.2.2
 annotated-types==0.7.0
-anyio==3.7.1
+anyio==4.4.0
 argon2-cffi==23.1.0
 argon2-cffi-bindings==21.2.0
 arrow==1.3.0
@@ -21,10 +21,13 @@ black==24.4.2
 bleach==6.1.0
 blinker==1.8.2
 blis==0.7.11
+boolean.py==4.0
+CacheControl==0.14.0
 cachetools==5.4.0
 catalogue==2.0.10
 certifi==2024.7.4
 cffi==1.16.0
+chardet==5.2.0
 charset-normalizer==3.3.2
 chex==0.1.7
 click==8.1.7
@@ -35,7 +38,10 @@ comm==0.2.2
 confection==0.1.5
 contourpy==1.2.1
 cryptography==43.0.0
+cssselect==1.2.0
+cssutils==2.11.1
 cycler==0.12.1
+cyclonedx-python-lib==7.5.1
 cymem==2.0.8
 dataclasses-json==0.6.7
 debugpy==1.8.2
@@ -65,6 +71,7 @@ frozenlist==1.4.1
 fsspec==2024.6.1
 gast==0.6.0
 gensim==4.3.2
+git-filter-repo==2.45.0
 gitdb==4.0.11
 GitPython==3.1.43
 google-auth==2.32.0
@@ -75,6 +82,7 @@ grpcio==1.65.1
 h11==0.14.0
 h5py==3.11.0
 holidays==0.53
+html5lib==1.1
 httpcore==1.0.5
 httptools==0.6.1
 httpx==0.27.0
@@ -106,7 +114,7 @@ jupyter-console==6.6.3
 jupyter-events==0.10.0
 jupyter-lsp==2.2.5
 jupyter-packaging==0.7.12
-jupyter_client==7.4.9  # 更新到最新版�? 
+jupyter_client==7.4.9
 jupyter_core==5.7.2
 jupyter_server==2.14.2
 jupyter_server_terminals==0.5.3
@@ -125,7 +133,9 @@ langcodes==3.4.0
 langsmith==0.1.92
 language_data==1.2.0
 libclang==18.1.1
+license-expression==30.3.0
 llvmlite==0.43.0
+lxml==5.2.2
 marisa-trie==1.2.0
 Markdown==3.6
 markdown-it-py==3.0.0
@@ -137,6 +147,7 @@ mdurl==0.1.2
 mistune==3.0.2
 mkl==2021.4.0
 ml-dtypes==0.4.0
+more-itertools==10.3.0
 mpmath==1.3.0
 msgpack==1.0.8
 multidict==6.0.5
@@ -150,33 +161,39 @@ nbformat==5.10.4
 nest-asyncio==1.6.0
 networkx==3.2.1
 nltk==3.8.1
-notebook==6.5.7  # 更新到最新版�? 
+notebook==6.5.7
 notebook_shim==0.2.4
 numba==0.60.0
 numpy==1.26.4
 oauthlib==3.2.2
 openai==1.35.15
-opencv-python==4.8.0.76
+opencv-python==4.8.1.78
 opt-einsum==3.3.0
 optax==0.2.1
 optree==0.12.1
 orbax-checkpoint==0.4.4
 orjson==3.10.6
 overrides==7.7.0
+packageurl-python==0.15.4
 packaging==24.1
 pandas==2.2.2
 pandocfilters==1.5.1
 parso==0.8.4
 pathspec==0.12.1
 pillow==10.4.0
+pip-api==0.0.34
+pip-requirements-parser==32.0.1
+pip_audit==2.7.3
 platformdirs==4.2.2
 pluggy==1.5.0
+premailer==3.10.0
 preshed==3.0.9
 prometheus_client==0.20.0
 prompt_toolkit==3.0.47
 protobuf==4.25.3
 psutil==6.0.0
 pure-eval==0.2.2
+py-serializable==1.1.0
 pyarrow==17.0.0
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
@@ -190,7 +207,7 @@ pytest==8.2.2
 python-dateutil==2.9.0.post0
 python-dotenv==0.19.1
 python-json-logger==2.0.7
-python-multipart==0.0.7
+python-multipart==0.0.9
 pytz==2024.1
 PyYAML==6.0.1
 pyzmq==26.0.3
@@ -221,6 +238,7 @@ slicer==0.0.8
 smart-open==7.0.4
 smmap==5.0.1
 sniffio==1.3.1
+sortedcontainers==2.4.0
 soupsieve==2.5
 spacy==3.7.5
 spacy-legacy==3.0.12
@@ -236,9 +254,9 @@ tbb==2021.13.0
 tenacity==8.5.0
 tensorboard==2.17.0
 tensorboard-data-server==0.7.2
-tensorflow
+tensorflow==2.17.0
 tensorflow-estimator==2.15.0
-tensorflow-intel
+tensorflow-intel==2.17.0
 tensorflow-io-gcs-filesystem==0.31.0
 tensorstore==0.1.45
 termcolor==2.4.0
@@ -251,8 +269,8 @@ tokenizers==0.19.1
 toml==0.10.2
 tomli==1.2.3
 toolz==0.12.1
-torch==2.3.1+cpu
-torchvision==0.18.1+cpu
+torch==2.3.1
+torchvision==0.18.1
 tornado==6.4.1
 tqdm==4.66.4
 traitlets==5.14.3
@@ -281,5 +299,6 @@ Werkzeug==3.0.3
 widgetsnbextension==4.0.11
 woodwork==0.31.0
 wrapt==1.14.1
+yagmail==0.15.293
 yarl==1.9.4
 zipp==3.19.2

@@ -1,0 +1,23 @@
+name: Dependency Management and Security Check
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 每周一运行
+  push:
+    branches: [ main ]  # 每次推送到主分支时运行
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install chardet safety
+    - name: Run dependency management and security check
+      run: python manage_dependencies_and_security.py

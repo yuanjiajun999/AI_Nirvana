@@ -60,3 +60,10 @@ requirements-actual.txt
 *.pyc
 echo "ai_assistant.log" >> .gitignore
 AI_Nirvana_new
+dependency_check_20240724_131526.log
+Dockerfile
+docker-compose.yml
+Dockerfile.base
+.dockerignore
+*.tmp  
+*.temp  
