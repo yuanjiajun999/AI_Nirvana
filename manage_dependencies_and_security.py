@@ -7,18 +7,24 @@ import yagmail
 
 # 设置日志
 log_filename = f"dependency_check_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-logging.basicConfig(filename=log_filename, level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    filename=log_filename,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
 
 def detect_file_encoding(file_path):
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         raw_data = file.read()
-    return chardet.detect(raw_data)['encoding']
+    return chardet.detect(raw_data)["encoding"]
+
 
 def read_file_with_encoding(file_path):
     encoding = detect_file_encoding(file_path)
-    with open(file_path, 'r', encoding=encoding) as file:
+    with open(file_path, "r", encoding=encoding) as file:
         return file.read()
+
 
 def run_command(command):
     logging.info(f"Running command: {command}")
@@ -31,16 +37,20 @@ def run_command(command):
         logging.error(f"Command error: {result.stderr}")
     return result.returncode
 
+
 def update_dependencies():
     return run_command("python update_all_requirements.py")
 
+
 def run_safety_check():
     requirements = read_file_with_encoding("requirements.txt")
-    process = subprocess.Popen(["safety", "check", "--stdin"], 
-                               stdin=subprocess.PIPE, 
-                               stdout=subprocess.PIPE, 
-                               stderr=subprocess.PIPE, 
-                               text=True)
+    process = subprocess.Popen(
+        ["safety", "check", "--stdin"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
     stdout, stderr = process.communicate(input=requirements)
     print(stdout)
     logging.info(f"Safety check output: {stdout}")
@@ -49,12 +59,14 @@ def run_safety_check():
         logging.error(f"Safety check error: {stderr}")
     return process.returncode, stdout
 
+
 def update_documentation(check_results):
     with open("SECURITY.md", "a") as doc:
         doc.write(f"\n\n## Security Check - {datetime.now().strftime('%Y-%m-%d')}\n")
         doc.write("Results of the latest security check:\n")
         doc.write(check_results)
     logging.info("Documentation updated with security check results")
+
 
 def send_notification(subject, body):
     try:
@@ -64,9 +76,10 @@ def send_notification(subject, body):
     except Exception as e:
         logging.error(f"Failed to send notification: {str(e)}")
 
+
 def main():
     logging.info("Starting dependency management and security check")
-    
+
     # 更新依赖
     if update_dependencies() != 0:
         error_msg = "Error updating dependencies"
@@ -91,6 +104,7 @@ def main():
     print("Dependency management and security check completed.")
     logging.info("Dependency management and security check completed")
     print(f"Log file created: {log_filename}")
+
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,10 @@
 # examples/model_interpretability_example.py
 
-from src.core.model_interpretability import ModelInterpreter
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
+
+from src.core.model_interpretability import ModelInterpreter
+
 
 def main():
     # 加载示例数据集
@@ -34,6 +36,7 @@ def main():
     shap_values = interpreter.shap_values()
     print("SHAP Values (first 5 samples):")
     print(shap_values[:5])
+
 
 if __name__ == "__main__":
     main()

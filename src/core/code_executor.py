@@ -1,9 +1,11 @@
+import os
 import subprocess
 import tempfile
-import os
 from typing import Tuple
+
+from src.utils.error_handler import AIAssistantException, error_handler, logger
 from src.utils.security import SecurityManager
-from src.utils.error_handler import error_handler, logger, AIAssistantException
+
 
 class CodeExecutor:
     def __init__(self):
@@ -25,23 +27,24 @@ class CodeExecutor:
         Raises:
             AIAssistantException: 如果代码执行失败或不安全
         """
-        if language.lower() != 'python':
+        if language.lower() != "python":
             logger.warning(f"Unsupported language: {language}")
             return "", "Only Python execution is currently supported."
-        
+
         if not self.security_manager.is_safe_code(code):
             logger.warning("Unsafe code detected")
             return "", "Code execution blocked due to security concerns."
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as temp_file:
             temp_file.write(code)
             temp_file_path = temp_file.name
 
         try:
-            result = subprocess.run(['python', temp_file_path],
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=5)
+            result = subprocess.run(
+                ["python", temp_file_path], capture_output=True, text=True, timeout=5
+            )
             logger.info(f"Code executed successfully: {code[:50]}...")
             return result.stdout, result.stderr
         except subprocess.TimeoutExpired:
@@ -77,6 +80,6 @@ class CodeExecutor:
         Returns:
             List[str]: 支持的编程语言列表
         """
-        supported_languages = ['python']
+        supported_languages = ["python"]
         logger.info(f"Supported languages: {supported_languages}")
         return supported_languages

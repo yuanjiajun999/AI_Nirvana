@@ -1,12 +1,18 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import unittest  
+import unittest
+from src.core.generative_ai import GenerativeAI
 
-from src.core.generative_ai import GenerativeAI  
 
-class TestGenerativeAI(unittest.TestCase):  
-    # Test cases for generative AI  
-    def test_something(self):  
-        # 测试代码在这里  
-        pass
+class TestGenerativeAI(unittest.TestCase):
+    def setUp(self):
+        self.gen_ai = GenerativeAI("path/to/model")
+
+    def test_generate_text(self):
+        prompt = "Once upon a time"
+        generated_text = self.gen_ai.generate_text(prompt, max_length=50)
+        self.assertIsInstance(generated_text, list)
+        self.assertTrue(all(isinstance(text, str) for text in generated_text))
+        self.assertTrue(all(text.startswith(prompt) for text in generated_text))
+
+
+if __name__ == "__main__":
+    unittest.main()

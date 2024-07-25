@@ -1,44 +1,49 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import unittest
+from unittest.mock import patch
+
 from src.core.langchain import LangChainAgent, get_response
+
 
 class TestLangChain(unittest.TestCase):
     def setUp(self):
         self.agent = LangChainAgent()
 
-    def test_qa_task(self):
-        query = "What is the capital of France?"
-        result = self.agent.run_qa_task(query)
-        self.assertIsInstance(result, str)
-        self.assertTrue(len(result) > 0)
+    @patch("src.core.langchain.ChatOpenAI")
+    def test_qa_task(self, mock_chat):
 
-    def test_generation_task(self):
-        prompt = "Once upon a time, there was a..."
-        generated_text = self.agent.run_generation_task(prompt)
-        self.assertIsInstance(generated_text, str)
-        self.assertTrue(len(generated_text) > 0)
-        self.assertIn("Once upon a time", prompt)  # 确保原始提示的一部分在生成的文本中
+        mock_chat.return_value.invoke.return_value.content = (
+            "Paris is the capital ofFrance."
+        )
+        result = self.agent.run_qa_task("What is the capital of France?")
+        self.assertIn("Paris", result)
 
-    def test_chat_completion(self):
-        response = get_response("Hello, World!")
-        self.assertIsInstance(response, str)
-        self.assertTrue(len(response) > 0)
+    @patch("src.core.langchain.ChatOpenAI")
+    def test_summarization_task(self, mock_chat):
+        mock_chat.return_value.invoke.return_value.content = "This is a summary."
+        text = "This is a long text that needs to be summarized."
+        result = self.agent.run_summarization_task(text)
+        self.assertEqual(result, "This is a summary.")
 
-    def test_qa_task_with_get_response(self):
-        response = get_response("What is the capital of France?")
-        self.assertIsInstance(response, str)
-        self.assertTrue(len(response) > 0)
-        self.assertIn("paris", response.lower())
+    @patch("src.core.langchain.ChatOpenAI")
+    def test_generation_task(self, mock_chat):
+        mock_chat.return_value.invoke.return_value.content = "Once upon a time..."
+        result = self.agent.run_generation_task("Write a short story")
+        self.assertTrue(result.startswith("Once upon a time"))
 
-    def test_summarization_task_with_get_response(self):
-        long_text = "This is a long text that needs to be summarized. It contains multiple sentences and ideas. The main point is about text summarization."
-        response = get_response(f"Summarize this text: {long_text}")
-        self.assertIsInstance(response, str)
-        self.assertTrue(len(response) > 0)
-        self.assertIn("summariz", response.lower())  # Check if the response mentions summarization
-        self.assertLess(len(response.split()), len(long_text.split()) * 2)  # 允许更长的摘要
+    @patch("src.core.langchain.ChatOpenAI")
+    def test_get_response(self, mock_chat):
+        mock_chat.return_value.invoke.return_value.content = (
+            "Hello, how can I help you?"
+        )
+        response = get_response("Hi")
+        self.assertEqual(response, "Hello, how can I help you?")
 
-if __name__ == '__main__':
+    def test_chat_completion_caching(self):
+        # Test that repeated calls with the same input return cached results
+        response1 = get_response("Hello, World!")
+        response2 = get_response("Hello, World!")
+        self.assertEqual(response1, response2)
+
+
+if __name__ == "__main__":
     unittest.main()

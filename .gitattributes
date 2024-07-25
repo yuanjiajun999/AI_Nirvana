@@ -44,3 +44,4 @@ torch/lib/torch_cpu.dll filter=lfs diff=lfs merge=lfs -text
 *.woff binary  
 *.woff2 binary  
 *.otf binary
+* text=auto

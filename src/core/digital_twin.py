@@ -7,6 +7,7 @@ class DigitalTwin:
         self.physical_system_model = physical_system_model
 
     def simulate(self, initial_conditions, time_steps):
+
         states = odeint(self.physical_system_model, initial_conditions, time_steps)
         return states
 
@@ -15,5 +16,7 @@ class DigitalTwin:
         return anomalies
 
     def optimize(self, objective_function, constraints):
-        optimal_parameters = self.physical_system_model.optimize(objective_function, constraints)
+        optimal_parameters = self.physical_system_model.optimize(
+            objective_function, constraints
+        )
         return optimal_parameters

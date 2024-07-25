@@ -1,14 +1,19 @@
-import re
 import os
+import re
 import subprocess
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
+import hashlib
+
 from cryptography.fernet import Fernet, InvalidToken
-from src.utils.error_handler import error_handler, logger, SecurityException
+
+from src.utils.error_handler import SecurityException, error_handler, logger
+
 
 class SecurityManager:
     """
     安全管理类，提供代码安全检查、敏感数据加密和安全代码执行功能。
     """
+
     def __init__(self):
         """
         初始化 SecurityManager，生成加密密钥。
@@ -16,17 +21,24 @@ class SecurityManager:
         self.key = Fernet.generate_key()
         self.cipher_suite = Fernet(self.key)
         self.unsafe_patterns: List[str] = [
-            r'import\s+os',
-            r'import\s+subprocess',
-            r'open\(',
-            r'eval\(',
-            r'exec\(',
-            r'__import__\(',
-            r'globals\(\)',
-            r'locals\(\)',
-            r'sys\.',
-            r'shutil\.',
+            r"import\s+os",
+            r"import\s+subprocess",
+            r"open\(",
+            r"eval\(",
+            r"exec\(",
+            r"__import__\(",
+            r"globals\(\)",
+            r"locals\(\)",
+            r"sys\.",
+            r"shutil\.",
         ]
+        self.password_policy = {
+            "min_length": 8,
+            "require_uppercase": True,
+            "require_lowercase": True,
+            "require_digit": True,
+            "require_special_char": True,
+        }
         logger.info("SecurityManager initialized")
 
     @error_handler
@@ -138,14 +150,14 @@ class SecurityManager:
             raise SecurityException("Unsafe code detected")
 
         sandbox_dir = self.create_sandbox()
-        file_path = os.path.join(sandbox_dir, f'script.{language}')
-        with open(file_path, 'w') as f:
+        file_path = os.path.join(sandbox_dir, f"script.{language}")
+        with open(file_path, "w") as f:
             f.write(code)
 
-        if language == 'python':
-            cmd = ['python', file_path]
-        elif language == 'javascript':
-            cmd = ['node', file_path]
+        if language == "python":
+            cmd = ["python", file_path]
+        elif language == "javascript":
+            cmd = ["node", file_path]
         else:
             raise SecurityException(f"Unsupported language: {language}")
 
@@ -169,7 +181,64 @@ class SecurityManager:
         Returns:
             str: 沙盒目录的路径。
         """
-        sandbox_dir = os.path.join(os.getcwd(), 'sandbox')
+        sandbox_dir = os.path.join(os.getcwd(), "sandbox")
         os.makedirs(sandbox_dir, exist_ok=True)
         logger.info(f"Created sandbox directory: {sandbox_dir}")
         return sandbox_dir
+
+    def sanitize_input(self, input_str: str) -> str:
+        """
+        清理输入字符串，移除潜在的危险字符。
+
+        Args:
+            input_str (str): 需要清理的输入字符串。
+
+        Returns:
+            str: 清理后的字符串。
+        """
+        return re.sub(r'[<>&\'"]/g', "", input_str)
+
+    def hash_password(self, password: str) -> str:
+        """
+        对密码进行哈希处理。
+
+        Args:
+            password (str): 需要哈希的密码。
+
+        Returns:
+            str: 哈希后的密码。
+        """
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def validate_password(self, password: str) -> List[str]:
+        """
+        验证密码是否符合安全策略。
+
+        Args:
+            password (str): 需要验证的密码。
+
+        Returns:
+            List[str]: 不符合安全策略的错误信息列表。如果密码符合所有策略，返回空列表。
+        """
+        errors = []
+        if len(password) < self.password_policy["min_length"]:
+            errors.append(
+                f"Password must be at least {self.password_policy['min_length']} characters long"
+            )
+        if self.password_policy["require_uppercase"] and not any(
+            c.isupper() for c in password
+        ):
+            errors.append("Password must contain at least one uppercase letter")
+        if self.password_policy["require_lowercase"] and not any(
+            c.islower() for c in password
+        ):
+            errors.append("Password must contain at least one lowercase letter")
+        if self.password_policy["require_digit"] and not any(
+            c.isdigit() for c in password
+        ):
+            errors.append("Password must contain at least one digit")
+        if self.password_policy["require_special_char"] and not re.search(
+            r'[!@#$%^&*(),.?":{}|<>]', password
+        ):
+            errors.append("Password must contain at least one special character")
+        return errors

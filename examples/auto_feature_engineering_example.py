@@ -1,29 +1,37 @@
-# examples/auto_feature_engineering_example.py
-
-from src.core.auto_feature_engineering import AutoFeatureEngineer
 import pandas as pd
-from sklearn.datasets import load_boston
+import numpy as np
+from src.core.auto_feature_engineering import AutoFeatureEngineer
+
 
 def main():
-    # 加载波士顿房价数据集作为示例
-    boston = load_boston()
-    df = pd.DataFrame(boston.data, columns=boston.feature_names)
-    
+    # 创建一个示例数据集
+    data = pd.DataFrame(
+        {
+            "id": range(1000),
+            "A": np.random.rand(1000),
+            "B": np.random.randint(0, 5, 1000),
+            "timestamp": pd.date_range(start="1/1/2021", periods=1000),
+        }
+    )
+
     # 初始化自动特征工程器
-    auto_fe = AutoFeatureEngineer(df)
-    
-    print("Starting automatic feature engineering process...")
-    
-    # 生成新特征
+    auto_fe = AutoFeatureEngineer(data)
+
+    # 创建实体集
+    auto_fe.create_entity_set()
+
+    # 生成特征
     feature_matrix, feature_defs = auto_fe.generate_features()
-    
-    print(f"Original number of features: {df.shape[1]}")
-    print(f"Number of features after auto engineering: {feature_matrix.shape[1]}")
-    
-    # 显示一些新生成的特征
-    print("\nSample of new features:")
-    for i, feature_def in enumerate(feature_defs[:5]):
-        print(f"{i+1}. {feature_def}")
+
+    print("Original data shape:", data.shape)
+    print("Feature matrix shape:", feature_matrix.shape)
+
+    # 获取重要特征
+    important_features = auto_fe.get_important_features(n=10)
+    print("\nTop 10 important features:")
+    for feature in important_features:
+        print(feature)
+
 
 if __name__ == "__main__":
     main()

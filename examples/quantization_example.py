@@ -1,46 +1,48 @@
-# examples/quantization_example.py
-
+import torch
+import torch.nn as nn
 from src.core.quantization import Quantizer
-import numpy as np
+
+
+class SimpleModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc = nn.Linear(10, 5)
+
+    def forward(self, x):
+        return self.fc(x)
+
 
 def main():
-    # 创建一个模拟的模型权重
-    weights = np.random.randn(1000).astype(np.float32)
-    
+    # 创建一个简单的模型
+    model = SimpleModel()
+
+    # 创建一些随机输入数据
+    input_data = torch.randn(1, 10)
+
+    # 初始化量化器
     quantizer = Quantizer()
 
-    print("Original weights statistics:")
-    print(f"Mean: {np.mean(weights):.4f}")
-    print(f"Std: {np.std(weights):.4f}")
-    print(f"Min: {np.min(weights):.4f}")
-    print(f"Max: {np.max(weights):.4f}")
-    print(f"Size: {weights.nbytes} bytes")
-    print()
+    print("Original model:")
+    print(model)
+    print("Output:", model(input_data))
 
-    # 应用量化
-    quantized_weights = quantizer.quantize(weights, bits=8)
+    # 量化模型
+    quantized_model = quantizer.quantize(model)
 
-    print("Quantized weights statistics:")
-    print(f"Mean: {np.mean(quantized_weights):.4f}")
-    print(f"Std: {np.std(quantized_weights):.4f}")
-    print(f"Min: {np.min(quantized_weights):.4f}")
-    print(f"Max: {np.max(quantized_weights):.4f}")
-    print(f"Size: {quantized_weights.nbytes} bytes")
-    print()
+    print("\nQuantized model:")
+    print(quantized_model)
+    print("Output:", quantized_model(input_data))
 
-    # 反量化
-    dequantized_weights = quantizer.dequantize(quantized_weights)
+    # 评估量化效果
+    original_size = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    quantized_size = sum(
+        p.numel() for p in quantized_model.parameters() if p.requires_grad
+    )
 
-    print("Dequantized weights statistics:")
-    print(f"Mean: {np.mean(dequantized_weights):.4f}")
-    print(f"Std: {np.std(dequantized_weights):.4f}")
-    print(f"Min: {np.min(dequantized_weights):.4f}")
-    print(f"Max: {np.max(dequantized_weights):.4f}")
-    print(f"Size: {dequantized_weights.nbytes} bytes")
+    print(f"\nOriginal model size: {original_size} parameters")
+    print(f"Quantized model size: {quantized_size} parameters")
+    print(f"Size reduction: {(1 - quantized_size/original_size)*100:.2f}%")
 
-    # 计算量化误差
-    mse = np.mean((weights - dequantized_weights) ** 2)
-    print(f"\nMean Squared Error: {mse:.8f}")
 
 if __name__ == "__main__":
     main()

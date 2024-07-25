@@ -11,13 +11,18 @@ class ReinforcementLearningAgent:
         self.model = self._build_model()
 
     def _build_model(self):
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dense(24, activation='relu', input_shape=(self.state_size,)),
-            tf.keras.layers.Dense(24, activation='relu'),
-            tf.keras.layers.Dense(self.action_size, activation='linear')
-        ])
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-                      loss='mse')
+        model = tf.keras.Sequential(
+            [
+                tf.keras.layers.Dense(
+                    24, activation="relu", input_shape=(self.state_size,)
+                ),
+                tf.keras.layers.Dense(24, activation="relu"),
+                tf.keras.layers.Dense(self.action_size, activation="linear"),
+            ]
+        )
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="mse"
+        )
         return model
 
     def act(self, state):

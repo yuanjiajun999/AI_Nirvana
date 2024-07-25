@@ -18,5 +18,9 @@ class GenerativeAI:
             top_p=0.95,
             num_beams=2,
         )
-        generated_texts = [self.tokenizer.decode(gen_text, skip_special_tokens=True) for gen_text in output]
-        return generated_texts
+
+
+generated_texts = [
+    self.tokenizer.decode(gen_text, skip_special_tokens=True) for gen_text in output
+]
+return generated_texts

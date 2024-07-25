@@ -1,7 +1,6 @@
-# examples/reinforcement_learning_example.py
-
-from src.core.reinforcement_learning import ReinforcementLearningAgent
 import numpy as np
+from src.core.reinforcement_learning import ReinforcementLearningAgent
+
 
 class SimpleEnvironment:
     def __init__(self):
@@ -12,10 +11,10 @@ class SimpleEnvironment:
             self.state = max(0, self.state - 1)
         elif action == 1:  # 右移
             self.state = min(5, self.state + 1)
-        
         reward = 1 if self.state == 5 else 0
         done = self.state == 5
         return self.state, reward, done
+
 
 def main():
     env = SimpleEnvironment()
@@ -28,9 +27,9 @@ def main():
         done = False
 
         while not done:
-            action = agent.act(state)
+            action = agent.act(np.array([state]))
             next_state, reward, done = env.step(action)
-            agent.learn(state, action, reward, next_state, done)
+            agent.train(np.array([state]), action, reward, np.array([next_state]), done)
             state = next_state
             total_reward += reward
 
@@ -38,15 +37,17 @@ def main():
             print(f"Episode {episode}, Total Reward: {total_reward}")
 
     print("Training completed.")
-    
+
     # 测试学习到的策略
     state = 0
     steps = 0
     while state != 5:
-        action = agent.act(state)
+        action = agent.act(np.array([state]))
         state, _, _ = env.step(action)
         steps += 1
+
     print(f"Steps to reach goal: {steps}")
+
 
 if __name__ == "__main__":
     main()

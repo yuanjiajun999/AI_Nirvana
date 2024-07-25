@@ -1,6 +1,5 @@
-# examples/langsmith_example.py
-
 from src.core.langsmith import LangSmith
+
 
 def main():
     lang_smith = LangSmith()
@@ -14,12 +13,12 @@ def main():
 
     # 代码重构示例
     code_to_refactor = """
-    def f(x):
-        if x == 0:
-            return 1
-        else:
-            return x * f(x-1)
-    """
+def f(x):
+    if x == 0:
+        return 1
+    else:
+        return x * f(x-1)
+"""
     refactored_code = lang_smith.refactor_code(code_to_refactor)
     print("Original Code:")
     print(code_to_refactor)
@@ -33,6 +32,7 @@ def main():
     translated_text = lang_smith.translate_text(text, target_lang)
     print(f"Original text: {text}")
     print(f"Translated to {target_lang}: {translated_text}")
+
 
 if __name__ == "__main__":
     main()

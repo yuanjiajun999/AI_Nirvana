@@ -3,14 +3,15 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
+
 class Config:
-    def __init__(self, config_file: str = 'config.json'):
+    def __init__(self, config_file: str = "config.json"):
         self.config_file = config_file
         self.config = self.load_config()
         self.predefined_responses = {
             "introduce_yourself": "Hello, I am the AI assistant created for the AI Nirvana project. I'm here to help you with a variety of tasks.",
             "how_are_you": "I'm doing well, thank you for asking.",
-            "what_can_you_do": "I can assist you with a wide range of tasks, such as answering questions, generating content, summarizing text, and performing sentiment analysis."
+            "what_can_you_do": "I can assist you with a wide range of tasks, such as answering questions, generating content, summarizing text, and performing sentiment analysis.",
         }
 
     def load_config(self) -> Dict[str, Any]:
@@ -19,11 +20,13 @@ class Config:
             return self.create_default_config()
 
         try:
-            with open(self.config_file, 'r') as f:
+            with open(self.config_file, "r") as f:
                 config = json.load(f)
             return self.update_config_from_env(config)
         except json.JSONDecodeError:
-            logging.error(f"Error decoding {self.config_file}. Creating default config.")
+            logging.error(
+                f"Error decoding {self.config_file}. Creating default config."
+            )
             return self.create_default_config()
 
     def create_default_config(self) -> Dict[str, Any]:
@@ -36,9 +39,9 @@ class Config:
             "api_base": "https://api.gptsapi.net/v1",
             "use_gpu": False,
             "system_prompt": "You are a helpful AI assistant.",
-            "max_context_length": 5
+            "max_context_length": 5,
         }
-        with open(self.config_file, 'w') as f:
+        with open(self.config_file, "w") as f:
             json.dump(default_config, f, indent=4)
         return self.update_config_from_env(default_config)
 
@@ -50,7 +53,7 @@ class Config:
             "LOG_LEVEL": "log_level",
             "USE_GPU": "use_gpu",
             "SYSTEM_PROMPT": "system_prompt",
-            "MAX_CONTEXT_LENGTH": "max_context_length"
+            "MAX_CONTEXT_LENGTH": "max_context_length",
         }
         for env_var, config_key in env_mapping.items():
             env_value = os.getenv(env_var)
@@ -69,21 +72,29 @@ class Config:
 
     def save_config(self) -> None:
         """保存配置到文件"""
-        with open(self.config_file, 'w') as f:
+        with open(self.config_file, "w") as f:
             json.dump(self.config, f, indent=4)
 
     def get_predefined_response(self, key: str) -> str:
         """获取预定义响应"""
-        return self.predefined_responses.get(key, "I'm sorry, I don't have a predefined response for that.")
+        return self.predefined_responses.get(
+            key, "I'm sorry, I don't have a predefined response for that."
+        )
 
     def validate_config(self) -> bool:
         """验证配置的完整性和正确性"""
-        required_keys = ["model", "log_level", "max_input_length", "api_key", "api_base"]
+        required_keys = [
+            "model",
+            "log_level",
+            "max_input_length",
+            "api_key",
+            "api_base",
+        ]
         for key in required_keys:
             if key not in self.config:
                 logging.error(f"Missing required configuration key: {key}")
                 return False
-        
+
         # 添加其他验证逻辑，例如检查 API 密钥格式、日志级别是否有效等
-        
+
         return True

@@ -1,7 +1,11 @@
 from src.core.ai_assistant import AIAssistant
 from src.dialogue_manager import DialogueManager
-from src.ui import (print_assistant_response, print_dialogue_context,
-                    print_sentiment_analysis, print_user_input)
+from src.ui import (
+    print_assistant_response,
+    print_dialogue_context,
+    print_sentiment_analysis,
+    print_user_input,
+)
 
 
 def print_help():
@@ -12,7 +16,12 @@ def print_help():
     print("'help' - 显示此帮助信息")
     print("长文本（超过设定长度）会自动进行摘要")
 
-def run_cli(assistant: AIAssistant, dialogue_manager: DialogueManager, max_input_length: int = 100):
+
+def run_cli(
+    assistant: AIAssistant,
+    dialogue_manager: DialogueManager,
+    max_input_length: int = 100,
+):
     print("欢迎使用 AI Nirvana 智能助手！")
     print("输入 'help' 查看可用命令。")
 
@@ -21,18 +30,18 @@ def run_cli(assistant: AIAssistant, dialogue_manager: DialogueManager, max_input
     while True:
         user_input = input("\n请输入您的问题或文本：\n")
 
-        if user_input.lower() == 'quit':
+        if user_input.lower() == "quit":
             print("谢谢使用，再见！")
             break
-        elif user_input.lower() == 'clear':
+        elif user_input.lower() == "clear":
             assistant.clear_context()
             dialogue_manager.clear_history()
             print("对话历史已清除。")
             continue
-        elif user_input.lower() == 'help':
+        elif user_input.lower() == "help":
             print_help()
             continue
-        elif user_input.lower() == 'sentiment':
+        elif user_input.lower() == "sentiment":
             analyze_sentiment = True
             print("下一条输入将进行情感分析。")
             continue
@@ -60,11 +69,12 @@ def run_cli(assistant: AIAssistant, dialogue_manager: DialogueManager, max_input
         except Exception as e:
             print(f"发生错误: {str(e)}")
 
+
 if __name__ == "__main__":
     # This is just for testing the CLI independently
     from src.core.ai_assistant import AIAssistant
     from src.dialogue_manager import DialogueManager
-    
+
     assistant = AIAssistant()
     dialogue_manager = DialogueManager()
     run_cli(assistant, dialogue_manager)

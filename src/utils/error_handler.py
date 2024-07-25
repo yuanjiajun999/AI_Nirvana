@@ -1,31 +1,43 @@
 import logging
 from functools import wraps
-from typing import Callable, Any
+from typing import Any, Callable
+
 
 class AIAssistantException(Exception):
     """AI助手相关的自定义异常基类"""
+
     pass
+
 
 class InputValidationError(AIAssistantException):
     """输入验证错误"""
+
     pass
+
 
 class ModelError(AIAssistantException):
     """模型相关错误"""
+
     pass
+
 
 class ConfigurationError(AIAssistantException):
     """配置相关错误"""
+
     pass
+
 
 class SecurityException(Exception):
     pass
+
 
 def error_handler(func):
     # 保留现有的 error_handler 函数实现
     pass
 
+
 # 如果 logger 是在这个文件中定义的，保留它的定义
+
 
 def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     """
@@ -39,7 +51,10 @@ def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging
     Returns:
         logging.Logger: 配置好的logger对象
     """
-    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+
+    formatter = logging.Formatter(
+        "% (asctime)s [ % (levelname)s] % (name)s:% (message)s"
+    )
 
     file_handler = logging.FileHandler(log_file)
     file_handler.setFormatter(formatter)
@@ -54,7 +69,9 @@ def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging
 
     return logger
 
-logger = setup_logger('ai_assistant', 'ai_assistant.log')
+
+logger = setup_logger("ai_assistant", "ai_assistant.log")
+
 
 def error_handler(func: Callable) -> Callable:
     """
@@ -66,6 +83,7 @@ def error_handler(func: Callable) -> Callable:
     Returns:
         Callable: 装饰后的函数
     """
+
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
@@ -82,4 +100,5 @@ def error_handler(func: Callable) -> Callable:
         except Exception as e:
             logger.exception(f"Unexpected error in {func.__name__}: {str(e)}")
             raise AIAssistantException(f"An unexpected error occurred: {str(e)}")
+
     return wrapper

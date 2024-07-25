@@ -2,8 +2,10 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from src.core.language_model import LanguageModel
+from src.utils.error_handler import error_handler, logger
 from src.utils.security import SecurityManager
-from src.utils.error_handler import error_handler, logger, AIAssistantException, InputValidationError, ModelError
+from src.utils.exceptions import AIAssistantException, InputValidationError, ModelError
+
 
 class AIAssistant:
     """
@@ -47,30 +49,33 @@ class AIAssistant:
         """
         if not self.security_manager.is_safe_code(prompt):
             raise InputValidationError("Unsafe code detected in prompt")
-        
-        context_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.context])
+
+        context_str = "\n".join(
+            [f"{msg['role']}: {msg['content']}" for msg in self.context]
+        )
         response = self.language_model.generate_response(prompt, context=context_str)
-        
+
         self._update_context("user", prompt)
         self._update_context("assistant", response)
-        
+
         logger.info(f"User input: {prompt[:50]}...")
         logger.info(f"System response: {response[:50]}...")
-        
+
         return response
 
     @error_handler
     def summarize(self, text: str) -> str:
         if not self.security_manager.is_safe_code(text):
             raise InputValidationError("Unsafe code detected in text")
-    
+
         summary_prompt = f"请用中文简洁地总结以下文本，不超过100字：\n\n{text}"
         summary = self.language_model.generate_response(summary_prompt)
-    
+
         logger.info(f"Summarization request: {text[:50]}...")
         logger.info(f"Summary: {summary[:50]}...")
-    
+
         return summary
+
     @error_handler
     def analyze_sentiment(self, text: str) -> Dict[str, float]:
         """
@@ -89,16 +94,17 @@ class AIAssistant:
         """
         if not self.security_manager.is_safe_code(text):
             raise InputValidationError("Unsafe code detected in text")
-        
+
         sentiment_prompt = f"Analyze the sentiment of the following text and return a JSON object with keys 'positive', 'neutral', and 'negative', where the values are floats representing the probability of each sentiment:\n\n{text}"
         sentiment_response = self.language_model.generate_response(sentiment_prompt)
-        
+
         import json
+
         sentiment = json.loads(sentiment_response)
-        
+
         logger.info(f"Sentiment analysis request: {text[:50]}...")
         logger.info(f"Sentiment analysis result: {sentiment}")
-        
+
         return sentiment
 
     def _update_context(self, role: str, content: str) -> None:

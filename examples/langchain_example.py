@@ -1,4 +1,5 @@
-from src.core.langchain import LangChainAgent, get_response
+from src.core.langchain import get_response, LangChainAgent
+
 
 def main():
     # 使用 get_response 函数
@@ -9,7 +10,7 @@ def main():
 
     # 使用 LangChainAgent
     agent = LangChainAgent()
-    
+
     # QA 任务
     qa_query = "Explain the concept of machine learning in simple terms."
     qa_response = agent.run_qa_task(qa_query)
@@ -17,7 +18,7 @@ def main():
     print(f"QA Task Response: {qa_response}\n")
 
     # 摘要任务
-    text_to_summarize = "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans. Leading AI textbooks define the field as the study of 'intelligent agents': any system that perceives its environment and takes actions that maximize its chance of achieving its goals. Some popular accounts use the term 'artificial intelligence' to describe machines that mimic 'cognitive' functions that humans associate with the human mind, such as 'learning' and 'problem solving', however this definition is rejected by major AI researchers."
+    text_to_summarize = "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans. Leading AI textbooks define the field as the study of 'intelligent agents': any system that perceives its environment and takes actions that maximize its chance of achieving its goals."
     summary = agent.run_summarization_task(text_to_summarize)
     print("Summarization Task:")
     print(f"Original Text: {text_to_summarize}")
@@ -28,6 +29,7 @@ def main():
     generated_text = agent.run_generation_task(generation_prompt)
     print(f"Generation Task Prompt: {generation_prompt}")
     print(f"Generated Text: {generated_text}")
+
 
 if __name__ == "__main__":
     main()

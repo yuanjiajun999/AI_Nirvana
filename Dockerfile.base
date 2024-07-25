@@ -1,36 +1,42 @@
-FROM python:3.9-slim
+FROM python:3.9-slim  
 
-# 安装必要的系统依赖
+# 安装必要的系统依赖  
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*  
 
-WORKDIR /app
+WORKDIR /app  
 
-# 复制完整的 requirements.txt
-COPY requirements.txt .
+# 复制完整的 requirements.txt  
+COPY requirements.txt .  
 
-# 创建 requirements-docker.txt，过滤掉 Windows 特定的包
-RUN grep -v -E "pywin32|pywinpty|win32|wincertstore" requirements.txt > requirements-docker.txt
+# 创建 requirements-docker.txt，过滤掉 Windows 特定的包  
+RUN grep -v -E "pywin32|pywinpty|win32|wincertstore" requirements.txt > requirements-docker.txt  
 
-# 更新 pip
-RUN pip install --upgrade pip
+# 输出 requirements-docker.txt 的内容用于调试  
+RUN cat requirements-docker.txt  
 
-# 安装 CPU 版本的 PyTorch
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# 更新 pip  
+RUN pip install --upgrade pip  
 
-# 安装适合 Docker 的依赖
-RUN pip install --no-cache-dir -r requirements-docker.txt
+# 安装 CPU 版本的 PyTorch  
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu  
 
-# 清理
+# 更改 TensorFlow，但不直接修改 requirements.txt  
+RUN sed -i 's/tensorflow-intel==2.17.0/tensorflow==2.17.0/' requirements-docker.txt  
+
+# 安装适合 Docker 的依赖  
+RUN pip install --no-cache-dir -r requirements-docker.txt  
+
+# 清理  
 RUN apt-get purge -y --auto-remove gcc \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*  
 
-# 验证安装的包
-RUN pip list
+# 验证安装的包  
+RUN pip list  
 
-# 设置环境变量
-ENV DOCKER_ENV=1
+# 设置环境变量  
+ENV DOCKER_ENV=1  
 ENV CUDA_VISIBLE_DEVICES=""

@@ -1,15 +1,17 @@
-from typing import Dict, Any
-from langchain_openai import ChatOpenAI
-from langchain_community.graphs import NetworkxEntityGraph
-from langchain.chains import GraphQAChain
-from langchain_core.runnables import RunnableSequence
-from langchain.prompts import PromptTemplate
 import os
-from dotenv import load_dotenv
-from openai import OpenAIError
 from functools import lru_cache
+from typing import Any, Dict
+
+from dotenv import load_dotenv
+from langchain.chains import GraphQAChain
+from langchain.prompts import PromptTemplate
+from langchain_community.graphs import NetworkxEntityGraph
+from langchain_core.runnables import RunnableSequence
+from langchain_openai import ChatOpenAI
+from openai import OpenAIError
 
 load_dotenv()
+
 
 class APIConfig:
     MODEL_NAME = "gpt-3.5-turbo-0125"
@@ -17,6 +19,7 @@ class APIConfig:
     API_BASE = "https://api.gptsapi.net/v1"
     TEMPERATURE = 0.7
     MAX_TOKENS = 256
+
 
 class LangGraph:
     def __init__(self):
@@ -26,20 +29,19 @@ class LangGraph:
                 openai_api_key=APIConfig.API_KEY,
                 openai_api_base=APIConfig.API_BASE,
                 temperature=APIConfig.TEMPERATURE,
-                max_tokens=APIConfig.MAX_TOKENS
+                max_tokens=APIConfig.MAX_TOKENS,
             )
             self.graph = NetworkxEntityGraph()
-            
+
             self.entity_extraction_prompt = PromptTemplate(
                 template="Extract entities from the following text:\n\n{text}\n\nEntities:",
-                input_variables=["text"]
+                input_variables=["text"],
             )
+
             self.entity_extraction_chain = self.entity_extraction_prompt | self.llm
-            
+
             self.qa_chain = GraphQAChain.from_llm(
-                llm=self.llm,
-                graph=self.graph,
-                verbose=True
+                llm=self.llm, graph=self.graph, verbose=True
             )
         except OpenAIError as e:
             print(f"API 错误: {str(e)}")
@@ -57,7 +59,9 @@ class LangGraph:
         return self._cached_run(query)
 
     def reason(self, premise: str, conclusion: str) -> str:
-        query = f"Given the premise '{premise}', is the conclusion '{conclusion}' valid?"
+        query = (
+            f"Given the premise '{premise}', is the conclusion '{conclusion}' valid?"
+        )
         return self._cached_run(query)
 
     def infer_commonsense(self, context: str) -> str:

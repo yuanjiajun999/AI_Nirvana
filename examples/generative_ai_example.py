@@ -1,6 +1,5 @@
-# examples/generative_ai_example.py
-
 from src.core.generative_ai import GenerativeAI
+
 
 def main():
     gen_ai = GenerativeAI()
@@ -22,6 +21,7 @@ def main():
     generated_code = gen_ai.generate_code(code_prompt)
     print("\nGenerated Code:")
     print(generated_code)
+
 
 if __name__ == "__main__":
     main()

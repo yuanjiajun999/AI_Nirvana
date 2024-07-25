@@ -1,20 +1,30 @@
 import os
-from typing import List, Dict, Optional, Any
-from openai import OpenAI
+from typing import Any, Dict, List, Optional
+
 from dotenv import load_dotenv
-from src.utils.error_handler import error_handler, logger, ModelError
+from openai import OpenAI
+
+from src.utils.error_handler import ModelError, error_handler, logger
 
 load_dotenv()
 
+
 class LanguageModel:
     def __init__(self, default_model: str = "gpt-3.5-turbo-0125"):
-        self.api_key = "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API 密钥
+
+        self.api_key = (
+            "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API密钥
+        )
         self.default_model = default_model
-        self.client = OpenAI(api_key=self.api_key, base_url="https://api.gptsapi.net/v1")
+        self.client = OpenAI(
+            api_key=self.api_key, base_url="https://api.gptsapi.net/v1"
+        )
         logger.info(f"LanguageModel initialized with model: {default_model}")
 
     @error_handler
-    def generate_response(self, prompt: str, context: str = "", model: Optional[str] = None) -> str:
+    def generate_response(
+        self, prompt: str, context: str = "", model: Optional[str] = None
+    ) -> str:
         """
         生成响应。
 
@@ -35,8 +45,8 @@ class LanguageModel:
                 model=model,
                 messages=[
                     {"role": "system", "content": context},
-                    {"role": "user", "content": prompt}
-                ]
+                    {"role": "user", "content": prompt},
+                ],
             )
             result = response.choices[0].message.content
             logger.info(f"Generated response for prompt: {prompt[:50]}...")
@@ -128,6 +138,7 @@ class LanguageModel:
         response = self.generate_response(prompt)
         try:
             import json
+
             sentiment = json.loads(response)
             logger.info(f"Sentiment analysis completed for text: {text[:50]}...")
             return sentiment

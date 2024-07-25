@@ -1,6 +1,5 @@
-# examples/langgraph_example.py
-
 from src.core.langgraph import LangGraph
+
 
 def main():
     lang_graph = LangGraph()
@@ -24,6 +23,7 @@ def main():
     result = lang_graph.infer_commonsense(context)
     print(f"Context: {context}")
     print(f"Commonsense inference: {result}")
+
 
 if __name__ == "__main__":
     main()

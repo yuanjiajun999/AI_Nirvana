@@ -1,5 +1,6 @@
 # examples/generic_module_example.py
 
+
 def main():
     print("This is a generic example for AI Nirvana modules.")
     print("To use this example with a specific module:")
@@ -11,6 +12,7 @@ def main():
     print("instance = YourClass()")
     print("result = instance.your_method()")
     print("print(result)")
+
 
 if __name__ == "__main__":
     main()

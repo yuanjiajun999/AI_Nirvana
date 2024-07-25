@@ -13,7 +13,7 @@ class PluginManager:
             if filename.endswith(".py") and not filename.startswith("__"):
                 module_name = filename[:-3]
                 module = importlib.import_module(f"src.plugins.{module_name}")
-                if hasattr(module, 'register_plugin'):
+                if hasattr(module, "register_plugin"):
                     plugin = module.register_plugin()
                     self.plugins[module_name] = plugin
 
@@ -22,7 +22,7 @@ class PluginManager:
 
     def execute_plugin(self, name: str, *args, **kwargs) -> Any:
         plugin = self.get_plugin(name)
-        if plugin and hasattr(plugin, 'execute'):
+        if plugin and hasattr(plugin, "execute"):
             return plugin.execute(*args, **kwargs)
         return None
 

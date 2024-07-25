@@ -7,7 +7,7 @@ __pycache__/
 dist/  
 build/  
 .Python  
-
+*$py.class
 # Virtual Environments  
 env/  
 venv/  
@@ -67,3 +67,10 @@ Dockerfile.base
 .dockerignore
 *.tmp  
 *.temp  
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+#[alias]
+    black = !black .

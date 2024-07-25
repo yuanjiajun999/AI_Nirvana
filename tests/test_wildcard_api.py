@@ -1,10 +1,10 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import unittest
-from unittest.mock import patch
-
 from src.core.wildcard_api import WildCardAPI
+from unittest.mock import patch
+import unittest
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TestWildCardAPI(unittest.TestCase):
@@ -15,8 +15,9 @@ class TestWildCardAPI(unittest.TestCase):
     def test_chat_completion(self):
         messages = [
             {"role": "user", "content": "Hello!"},
-            {"role": "assistant", "content": "Hi there!"}
+            {"role": "assistant", "content": "Hi there!"},
         ]
+
         response = self.api.chat_completion(model="gpt-3.5-turbo", messages=messages)
         self.assertIsNotNone(response)
 
@@ -27,5 +28,7 @@ class TestWildCardAPI(unittest.TestCase):
 
     def test_image_generation(self):
         prompt = "A cute baby sea otter"
-        images = self.api.image_generation(model="dall-e-3", prompt=prompt, n=1, size="1024x1024")
+        images = self.api.image_generation(
+            model="dall-e-3", prompt=prompt, n=1, size="1024x1024"
+        )
         self.assertIsNotNone(images)

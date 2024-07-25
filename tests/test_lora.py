@@ -1,6 +1,9 @@
 import unittest
+
 import torch
+
 from src.core.lora import LoRALayer, LoRAModel
+
 
 class TestLoRA(unittest.TestCase):
     def test_lora_layer(self):
@@ -15,7 +18,7 @@ class TestLoRA(unittest.TestCase):
         base_model = torch.nn.Sequential(
             torch.nn.Linear(in_features, hidden_features),
             torch.nn.ReLU(),
-            torch.nn.Linear(hidden_features, out_features)
+            torch.nn.Linear(hidden_features, out_features),
         )
         lora_config = [
             (out_features, out_features, 2),  # Apply LoRA to the output layer
@@ -25,5 +28,6 @@ class TestLoRA(unittest.TestCase):
         output = model(x)
         self.assertEqual(output.shape, (1, out_features))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
