@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-
 class ModelInterface(ABC):
     @abstractmethod
     def load_model(self, model_path: str) -> None:

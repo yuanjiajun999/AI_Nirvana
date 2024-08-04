@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
-from src.core.api_model import APIModel, ConcreteAPIModel
-
+from src.core.api_model import ConcreteAPIModel
 
 class TestAPIModel(unittest.TestCase):
     def setUp(self):
@@ -26,6 +25,9 @@ class TestAPIModel(unittest.TestCase):
         result = self.api_model.generate("Test prompt")
         self.assertTrue(result.startswith("Error: Unable to get response"))
 
+    def test_generate_response(self):
+        response = self.api_model.generate_response("Test prompt")
+        self.assertEqual(response, "This is a test response")
 
 if __name__ == "__main__":
     unittest.main()

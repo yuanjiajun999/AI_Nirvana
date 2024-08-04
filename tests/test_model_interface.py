@@ -1,7 +1,6 @@
 import unittest
-
+from typing import Any, Dict
 from src.core.model_interface import ModelInterface
-
 
 class DummyModel(ModelInterface):
     def load_model(self, model_path: str) -> None:
@@ -25,14 +24,11 @@ class DummyModel(ModelInterface):
     def get_model_info(self) -> Dict[str, Any]:
         return {"name": "DummyModel", "version": "1.0"}
 
+    def fine_tune(self, fine_tuning_data: Any, fine_tuning_labels: Any) -> None:
+        pass
 
-def fine_tune(self, fine_tuning_data: Any, fine_tuning_labels: Any) -> None:
-    pass
-
-
-def explain_prediction(self, input_data: Any, prediction: Any) -> str:
-    return f"Prediction {prediction} was made for input {input_data}"
-
+    def explain_prediction(self, input_data: Any, prediction: Any) -> str:
+        return f"Prediction {prediction} was made for input {input_data}"
 
 class TestModelInterface(unittest.TestCase):
     def setUp(self):
@@ -63,6 +59,5 @@ class TestModelInterface(unittest.TestCase):
         self.assertIn("test", explanation)
         self.assertIn(str(input_data), explanation)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

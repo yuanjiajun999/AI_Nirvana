@@ -1,42 +1,51 @@
-# examples/model_interpretability_example.py
-
-from sklearn.datasets import load_iris
+import pandas as pd
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-
+from sklearn.model_selection import train_test_split
 from src.core.model_interpretability import ModelInterpreter
 
+# 加载数据
+# 这里使用虚构的数据，实际使用时请替换为您的实际数据
+data = pd.DataFrame({
+    'feature1': np.random.rand(1000),
+    'feature2': np.random.rand(1000),
+    'feature3': np.random.rand(1000),
+    'target': np.random.choice([0, 1], 1000)
+})
 
-def main():
-    # 加载示例数据集
-    iris = load_iris()
-    X, y = iris.data, iris.target
+X = data.drop('target', axis=1)
+y = data['target']
 
-    # 训练一个简单的模型
-    model = RandomForestClassifier(n_estimators=10, random_state=42)
-    model.fit(X, y)
+# 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # 初始化模型解释器
-    interpreter = ModelInterpreter(model, X, feature_names=iris.feature_names)
+# 训练模型
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
 
-    # 特征重要性
-    feature_importance = interpreter.feature_importance()
-    print("Feature Importance:")
-    for feature, importance in feature_importance.items():
-        print(f"{feature}: {importance:.4f}")
-    print()
+# 创建ModelInterpreter实例
+interpreter = ModelInterpreter(
+    model=model,
+    X=X,
+    y=y,
+    feature_names=X.columns.tolist(),
+    class_names=['Class 0', 'Class 1'],
+    model_type='tree'
+)
 
-    # 部分依赖图
-    feature = "petal length (cm)"
-    pdp = interpreter.partial_dependence_plot(feature)
-    print(f"Partial Dependence Plot for {feature}:")
-    print(pdp)
-    print()
+# 运行所有分析并保存结果
+output_dir = 'interpretation_results'
+interpreter.run_all_analyses(output_dir)
 
-    # SHAP值
-    shap_values = interpreter.shap_values()
-    print("SHAP Values (first 5 samples):")
-    print(shap_values[:5])
+# 保存模型
+model_path = 'model.joblib'
+interpreter.save_model(model_path)
 
+# 加载模型
+loaded_interpreter = ModelInterpreter(None, X, y)
+loaded_interpreter.load_model(model_path)
 
-if __name__ == "__main__":
-    main()
+# 比较原始模型和加载的模型的预测
+original_predictions = interpreter.model.predict(X_test)
+loaded_predictions = loaded_interpreter.model.predict(X_test)
+print("Models produce the same predictions:", np.array_equal(original_predictions, loaded_predictions))

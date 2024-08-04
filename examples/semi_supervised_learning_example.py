@@ -1,55 +1,60 @@
 import torch
 import torch.nn as nn
-from src.core.semi_supervised_learning import SemiSupervisedTrainer
-from sklearn.datasets import make_moons
-from sklearn.model_selection import train_test_split
+from src.core.semi_supervised_learning import SemiSupervisedDataset, AdvancedSemiSupervisedTrainer
 
-
-class SimpleNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.fc = nn.Sequential(nn.Linear(2, 10), nn.ReLU(), nn.Linear(10, 2))
+# Define a simple model
+class SimpleModel(nn.Module):
+    def __init__(self, input_dim, num_classes):
+        super(SimpleModel, self).__init__()
+        self.fc1 = nn.Linear(input_dim, 64)
+        self.fc2 = nn.Linear(64, num_classes)
 
     def forward(self, x):
-        return self.fc(x)
+        x = torch.relu(self.fc1(x))
+        return self.fc2(x)
 
+    def extract_features(self, x):
+        return torch.relu(self.fc1(x))
 
-def main():
-    # 生成月牙形数据集
-    X, y = make_moons(n_samples=1000, noise=0.3, random_state=42)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+# Set up parameters
+input_dim = 10
+num_classes = 3
+num_labeled = 100
+num_unlabeled = 500
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # 将部分训练数据设为未标记
-    n_labeled = 100
-    X_labeled = X_train[:n_labeled]
-    y_labeled = y_train[:n_labeled]
-    X_unlabeled = X_train[n_labeled:]
+# Generate dummy data
+labeled_data = [(torch.randn(input_dim), torch.randint(0, num_classes, (1,)).item()) for _ in range(num_labeled)]
+unlabeled_data = [torch.randn(input_dim) for _ in range(num_unlabeled)]
 
-    # 转换为 PyTorch 张量
-    X_labeled = torch.FloatTensor(X_labeled)
-    y_labeled = torch.LongTensor(y_labeled)
-    X_unlabeled = torch.FloatTensor(X_unlabeled)
-    X_test = torch.FloatTensor(X_test)
-    y_test = torch.LongTensor(y_test)
+# Create model and trainer
+model = SimpleModel(input_dim, num_classes).to(device)
+trainer = AdvancedSemiSupervisedTrainer(model, labeled_data, unlabeled_data, device, num_classes)
 
-    model = SimpleNN()
-    trainer = SemiSupervisedTrainer(
-        model, list(zip(X_labeled, y_labeled)), X_unlabeled, "cpu"
-    )
+# Train the model
+epochs = 10
+final_loss = trainer.train(epochs=epochs)
+print(f"Training completed. Final loss: {final_loss}")
 
-    print("Starting semi-supervised training...")
-    trainer.train(epochs=50)
+# Evaluate the model
+accuracy = trainer.evaluate()
+print(f"Model accuracy: {accuracy}")
 
-    # 评估模型
-    model.eval()
-    with torch.no_grad():
-        test_output = model(X_test)
-        predicted = torch.max(test_output, 1)[1]
-        accuracy = (predicted == y_test).float().mean()
-        print(f"Test Accuracy: {accuracy.item():.4f}")
+# Fine-tune the model
+new_data = [(torch.randn(input_dim), torch.randint(0, num_classes, (1,)).item()) for _ in range(50)]
+trainer.fine_tune(new_data, epochs=5)
 
+# Re-evaluate after fine-tuning
+new_accuracy = trainer.evaluate()
+print(f"Model accuracy after fine-tuning: {new_accuracy}")
 
-if __name__ == "__main__":
-    main()
+# Generate pseudo-labels for unlabeled data
+pseudo_labeled_data = trainer.gaussian_mixture_pseudo_label(unlabeled_data)
+print(f"Generated {len(pseudo_labeled_data)} pseudo-labels")
+
+# Use the model for predictions
+test_input = torch.randn(1, input_dim).to(device)
+with torch.no_grad():
+    prediction = model(test_input)
+    predicted_class = torch.argmax(prediction, dim=1).item()
+print(f"Predicted class for test input: {predicted_class}")

@@ -1,38 +1,55 @@
 import torch
-from src.core.lora import LoRALayer, LoRAModel
+import torch.nn as nn
+from src.core.lora import apply_lora_to_model
 
+# Define a simple base model
+class SimpleModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear1 = nn.Linear(10, 20)
+        self.linear2 = nn.Linear(20, 5)
 
-def main():
-    # 创建一个简单的基础模型
-    base_model = torch.nn.Sequential(
-        torch.nn.Linear(10, 20), torch.nn.ReLU(), torch.nn.Linear(20, 5)
-    )
+    def forward(self, x):
+        x = torch.relu(self.linear1(x))
+        return self.linear2(x)
 
-    # 创建 LoRA 层配置
-    lora_config = [
-        (20, 20, 4),  # 对应第一个 Linear 层
-        (5, 5, 2),  # 对应第二个 Linear 层
-    ]
+# Create an instance of the base model
+base_model = SimpleModel()
 
-    # 创建 LoRA 模型
-    lora_model = LoRAModel(base_model, lora_config)
+# Define LoRA configuration
+lora_config = {
+    'linear1': {'rank': 4, 'alpha': 0.5},
+    'linear2': {'rank': 2, 'alpha': 0.3}
+}
 
-    # 生成一些随机输入数据
+# Apply LoRA to the model
+lora_model, lora_optimizer = apply_lora_to_model(base_model, lora_config)
+
+# Simulate a training loop
+for epoch in range(5):
+    # Forward pass
     x = torch.randn(1, 10)
-
-    # 使用 LoRA 模型进行前向传播
     output = lora_model(x)
+    
+    # Compute loss
+    target = torch.randn(1, 5)
+    loss = nn.functional.mse_loss(output, target)
+    
+    # Backward pass and optimization
+    loss.backward()
+    lora_optimizer.step()
+    lora_optimizer.zero_grad()
+    
+    print(f"Epoch {epoch + 1}, Loss: {loss.item():.4f}")
 
-    print(f"Input shape: {x.shape}")
-    print(f"Output shape: {output.shape}")
-    print(f"Output: {output}")
+# Merge LoRA weights for inference
+lora_model.merge_and_unmerge()
 
-    # 展示 LoRA 层的参数
-    for i, layer in enumerate(lora_model.lora_layers):
-        print(f"\nLoRA Layer {i}:")
-        print(f"A shape: {layer.lora_A.shape}")
-        print(f"B shape: {layer.lora_B.shape}")
+# Use the model for inference
+with torch.no_grad():
+    test_input = torch.randn(1, 10)
+    inference_output = lora_model(test_input)
+    print("Inference output:", inference_output)
 
-
-if __name__ == "__main__":
-    main()
+# Unmerge weights if you want to continue training
+lora_model.merge_and_unmerge()

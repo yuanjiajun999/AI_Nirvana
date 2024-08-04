@@ -1,5 +1,6 @@
 import os
 from typing import Any, Dict, List, Optional
+import json
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -8,23 +9,15 @@ from src.utils.error_handler import ModelError, error_handler, logger
 
 load_dotenv()
 
-
 class LanguageModel:
     def __init__(self, default_model: str = "gpt-3.5-turbo-0125"):
-
-        self.api_key = (
-            "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API密钥
-        )
+        self.api_key = "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API 密钥
         self.default_model = default_model
-        self.client = OpenAI(
-            api_key=self.api_key, base_url="https://api.gptsapi.net/v1"
-        )
+        self.client = OpenAI(api_key=self.api_key, base_url="https://api.gptsapi.net/v1")
         logger.info(f"LanguageModel initialized with model: {default_model}")
 
     @error_handler
-    def generate_response(
-        self, prompt: str, context: str = "", model: Optional[str] = None
-    ) -> str:
+    def generate_response(self, prompt: str, context: str = "", model: Optional[str] = None) -> str:
         """
         生成响应。
 
@@ -45,8 +38,8 @@ class LanguageModel:
                 model=model,
                 messages=[
                     {"role": "system", "content": context},
-                    {"role": "user", "content": prompt},
-                ],
+                    {"role": "user", "content": prompt}
+                ]
             )
             result = response.choices[0].message.content
             logger.info(f"Generated response for prompt: {prompt[:50]}...")
@@ -135,16 +128,65 @@ class LanguageModel:
             ModelError: 如果情感分析失败
         """
         prompt = f"Analyze the sentiment of the following text and return a JSON object with keys 'positive', 'neutral', and 'negative', where the values are floats representing the probability of each sentiment:\n\n{text}"
-        response = self.generate_response(prompt)
         try:
-            import json
-
+            response = self.generate_response(prompt)
             sentiment = json.loads(response)
             logger.info(f"Sentiment analysis completed for text: {text[:50]}...")
             return sentiment
         except json.JSONDecodeError:
             logger.error("Failed to parse sentiment analysis result")
             raise ModelError("Failed to parse sentiment analysis result")
+        except Exception as e:
+            logger.error(f"Error in sentiment analysis: {e}")
+            raise ModelError(f"Failed to analyze sentiment: {str(e)}")
+
+    @error_handler
+    def summarize(self, text: str, max_length: int = 100) -> str:
+        """
+        生成文本摘要。
+
+        Args:
+            text (str): 需要摘要的文本
+            max_length (int): 摘要的最大长度
+
+        Returns:
+            str: 生成的摘要
+
+        Raises:
+            ModelError: 如果生成摘要失败
+        """
+        prompt = f"请用中文简洁地总结以下文本，不超过{max_length}字：\n\n{text}"
+        try:
+            summary = self.generate_response(prompt)
+            logger.info(f"Summary generated for text: {text[:50]}...")
+            return summary
+        except Exception as e:
+            logger.error(f"Error in generating summary: {e}")
+            raise ModelError(f"Failed to generate summary: {str(e)}")
+
+    @error_handler
+    def translate(self, text: str, target_language: str) -> str:
+        """
+        翻译文本到目标语言。
+
+        Args:
+            text (str): 需要翻译的文本
+            target_language (str): 目标语言
+
+        Returns:
+            str: 翻译后的文本
+
+        Raises:
+            ModelError: 如果翻译失败
+        """
+        prompt = f"Translate the following text to {target_language}:\n\n{text}"
+        try:
+            translated_text = self.generate_response(prompt)
+            logger.info(f"Text translated to {target_language}")
+            return translated_text
+        except Exception as e:
+            logger.error(f"Error in translation: {e}")
+            raise ModelError(f"Failed to translate text: {str(e)}")
 
     def clear_context(self) -> None:
         """

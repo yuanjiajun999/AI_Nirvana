@@ -1,19 +1,28 @@
+import sys
+print(sys.path)
 import logging
 from typing import Any, Dict, List, Optional
+import json
 
 from src.core.language_model import LanguageModel
+from src.core.security import SecurityManager
+from src.core.knowledge_base import KnowledgeBase
+from src.core.multimodal import MultimodalInterface
+from src.core.reasoning import ReasoningEngine
 from src.utils.error_handler import error_handler, logger
-from src.utils.security import SecurityManager
 from src.utils.exceptions import AIAssistantException, InputValidationError, ModelError
-
 
 class AIAssistant:
     """
-    AI 助手类，提供生成回应、文本摘要、情感分析的功能，并支持上下文管理和安全检查。
+    AI 助手类，提供多模态输入处理、生成回应、文本摘要、情感分析等功能，
+    并支持上下文管理、安全检查、知识检索和推理。
 
     Attributes:
         language_model: 用于生成回应、摘要和情感分析的语言模型。
         security_manager: 用于进行安全检查和数据加密的安全管理器。
+        knowledge_base: 用于知识检索的知识库。
+        multimodal_interface: 用于处理多模态输入的接口。
+        reasoning_engine: 用于推理的引擎。
         context: 存储对话历史的列表。
         max_context_length: 保存的最大上下文长度。
     """
@@ -28,9 +37,48 @@ class AIAssistant:
         """
         self.language_model = LanguageModel(default_model=model_name)
         self.security_manager = SecurityManager()
+        self.knowledge_base = KnowledgeBase()
+        self.multimodal_interface = MultimodalInterface()  # 不需要参数
+        self.reasoning_engine = ReasoningEngine()
         self.context: List[Dict[str, str]] = []
         self.max_context_length = max_context_length
         logger.info(f"AI Assistant initialized with model: {model_name}")
+
+    @error_handler
+    def process_input(self, input_data: Any) -> str:
+        """
+        处理输入数据并生成回应。
+
+        Args:
+            input_data: 用户输入的数据，可以是多模态的。
+
+        Returns:
+            str: 生成的回应。
+
+        Raises:
+            InputValidationError: 如果输入不安全。
+            ModelError: 如果生成回应时发生错误。
+        """
+        try:
+            processed_input = self.multimodal_interface.process(input_data)
+            
+            if not self.security_manager.is_safe(processed_input):
+                raise InputValidationError("Input rejected due to security concerns.")
+            
+            relevant_knowledge = self.knowledge_base.retrieve(processed_input)
+            reasoning_result = self.reasoning_engine.reason(processed_input, relevant_knowledge)
+            response = self.language_model.generate_response(reasoning_result)
+            
+            self._update_context("user", str(input_data))
+            self._update_context("assistant", response)
+            
+            logger.info(f"User input: {str(input_data)[:50]}...")
+            logger.info(f"System response: {response[:50]}...")
+            
+            return response
+        except Exception as e:
+            logger.error(f"Error in process_input: {str(e)}")
+            raise
 
     @error_handler
     def generate_response(self, prompt: str) -> str:
@@ -47,34 +95,53 @@ class AIAssistant:
             InputValidationError: 如果输入不安全。
             ModelError: 如果生成回应时发生错误。
         """
-        if not self.security_manager.is_safe_code(prompt):
-            raise InputValidationError("Unsafe code detected in prompt")
+        try:
+            if not self.security_manager.is_safe_code(prompt):
+                raise InputValidationError("Unsafe code detected in prompt")
 
-        context_str = "\n".join(
-            [f"{msg['role']}: {msg['content']}" for msg in self.context]
-        )
-        response = self.language_model.generate_response(prompt, context=context_str)
+            context_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.context])
+            response = self.language_model.generate_response(prompt, context=context_str)
 
-        self._update_context("user", prompt)
-        self._update_context("assistant", response)
+            self._update_context("user", prompt)
+            self._update_context("assistant", response)
 
-        logger.info(f"User input: {prompt[:50]}...")
-        logger.info(f"System response: {response[:50]}...")
+            logger.info(f"User input: {prompt[:50]}...")
+            logger.info(f"System response: {response[:50]}...")
 
-        return response
+            return response
+        except Exception as e:
+            logger.error(f"Error in generate_response: {str(e)}")
+            raise
 
     @error_handler
     def summarize(self, text: str) -> str:
-        if not self.security_manager.is_safe_code(text):
-            raise InputValidationError("Unsafe code detected in text")
+        """
+        生成给定文本的摘要。
 
-        summary_prompt = f"请用中文简洁地总结以下文本，不超过100字：\n\n{text}"
-        summary = self.language_model.generate_response(summary_prompt)
+        Args:
+            text: 需要摘要的文本。
 
-        logger.info(f"Summarization request: {text[:50]}...")
-        logger.info(f"Summary: {summary[:50]}...")
+        Returns:
+            str: 生成的摘要。
 
-        return summary
+        Raises:
+            InputValidationError: 如果输入不安全。
+            ModelError: 如果生成摘要时发生错误。
+        """
+        try:
+            if not self.security_manager.is_safe_code(text):
+                raise InputValidationError("Unsafe code detected in text")
+
+            summary_prompt = f"请用中文简洁地总结以下文本，不超过100字：\n\n{text}"
+            summary = self.language_model.generate_response(summary_prompt)
+
+            logger.info(f"Summarization request: {text[:50]}...")
+            logger.info(f"Summary: {summary[:50]}...")
+
+            return summary
+        except Exception as e:
+            logger.error(f"Error in summarize: {str(e)}")
+            raise
 
     @error_handler
     def analyze_sentiment(self, text: str) -> Dict[str, float]:
@@ -92,20 +159,22 @@ class AIAssistant:
             InputValidationError: 如果输入不安全。
             ModelError: 如果情感分析时发生错误。
         """
-        if not self.security_manager.is_safe_code(text):
-            raise InputValidationError("Unsafe code detected in text")
+        try:
+            if not self.security_manager.is_safe_code(text):
+                raise InputValidationError("Unsafe code detected in text")
 
-        sentiment_prompt = f"Analyze the sentiment of the following text and return a JSON object with keys 'positive', 'neutral', and 'negative', where the values are floats representing the probability of each sentiment:\n\n{text}"
-        sentiment_response = self.language_model.generate_response(sentiment_prompt)
+            sentiment_prompt = f"Analyze the sentiment of the following text and return a JSON object with keys 'positive', 'neutral', and 'negative', where the values are floats representing the probability of each sentiment:\n\n{text}"
+            sentiment_response = self.language_model.generate_response(sentiment_prompt)
 
-        import json
+            sentiment = json.loads(sentiment_response)
 
-        sentiment = json.loads(sentiment_response)
+            logger.info(f"Sentiment analysis request: {text[:50]}...")
+            logger.info(f"Sentiment analysis result: {sentiment}")
 
-        logger.info(f"Sentiment analysis request: {text[:50]}...")
-        logger.info(f"Sentiment analysis result: {sentiment}")
-
-        return sentiment
+            return sentiment
+        except Exception as e:
+            logger.error(f"Error in analyze_sentiment: {str(e)}")
+            raise
 
     def _update_context(self, role: str, content: str) -> None:
         """
@@ -137,8 +206,12 @@ class AIAssistant:
         Raises:
             ModelError: 如果更改模型失败。
         """
-        self.language_model.change_default_model(model_name)
-        logger.info(f"Model changed to: {model_name}")
+        try:
+            self.language_model.change_default_model(model_name)
+            logger.info(f"Model changed to: {model_name}")
+        except Exception as e:
+            logger.error(f"Error in change_model: {str(e)}")
+            raise ModelError(f"Failed to change model: {str(e)}")
 
     @error_handler
     def get_available_models(self) -> List[str]:
@@ -151,9 +224,13 @@ class AIAssistant:
         Raises:
             ModelError: 如果获取模型列表失败。
         """
-        models = self.language_model.get_available_models()
-        logger.info(f"Available models: {models}")
-        return models
+        try:
+            models = self.language_model.get_available_models()
+            logger.info(f"Available models: {models}")
+            return models
+        except Exception as e:
+            logger.error(f"Error in get_available_models: {str(e)}")
+            raise ModelError(f"Failed to get available models: {str(e)}")
 
     @error_handler
     def encrypt_sensitive_data(self, data: str) -> str:
@@ -169,9 +246,13 @@ class AIAssistant:
         Raises:
             AIAssistantException: 如果加密过程中发生错误。
         """
-        encrypted_data = self.security_manager.encrypt_sensitive_data(data)
-        logger.info("Data encrypted successfully")
-        return encrypted_data
+        try:
+            encrypted_data = self.security_manager.encrypt_sensitive_data(data)
+            logger.info("Data encrypted successfully")
+            return encrypted_data
+        except Exception as e:
+            logger.error(f"Error in encrypt_sensitive_data: {str(e)}")
+            raise AIAssistantException(f"Failed to encrypt data: {str(e)}")
 
     @error_handler
     def decrypt_sensitive_data(self, encrypted_data: str) -> str:
@@ -187,9 +268,13 @@ class AIAssistant:
         Raises:
             AIAssistantException: 如果解密过程中发生错误。
         """
-        decrypted_data = self.security_manager.decrypt_sensitive_data(encrypted_data)
-        logger.info("Data decrypted successfully")
-        return decrypted_data
+        try:
+            decrypted_data = self.security_manager.decrypt_sensitive_data(encrypted_data)
+            logger.info("Data decrypted successfully")
+            return decrypted_data
+        except Exception as e:
+            logger.error(f"Error in decrypt_sensitive_data: {str(e)}")
+            raise AIAssistantException(f"Failed to decrypt data: {str(e)}")
 
     @error_handler
     def execute_code(self, code: str, language: str) -> tuple:
@@ -207,10 +292,14 @@ class AIAssistant:
             InputValidationError: 如果代码不安全。
             AIAssistantException: 如果执行代码时发生错误。
         """
-        result, error = self.security_manager.execute_in_sandbox(code, language)
-        logger.info(f"Code execution request: {code[:50]}...")
-        logger.info(f"Code execution result: {result[:50]}...")
-        return result, error
+        try:
+            result, error = self.security_manager.execute_in_sandbox(code, language)
+            logger.info(f"Code execution request: {code[:50]}...")
+            logger.info(f"Code execution result: {result[:50]}...")
+            return result, error
+        except Exception as e:
+            logger.error(f"Error in execute_code: {str(e)}")
+            raise AIAssistantException(f"Failed to execute code: {str(e)}")
 
     @error_handler
     def plan_task(self, task_description: str) -> str:
@@ -226,11 +315,15 @@ class AIAssistant:
         Raises:
             ModelError: 如果生成计划时发生错误。
         """
-        plan_prompt = f"Generate a step-by-step plan for the following task:\n\n{task_description}"
-        plan = self.language_model.generate_response(plan_prompt)
-        logger.info(f"Task planning request: {task_description[:50]}...")
-        logger.info(f"Generated plan: {plan[:50]}...")
-        return plan
+        try:
+            plan_prompt = f"Generate a step-by-step plan for the following task:\n\n{task_description}"
+            plan = self.language_model.generate_response(plan_prompt)
+            logger.info(f"Task planning request: {task_description[:50]}...")
+            logger.info(f"Generated plan: {plan[:50]}...")
+            return plan
+        except Exception as e:
+            logger.error(f"Error in plan_task: {str(e)}")
+            raise ModelError(f"Failed to generate task plan: {str(e)}")
 
     @error_handler
     def reinforcement_learning_action(self, state: Any) -> Any:
@@ -244,10 +337,16 @@ class AIAssistant:
             Any: 选择的动作。
 
         Raises:
-            NotImplementedError: 如果强化学习功能尚未实现。
+            ModelError: 如果强化学习过程中发生错误。
         """
-        # 这里应该实现实际的强化学习逻辑
-        raise NotImplementedError("Reinforcement learning not implemented yet")
+        try:
+            action = self.reasoning_engine.reinforcement_learning(state)
+            logger.info(f"Reinforcement learning action for state: {state}")
+            logger.info(f"Selected action: {action}")
+            return action
+        except Exception as e:
+            logger.error(f"Error in reinforcement_learning_action: {str(e)}")
+            raise ModelError(f"Failed to perform reinforcement learning: {str(e)}")
 
     @error_handler
     def active_learning_sample(self, unlabeled_data: List[Any]) -> Any:
@@ -261,7 +360,13 @@ class AIAssistant:
             Any: 选择的样本。
 
         Raises:
-            NotImplementedError: 如果主动学习功能尚未实现。
+            ModelError: 如果主动学习过程中发生错误。
         """
-        # 这里应该实现实际的主动学习逻辑
-        raise NotImplementedError("Active learning not implemented yet")
+        try:
+            sample = self.reasoning_engine.active_learning(unlabeled_data)
+            logger.info(f"Active learning sample selection from {len(unlabeled_data)} unlabeled data points")
+            logger.info(f"Selected sample: {sample}")
+            return sample
+        except Exception as e:
+            logger.error(f"Error in active_learning_sample: {str(e)}")
+            raise ModelError(f"Failed to perform active learning: {str(e)}")

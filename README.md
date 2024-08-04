@@ -181,6 +181,126 @@ Copypython src/main.py
 
    注意：请不要将您的实际 API 密钥提交到版本控制系统中。
    
+## 开发环境设置
+
+为了确保一致的代码质量和开发体验，请按照以下步骤设置您的开发环境：
+
+### 1. Python 环境
+
+确保您已安装 Python 3.9 或更高版本。您可以通过以下命令检查 Python 版本：
+
+```bash
+python --version
+2. 安装依赖
+在项目根目录下运行以下命令安装所需的依赖：
+pip install -r requirements.txt
+3. 安装 pre-commit
+我们使用 pre-commit 来自动化代码检查和格式化。安装 pre-commit：
+pip install pre-commit
+然后，在项目根目录下运行：
+pre-commit install
+4. 设置 Git
+确保您的 Git 配置正确设置了用户名和邮箱：
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+5. 处理可能的 SSL 问题
+如果您在运行 pre-commit 或其他涉及网络连接的操作时遇到 SSL 相关错误，请尝试以下步骤：
+
+更新 pip 和 setuptools：
+python -m pip install --upgrade pip setuptools
+
+确保 SSL 模块正确安装：
+python -c "import ssl; print(ssl.OPENSSL_VERSION)"
+
+如果上述命令失败，考虑重新安装 Python，确保包含 SSL 支持。
+如果您在公司网络中，可能需要配置代理设置：
+git config --global http.proxy http://proxyserver:port
+
+
+6. 代码格式化
+我们使用 Black 来保持代码格式的一致性。在提交代码之前，请运行：
+black .
+7. 提交代码
+正常情况下，直接使用 git commit 即可。pre-commit 钩子会自动运行检查。
+如果遇到问题，可以使用 --no-verify 标志跳过 pre-commit 钩子：
+git commit -m "Your commit message" --no-verify
+但请注意，这应该只是临时解决方案，长期应该解决 pre-commit 的问题。
+遇到问题？
+如果您在设置环境或使用工具时遇到任何问题，请查看项目 wiki 或联系项目维护者寻求帮助。
+
+
+VSCode 开发环境和 Docker 部署：
+
+VSCode 开发环境设置
+
+将以下内容添加到您的 README.md 文件中：
+markdownCopy## 开发环境设置 (VSCode)
+
+我们推荐使用 Visual Studio Code 进行开发。请按照以下步骤设置您的开发环境：
+
+### 1. 安装 VSCode
+
+如果您还没有安装 VSCode，请从 [官方网站](https://code.visualstudio.com/) 下载并安装。
+
+### 2. 安装推荐的 VSCode 扩展
+
+我们建议安装以下 VSCode 扩展来提升开发体验：
+
+- Python
+- Pylance
+- Black Formatter
+- GitLens
+- Docker (如果需要在 VSCode 中管理 Docker)
+
+您可以在 VSCode 中通过 Ctrl+Shift+X (Windows/Linux) 或 Cmd+Shift+X (Mac) 打开扩展视图，然后搜索并安装这些扩展。
+
+### 3. 配置 Python 环境
+
+1. 打开项目文件夹在 VSCode 中。
+2. 创建一个虚拟环境（如果还没有的话）：
+python -m venv venv
+3. 在 VSCode 中选择 Python 解释器：
+- 按 `Ctrl+Shift+P` (Windows/Linux) 或 `Cmd+Shift+P` (Mac)
+- 输入 "Python: Select Interpreter"
+- 选择刚创建的虚拟环境
+
+### 4. 安装依赖
+
+在 VSCode 的终端中运行：
+pip install -r requirements.txt
+
+### 5. 设置 pre-commit
+
+在 VSCode 的终端中运行：
+pip install pre-commit
+pre-commit install
+
+### 6. 配置 Black 格式化
+
+1. 打开 VSCode 设置 (File > Preferences > Settings)
+2. 搜索 "Python Formatting Provider"
+3. 选择 "black" 作为格式化器
+4. 启用 "Format On Save" 选项
+
+现在，每次保存 Python 文件时，VSCode 都会自动使用 Black 进行格式化。
+
+### 7. Git 配置
+
+确保在 VSCode 的终端中设置了 Git 用户名和邮箱：
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+## Docker 部署说明
+
+虽然我们主要使用 VSCode 进行开发，但项目的部署仍然使用 Docker。以下是部署相关的说明：
+
+1. 构建 Docker 镜像：
+docker build -t project-name .
+
+2. 运行 Docker 容器：
+docker run -d -p 8080:8080 project-name
+
+
 
 安全使用指南
 

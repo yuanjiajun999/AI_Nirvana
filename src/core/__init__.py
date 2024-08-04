@@ -1,4 +1,6 @@
-from typing import Any, List
+# E:\AI_Nirvana-1\src\core\__init__.py
+
+from typing import Any, List, Type
 
 # 使用相对导入
 from .active_learning import ActiveLearner
@@ -9,8 +11,17 @@ from .lora import LoRAModel
 from .multimodal import MultimodalInterface
 from .privacy_enhancement import PrivacyEnhancement
 from .quantization import quantize_and_evaluate
-from .reinforcement_learning import ReinforcementLearningAgent
-from .semi_supervised_learning import SemiSupervisedTrainer
+from .reinforcement_learning import (
+    DQNAgent, A2CAgent, PPOAgent, SACAgent, TD3Agent, DDPGAgent,
+    MultiAgentRL, HierarchicalRL, CuriosityDrivenRL, MetaLearningAgent,
+    create_environment, train_agent, evaluate_agent,
+    plot_learning_curve, save_agent, load_agent, parallel_train_agents
+)
+from .semi_supervised_learning import SemiSupervisedDataset, AdvancedSemiSupervisedTrainer
+from .ai_assistant import AIAssistant
+from .language_model import LanguageModel
+from .model_interface import ModelInterface
+from .model_factory import ModelFactory
 
 # 定义 __all__ 变量，明确指定可以从这个模块导入的名称
 __all__: List[str] = [
@@ -22,45 +33,38 @@ __all__: List[str] = [
     "MultimodalInterface",
     "PrivacyEnhancement",
     "quantize_and_evaluate",
-    "ReinforcementLearningAgent",
+    "DQNAgent",
+    "A2CAgent",
+    "PPOAgent",
+    "SACAgent",
+    "TD3Agent",
+    "DDPGAgent",
+    "MultiAgentRL",
+    "HierarchicalRL",
+    "CuriosityDrivenRL",
+    "MetaLearningAgent",
     "SemiSupervisedTrainer",
+    "AIAssistant",
+    "LanguageModel",
+    "ModelInterface",
+    "ModelFactory",
+    "create_environment",
+    "train_agent",
+    "evaluate_agent",
+    "plot_learning_curve",
+    "save_agent",
+    "load_agent",
+    "parallel_train_agents"
 ]
 
-
-def get_available_models() -> List[str]:
+def get_available_model_classes():
     """
-    返回所有可用模型的列表。
+    返回所有可用模型类的字典。
 
     Returns:
-        List[str]: 可用模型的名称列表
+        Dict[str, Type[ModelInterface]]: 模型名称和对应的模型类的字典
     """
-    return [
-        "ActiveLearner",
-        "DigitalTwin",
-        "GenerativeAI",
-        "IntelligentAgent",
-        "LoRAModel",
-        "MultimodalInterface",
-        "PrivacyEnhancement",
-        "ReinforcementLearningAgent",
-        "SemiSupervisedTrainer",
-    ]
-
-
-def get_model(model_name: str) -> Any:
-    """
-    根据模型名称返回相应的模型类。
-
-    Args:
-        model_name (str): 模型的名称
-
-    Returns:
-        Any: 对应的模型类
-
-    Raises:
-        ValueError: 如果提供的模型名称无效
-    """
-    models = {
+    return {
         "ActiveLearner": ActiveLearner,
         "DigitalTwin": DigitalTwin,
         "GenerativeAI": GenerativeAI,
@@ -68,11 +72,53 @@ def get_model(model_name: str) -> Any:
         "LoRAModel": LoRAModel,
         "MultimodalInterface": MultimodalInterface,
         "PrivacyEnhancement": PrivacyEnhancement,
-        "ReinforcementLearningAgent": ReinforcementLearningAgent,
-        "SemiSupervisedTrainer": SemiSupervisedTrainer,
+        "DQNAgent": DQNAgent,
+        "A2CAgent": A2CAgent,
+        "PPOAgent": PPOAgent,
+        "SACAgent": SACAgent,
+        "TD3Agent": TD3Agent,
+        "DDPGAgent": DDPGAgent,
+        "MultiAgentRL": MultiAgentRL,
+        "HierarchicalRL": HierarchicalRL,
+        "CuriosityDrivenRL": CuriosityDrivenRL,
+        "MetaLearningAgent": MetaLearningAgent,
+        "AdvancedSemiSupervisedTrainer": AdvancedSemiSupervisedTrainer,
     }
 
+def get_model(model_name: str) -> Type[ModelInterface]:
+    """
+    根据模型名称返回相应的模型类。
+
+    Args:
+        model_name (str): 模型的名称
+
+    Returns:
+        Type[ModelInterface]: 对应的模型类
+
+    Raises:
+        ValueError: 如果提供的模型名称无效
+    """
+    models = get_available_model_classes()
     if model_name not in models:
         raise ValueError(f"Invalid model name: {model_name}")
-
     return models[model_name]
+
+# 新增：使用ModelFactory注册所有模型
+for model_name, model_class in get_available_model_classes().items():
+    ModelFactory.register_model(model_name, model_class)
+
+def create_model(model_name: str, **kwargs) -> ModelInterface:
+    """
+    使用ModelFactory创建并返回指定的模型实例。
+
+    Args:
+        model_name (str): 模型的名称
+        **kwargs: 传递给模型构造函数的额外参数
+
+    Returns:
+        ModelInterface: 创建的模型实例
+
+    Raises:
+        ValueError: 如果提供的模型名称无效
+    """
+    return ModelFactory.create_model(model_name, **kwargs)

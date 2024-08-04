@@ -11,7 +11,6 @@ from openai import OpenAIError
 
 load_dotenv()
 
-
 class APIConfig:
     API_KEY = os.getenv(
         "API_KEY", "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"
@@ -20,7 +19,6 @@ class APIConfig:
     MODEL_NAME = "gpt-3.5-turbo-0125"
     TEMPERATURE = 0.7
     MAX_TOKENS = 256
-
 
 chat = ChatOpenAI(
     model_name=APIConfig.MODEL_NAME,
@@ -40,7 +38,6 @@ answer_prompt = ChatPromptTemplate.from_template(
 summarize_chain = summarize_prompt | chat | StrOutputParser()
 answer_chain = answer_prompt | chat | StrOutputParser()
 
-
 @lru_cache(maxsize=100)
 def get_response(question: str) -> str:
     try:
@@ -51,7 +48,6 @@ def get_response(question: str) -> str:
     except OpenAIError as e:
         print(f"API 错误: {str(e)}")
         return "抱歉，处理您的请求时出现了错误。"
-
 
 class LangChainAgent:
     def __init__(self):
@@ -65,35 +61,31 @@ class LangChainAgent:
             input_variables=["text"],
         )
 
+    def _run_chain(self, chain: RunnableSequence, inputs: Dict[str, Any]) -> str:
+        try:
+            response = chain.invoke(inputs)
+            return response if isinstance(response, str) else str(response)
+        except OpenAIError as e:
+            print(f"API 错误: {str(e)}")
+            return "抱歉，处理您的请求时出现了错误。"
 
-def _run_chain(self, chain: RunnableSequence, inputs: Dict[str, Any]) -> str:
-    try:
-        response = chain.invoke(inputs)
-        return response if isinstance(response, str) else str(response)
-    except OpenAIError as e:
-        print(f"API 错误: {str(e)}")
-        return "抱歉，处理您的请求时出现了错误。"
+    def run_qa_task(self, query: str) -> str:
+        chain = self.qa_template | self.llm | StrOutputParser()
+        return self._run_chain(chain, {"question": query})
 
+    def run_summarization_task(self, text: str) -> str:
+        chain = self.summarize_template | self.llm | StrOutputParser()
+        return self._run_chain(chain, {"text": text})
 
-def run_qa_task(self, query: str) -> str:
-    chain = self.qa_template | self.llm | StrOutputParser()
-    return self._run_chain(chain, {"question": query})
-
-
-def run_summarization_task(self, text: str) -> str:
-    chain = self.summarize_template | self.llm | StrOutputParser()
-    return self._run_chain(chain, {"text": text})
-
-
-def run_generation_task(self, prompt: str) -> str:
-    try:
-        response = self.llm.invoke(prompt)
-        if isinstance(response, str):
-            return response
-        elif hasattr(response, "content"):
-            return response.content
-        else:
-            return str(response)
-    except Exception as e:
-        print(f"Error in run_generation_task: {str(e)}")
-        return "抱歉，无法生成文本。"
+    def run_generation_task(self, prompt: str) -> str:
+        try:
+            response = self.llm.invoke(prompt)
+            if isinstance(response, str):
+                return response
+            elif hasattr(response, "content"):
+                return response.content
+            else:
+                return str(response)
+        except Exception as e:
+            print(f"Error in run_generation_task: {str(e)}")
+            return "抱歉，无法生成文本。"

@@ -1,81 +1,62 @@
-from src.core.model_interface import ModelInterface
-import numpy as np
+from src.core import ModelFactory, ModelInterface
+from typing import Any, Dict
 
-
-class SimpleModel(ModelInterface):
+class ExampleModel(ModelInterface):
     def __init__(self):
-        self.weights = np.random.rand(10)
+        self.model = None
 
     def load_model(self, model_path: str) -> None:
         print(f"Loading model from {model_path}")
-        # 实际应用中，这里应该加载模型权重
+        self.model = "Loaded Model"  # 这里应该是实际的模型加载代码
 
-    def predict(self, input_data: np.ndarray) -> np.ndarray:
-        return np.dot(input_data, self.weights)
+    def predict(self, input_data: Any) -> Any:
+        return f"Prediction for {input_data}"
 
-    def train(self, training_data: np.ndarray, labels: np.ndarray) -> None:
-        print("Training model...")
-        # 实际应用中，这里应该实现训练逻辑
+    def train(self, training_data: Any, labels: Any) -> None:
+        print(f"Training model with {len(training_data)} samples")
 
-    def evaluate(self, test_data: np.ndarray, test_labels: np.ndarray) -> dict:
-        predictions = self.predict(test_data)
-        mse = np.mean((predictions - test_labels) ** 2)
-        return {"mse": mse}
+    def evaluate(self, test_data: Any, test_labels: Any) -> Dict[str, float]:
+        return {"accuracy": 0.95, "f1_score": 0.94}
 
     def save_model(self, model_path: str) -> None:
         print(f"Saving model to {model_path}")
-        # 实际应用中，这里应该保存模型权重
 
-    def preprocess_data(self, raw_data: np.ndarray) -> np.ndarray:
-        return (raw_data - np.mean(raw_data)) / np.std(raw_data)
+    def preprocess_data(self, raw_data: Any) -> Any:
+        return f"Preprocessed {raw_data}"
 
-    def get_model_info(self) -> dict:
-        return {"name": "SimpleModel", "version": "1.0"}
+    def get_model_info(self) -> Dict[str, Any]:
+        return {"name": "ExampleModel", "version": "1.0"}
 
-    def fine_tune(
-        self, fine_tuning_data: np.ndarray, fine_tuning_labels: np.ndarray
-    ) -> None:
-        print("Fine-tuning model...")
-        # 实际应用中，这里应该实现微调逻辑
+    def fine_tune(self, fine_tuning_data: Any, fine_tuning_labels: Any) -> None:
+        print(f"Fine-tuning model with {len(fine_tuning_data)} samples")
 
-    def explain_prediction(self, input_data: np.ndarray, prediction: np.ndarray) -> str:
-        return f"Prediction {prediction} was made based on input features."
-
+    def explain_prediction(self, input_data: Any, prediction: Any) -> str:
+        return f"Model predicted {prediction} for {input_data} because of XYZ reasons"
 
 def main():
-    model = SimpleModel()
+    # 注册模型
+    ModelFactory.register_model("ExampleModel", ExampleModel)
 
-    # 加载模型
+    # 创建模型实例
+    model = ModelFactory.create_model("ExampleModel")
+
+    # 使用模型
     model.load_model("path/to/model")
+    input_data = [1, 2, 3]
+    preprocessed_data = model.preprocess_data(input_data)
+    prediction = model.predict(preprocessed_data)
+    explanation = model.explain_prediction(input_data, prediction)
 
-    # 预处理数据
-    raw_data = np.random.rand(100, 10)
-    preprocessed_data = model.preprocess_data(raw_data)
-
-    # 训练模型
-    labels = np.random.rand(100)
-    model.train(preprocessed_data, labels)
-
-    # 进行预测
-    test_data = np.random.rand(10, 10)
-    predictions = model.predict(test_data)
-    print("Predictions:", predictions)
+    print(f"Prediction: {prediction}")
+    print(f"Explanation: {explanation}")
 
     # 评估模型
-    eval_results = model.evaluate(test_data, np.random.rand(10))
-    print("Evaluation results:", eval_results)
-
-    # 保存模型
-    model.save_model("path/to/save/model")
+    evaluation_result = model.evaluate([1, 2, 3, 4], [0, 1, 1, 0])
+    print(f"Evaluation result: {evaluation_result}")
 
     # 获取模型信息
     model_info = model.get_model_info()
-    print("Model info:", model_info)
-
-    # 解释预测
-    explanation = model.explain_prediction(test_data[0], predictions[0])
-    print("Prediction explanation:", explanation)
-
+    print(f"Model info: {model_info}")
 
 if __name__ == "__main__":
     main()

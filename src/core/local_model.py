@@ -4,7 +4,6 @@ from transformers import BertModel, BertTokenizer
 
 from .model_interface import ModelInterface
 
-
 class LocalModel(ModelInterface):
     def __init__(self):
         self.model_name = "bert-base-chinese"
@@ -19,7 +18,6 @@ class LocalModel(ModelInterface):
             "默认回答": "对不起，我没有足够的信息来回答这个问题。您能提供更多细节或换个话题吗？",
         }
         self.vectorizer = TfidfVectorizer()
-
         self.tfidf_matrix = self.vectorizer.fit_transform(self.responses.keys())
 
     def generate_response(self, prompt):
@@ -35,3 +33,42 @@ class LocalModel(ModelInterface):
 
     def summarize(self, text):
         return text[:100] + "..."  # 简单地返回文本的前100个字符作为"摘要"
+
+    def evaluate(self, test_data, test_labels):
+        # 简单的评估逻辑
+        correct = sum(self.predict(data) == label for data, label in zip(test_data, test_labels))
+        return correct / len(test_data)
+
+    def explain_prediction(self, input_data):
+        # 简单的解释逻辑
+        return f"Prediction based on similarity to known responses. Input: {input_data}"
+
+    def fine_tune(self, train_data, train_labels):
+        # 简单的微调逻辑
+        print("Fine-tuning not implemented for this model.")
+
+    def get_model_info(self):
+        return {
+            "name": "Local BERT Model",
+            "type": "local",
+            "base_model": self.model_name
+        }
+
+    def load_model(self, path):
+        # 简单的加载逻辑
+        print(f"Loading model from {path}")
+
+    def predict(self, input_data):
+        return self.generate_response(input_data)
+
+    def preprocess_data(self, data):
+        # 简单的预处理逻辑
+        return data.lower()
+
+    def save_model(self, path):
+        # 简单的保存逻辑
+        print(f"Saving model to {path}")
+
+    def train(self, train_data, train_labels):
+        # 简单的训练逻辑
+        print("Training not implemented for this model.")
