@@ -6,6 +6,7 @@ from typing import List, Dict, Callable, Union, Optional
 from featuretools import EntitySet, dfs
 from sklearn.feature_selection import mutual_info_regression, mutual_info_classif
 
+
 class AutoFeatureEngineer:
     """
     A class for automated feature engineering using Featuretools.
@@ -23,7 +24,7 @@ class AutoFeatureEngineer:
         index_column (Optional[str]): The name of the index column.
     """
 
-    def __init__(self, data: pd.DataFrame, target_column: str):
+    def __init__(self, data, target_column):
         """
         Initialize the AutoFeatureEngineer.
 
@@ -33,13 +34,15 @@ class AutoFeatureEngineer:
         """
         self.data = data
         self.target_column = target_column
-        self.feature_matrix: Optional[pd.DataFrame] = None
-        self.feature_defs: Optional[List] = None
-        self.custom_features: Dict[str, Callable] = {}
-        self.entityset: Optional[EntitySet] = None
-        self.index_column: Optional[str] = None
+        self.feature_matrix = None
+        self.feature_defs = None
+        self.custom_features = {}
+        self.entityset = None
 
-    def create_entity_set(self, index_column: str, time_index: Optional[str] = None) -> EntitySet:
+    def set_entityset(self, es: ft.EntitySet):
+        self.entityset = es
+
+    def create_entity_set(self, index_column, time_index=None):
         """
         Create an EntitySet from the input data.
 
@@ -53,37 +56,20 @@ class AutoFeatureEngineer:
         Raises:
             ValueError: If the index column is not found in the data.
         """
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message="index .* not found in dataframe")
-            
-            es = ft.EntitySet(id="data")
-            dataframe = self.data.copy()
-
-            if index_column not in dataframe.columns:
-                raise ValueError(f"Index column '{index_column}' not found in data")
-
-            if time_index and time_index in dataframe.columns:
-                dataframe[time_index] = pd.to_datetime(dataframe[time_index], format='%Y-%m-%d', errors='coerce')
-
-            # Ensure the index column is in the data and is unique
-            dataframe = dataframe.set_index(index_column, verify_integrity=True)
-
-            es = es.add_dataframe(
-                dataframe_name="data",
-                dataframe=dataframe,
-                index=index_column,
-                time_index=time_index
-            )
-
-            # Verify index name
-            if es["data"].index.name != index_column:
-                es["data"].index.name = index_column
-
-            self.entityset = es
-            self.index_column = index_column
-            return es
-
-    def generate_features(self, max_depth: int = 1, primitives: Optional[List[str]] = None, show_warnings: bool = False) -> tuple[pd.DataFrame, List]:
+         # 确保 DataFrame 索引设置正确
+        if self.data.index.name != index_column:
+            self.data.set_index(index_column, inplace=True)
+        
+        self.entityset = ft.EntitySet(id="data")
+        self.entityset = self.entityset.add_dataframe(
+            dataframe_name="data",
+            dataframe=self.data,
+            index=index_column,
+            time_index=time_index
+        )
+        return self.entityset
+    
+    def generate_features(self, max_depth: int = 2, primitives: Optional[List[str]] = None, show_warnings: bool = False) -> tuple[pd.DataFrame, List]:
         """
         Generate features using Featuretools' deep feature synthesis.
 
@@ -107,28 +93,21 @@ class AutoFeatureEngineer:
         with warnings.catch_warnings():
             if not show_warnings:
                 warnings.simplefilter("ignore", category=UserWarning)
-            feature_matrix, feature_defs = dfs(
+            feature_matrix, feature_defs = ft.dfs(
                 entityset=self.entityset,
                 target_dataframe_name="data",
                 agg_primitives=primitives,
+                trans_primitives=[],
                 max_depth=max_depth,
+                features_only=False,
                 verbose=True
             )
-
-        # Ensure the index column is correct
-        if self.index_column not in feature_matrix.index.names:
-            feature_matrix = feature_matrix.reset_index()
-            feature_matrix = feature_matrix.set_index(self.index_column)
 
         self.feature_matrix = feature_matrix
         self.feature_defs = feature_defs
 
-        # Apply custom features
-        for feature_name, function in self.custom_features.items():
-            self.feature_matrix[feature_name] = self.feature_matrix.apply(function, axis=1)
-
-        return feature_matrix, feature_defs
-
+        return self.feature_matrix, self.feature_defs
+    
     def create_custom_feature(self, feature_name: str, function: Callable):
         """
         Create a custom feature.
@@ -248,7 +227,7 @@ class AutoFeatureEngineer:
             raise ValueError("Feature matrix not generated. Call generate_features() first.")
 
         nunique = self.feature_matrix.nunique() / len(self.feature_matrix)
-        columns_to_drop = nunique[nunique > threshold].index
+        columns_to_drop = nunique[nunique <= threshold].index  # 修改这里，使用 <= 而不是 >
         self.feature_matrix = self.feature_matrix.drop(columns=columns_to_drop)
         return list(columns_to_drop)
 

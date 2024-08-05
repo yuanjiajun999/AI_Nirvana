@@ -1,59 +1,90 @@
-# AutoFeatureEngineer 使用文档
+AutoFeatureEngineer 文档
+AutoFeatureEngineer 是一个用于自动特征工程的类,它利用 Featuretools 库来生成、选择和处理特征。
 
-`AutoFeatureEngineer` 是一个强大的自动特征工程工具，它利用 Featuretools 库来生成、选择和处理特征。以下是使用此类的基本步骤和主要功能。
+类初始化
+afe = AutoFeatureEngineer(data, target_column)  
+data: pandas DataFrame,包含原始数据
+target_column: 字符串,目标列的名称
+主要方法
+1. create_entity_set(index_column, time_index=None)
+创建一个 Featuretools EntitySet。
 
-## 初始化
+index_column: 字符串,用作索引的列名
+time_index: 可选,字符串,用作时间索引的列名
+返回: Featuretools EntitySet
 
-首先，导入类并使用您的数据和目标列名初始化：
+2. generate_features(max_depth=2, primitives=None, show_warnings=False)
+使用 Featuretools 的深度特征综合生成特征。
 
-```python
-from auto_feature_engineer import AutoFeatureEngineer
+max_depth: 整数,特征生成的最大深度
+primitives: 可选,列表,要使用的原始函数列表
+show_warnings: 布尔值,是否显示警告
+返回: (特征矩阵, 特征定义) 的元组
 
-afe = AutoFeatureEngineer(data, target_column='target')
-主要功能
+3. get_important_features(n=10, method='correlation')
+获取最重要的特征。
 
-创建实体集
-在生成特征之前，需要创建一个实体集：
-es = afe.create_entity_set(index_column='id', time_index='date')
+n: 整数,返回的重要特征数量
+method: 字符串,用于确定特征重要性的方法 ('correlation', 'mutual_info', 'mutual_info_regression', 或 'mutual_info_classif')
+返回: 重要特征名称的列表
 
-生成特征
-使用深度特征合成生成新特征：
-feature_matrix, feature_defs = afe.generate_features(max_depth=2)
+4. get_feature_types()
+获取特征矩阵中所有特征的类型。
 
-获取重要特征
-选择最重要的特征：
-important_features = afe.get_important_features(n=5, method='correlation')
+返回: 将特征名称映射到其类型的字典
 
-获取特征类型
-了解每个特征的数据类型：
-feature_types = afe.get_feature_types()
+5. remove_low_information_features(threshold=0.95)
+移除低信息内容的特征。
 
-移除低信息量特征
-删除那些在大多数样本中具有相同值的特征：
-removed_features = afe.remove_low_information_features(threshold=0.95)
+threshold: 浮点数,确定低信息内容的阈值
+返回: 被移除的特征名称列表
 
-移除高相关性特征
-删除高度相关的特征以减少冗余：
-removed_correlated = afe.remove_highly_correlated_features(threshold=0.9)
+6. remove_highly_correlated_features(threshold=0.9)
+移除高度相关的特征。
 
-标准化特征
-将数值特征标准化：
-afe.normalize_features(method='standard')
+threshold: 浮点数,用于移除特征的相关阈值
+返回: 被移除的特征名称列表
 
-编码分类特征
-将分类特征转换为数值形式：
-afe.encode_categorical_features(method='onehot')
+7. normalize_features(method='standard')
+归一化特征矩阵中的数值特征。
 
-获取最终的特征矩阵
-在所有处理完成后，获取最终的特征矩阵：
-final_feature_matrix = afe.get_feature_matrix()
+method: 字符串,要使用的归一化方法 ('standard' 或 'minmax')
+8. encode_categorical_features(method='onehot')
+编码特征矩阵中的分类特征。
 
+method: 字符串,要使用的编码方法 ('onehot' 或 'label')
+9. get_feature_matrix()
+获取特征矩阵。
 
-注意事项
+返回: pandas DataFrame,包含生成的特征
 
-确保在调用其他方法之前先调用 create_entity_set 和 generate_features。
-特征生成和处理可能需要较长时间，特别是对于大型数据集。
-某些方法（如 remove_low_information_features 和 remove_highly_correlated_features）会直接修改特征矩阵。
-使用 get_feature_matrix() 随时获取当前的特征矩阵。
+使用示例
+import pandas as pd  
+from auto_feature_engineering import AutoFeatureEngineer  
 
-通过这些步骤，您可以自动化特征工程过程，生成丰富的特征集，并对其进行优化和处理。
+# 加载数据  
+data = pd.read_csv('your_data.csv')  
+
+# 初始化 AutoFeatureEngineer  
+afe = AutoFeatureEngineer(data, target_column='target')  
+
+# 创建实体集  
+es = afe.create_entity_set(index_column='id')  
+
+# 生成特征  
+feature_matrix, feature_defs = afe.generate_features(max_depth=2)  
+
+# 获取重要特征  
+important_features = afe.get_important_features(n=5, method='mutual_info')  
+
+# 移除低信息特征  
+afe.remove_low_information_features()  
+
+# 归一化特征  
+afe.normalize_features()  
+
+# 编码分类特征  
+afe.encode_categorical_features()  
+
+# 获取最终的特征矩阵  
+final_feature_matrix = afe.get_feature_matrix()  
