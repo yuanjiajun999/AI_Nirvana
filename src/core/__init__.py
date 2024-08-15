@@ -21,6 +21,9 @@ from .language_model import LanguageModel
 from .model_interface import ModelInterface  
 from .model_factory import ModelFactory  
 from .auto_feature_engineering import AutoFeatureEngineer  # 新增  
+from .vector_store import VectorStore
+from .langsmith import LangSmithIntegration
+from .langgraph import LangGraph
 
 # 定义 __all__ 变量，明确指定可以从这个模块导入的名称  
 __all__: List[str] = [  
@@ -55,7 +58,11 @@ __all__: List[str] = [
     "save_agent",  
     "load_agent",  
     "parallel_train_agents",  
-    "AutoFeatureEngineer"  # 新增  
+    "AutoFeatureEngineer"  # 新增 
+    "VectorStore",  # 新增
+    "ExtendedNetworkxEntityGraph",
+    "LangGraph",     # 新增
+    "LangSmithIntegration", # 新增
 ]  
 
 def get_available_model_classes() -> Dict[str, Type[ModelInterface]]:  
@@ -84,8 +91,11 @@ def get_available_model_classes() -> Dict[str, Type[ModelInterface]]:
         "CuriosityDrivenRL": CuriosityDrivenRL,  
         "MetaLearningAgent": MetaLearningAgent,  
         "AdvancedSemiSupervisedTrainer": AdvancedSemiSupervisedTrainer,  
-        "AutoFeatureEngineer": AutoFeatureEngineer  # 新增  
-    }  
+        "LangSmithIntegration":LangSmithIntegration, # 新增
+        "AutoFeatureEngineer": AutoFeatureEngineer,
+        "VectorStore": VectorStore,  # 新增
+        "LangGraph": LangGraph       # 新增
+    }
 
 def get_model(model_name: str) -> Type[ModelInterface]:  
     """  

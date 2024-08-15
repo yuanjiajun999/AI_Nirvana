@@ -52,11 +52,17 @@ class SecurityManager:
         Returns:
             bool: 如果代码安全返回 True，否则返回 False。
         """
-        for pattern in self.unsafe_patterns:
-            if re.search(pattern, code):
-                logger.warning(f"Unsafe code pattern detected: {pattern}")
+        unsafe_modules = ['os', 'subprocess', 'sys', 'socket']
+        unsafe_functions = ['eval', 'exec', 'compile', '__import__']
+
+        for module in unsafe_modules:
+            if f"import {module}" in code or f"from {module}" in code:
                 return False
-        logger.info("Code passed safety check")
+
+        for func in unsafe_functions:
+            if func in code:
+                return False
+
         return True
 
     @error_handler

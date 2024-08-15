@@ -122,10 +122,15 @@ generated_code = lang_smith.generate_code("Write a Python function to sort a lis
 Copygit clone https://github.com/yuanjiajun999/AI_Nirvana.git
 cd AI_Nirvana
 
-设置环境：
-Copypython -m venv venv
-source venv/bin/activate  # Windows 使用: venv\Scripts\activate
-pip install -r requirements.txt
+# 创建并激活 Anaconda 环境
+conda create --name ai-nirvana-env python=3.9
+conda activate ai-nirvana-env
+
+# 安装 Poetry
+conda install poetry
+
+# 安装项目依赖
+poetry install
 
 配置 API 密钥：
 创建 .env 文件并添加：

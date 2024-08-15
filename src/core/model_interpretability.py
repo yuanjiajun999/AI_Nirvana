@@ -8,7 +8,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.inspection import PartialDependenceDisplay  
 from sklearn.inspection import permutation_importance
 from sklearn.inspection import partial_dependence
-from sklearn.inspection import plot_partial_dependence
 from pdpbox import pdp, info_plots  
 from sklearn.model_selection import cross_val_score, learning_curve  
 from sklearn.metrics import confusion_matrix, roc_curve, auc  
@@ -30,6 +29,7 @@ import lime
 import lime.lime_tabular
 from sklearn.base import is_classifier  
 from sklearn.utils.multiclass import type_of_target
+from sklearn.model_selection import train_test_split
 
 class ModelInterpreter:  
     """  
@@ -46,48 +46,43 @@ class ModelInterpreter:
         model_type: Type of the model ('classifier' or 'regressor').  
     """  
 
-    def __init__(self, model, X, y, feature_names=None, class_names=None, model_type='tree', test_size=0.2, random_state=42):
+    def __init__(self, model, data, target_column=None, feature_names=None, class_names=None, model_type='tree'):
         self.model = model
-    
-        # 处理 X  
-        if isinstance(X, pd.DataFrame):  
-            self.X = X  
-        elif isinstance(X, np.ndarray):  
-            self.X = pd.DataFrame(X, columns=feature_names or [f'Feature {i}' for i in range(X.shape[1])])  
-        else:  
-            raise TypeError("X should be a pandas DataFrame or numpy array")  
-    
-        # 处理 y  
-        if isinstance(y, pd.Series):  
-            self.y = y  
-        elif isinstance(y, np.ndarray):  
-            self.y = pd.Series(y)  
-        else:  
-            raise TypeError("y should be a pandas Series or numpy array")  
-    
-        # 如果没有提供 feature_names，使用 DataFrame 的列名  
-        self.feature_names = self.X.columns.tolist()  
-        self.class_names = class_names  
-        self.model_type = model_type  
+        self.model_type = model_type
 
-        # Split the data into train and test sets  
-        from sklearn.model_selection import train_test_split  
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=test_size, random_state=random_state)  
+        if isinstance(data, pd.DataFrame):
+            self.data = data
+        elif isinstance(data, str):
+            self.data = pd.DataFrame({'text': [data]})
+        elif isinstance(data, np.ndarray):
+            self.data = pd.DataFrame(data, columns=feature_names or [f'Feature {i}' for i in range(data.shape[1])])
+        else:
+            raise TypeError("data should be a pandas DataFrame, numpy array, or a string")
+
+        if target_column and target_column in self.data.columns:
+            self.X = self.data.drop(columns=[target_column])
+            self.y = self.data[target_column]
+        else:
+            self.X = self.data
+            self.y = None
+
+        self.feature_names = self.X.columns.tolist()
+        self.class_names = class_names
 
         self.explainer = None
-        self.lime_explainer = None  
+        self.lime_explainer = None
 
-        # 设置中文字体，但要注意可能的兼容性问题  
-        try:  
-            plt.rcParams['font.sans-serif'] = ['SimHei']  
-            plt.rcParams['axes.unicode_minus'] = False  
-        except Exception as e:  
-            print(f"Warning: Could not set Chinese font: {e}")  
+        # 设置中文字体，但要注意可能的兼容性问题
+        try:
+            plt.rcParams['font.sans-serif'] = ['SimHei']
+            plt.rcParams['axes.unicode_minus'] = False
+        except Exception as e:
+            print(f"Warning: Could not set Chinese font: {e}")
 
         shap.initjs()
 
         # 如果模型不为 None，创建 SHAP 解释器
-        if self.model is not None:
+        if self.model is not None and self.model_type != 'text':
             self.create_explainer()
 
     def create_explainer(self, method='shap'):  
@@ -148,6 +143,23 @@ class ModelInterpreter:
             plt.savefig(save_path)  
             plt.close()
 
+    def explain_prediction(self, data=None):
+        if data is None:
+            data = self.X
+
+        if isinstance(data, str):
+            data = pd.DataFrame({'text': [data]})
+
+        if self.model_type == 'text' or 'text' in data.columns:
+            return f"模型正在分析以下文本：'{data['text'].iloc[0]}'. 这是一个文本分析任务，无法提供数值特征解释。"
+        elif hasattr(self.model, 'feature_importances_'):
+            importances = self.model.feature_importances_
+            feature_imp = pd.DataFrame({'feature': self.feature_names, 'importance': importances})
+            feature_imp = feature_imp.sort_values('importance', ascending=False)
+            return f"特征重要性：\n{feature_imp.to_string(index=False)}"
+        else:
+            return "当前模型不支持直接的特征重要性解释。需要实现其他解释方法。"
+        
     def explain_instance_lime(self, instance_index, save_path=None):  
         if self.lime_explainer is None:  
             self.create_explainer('lime')  
@@ -282,28 +294,40 @@ class ModelInterpreter:
         else:  
             plt.show()  
     
-    def plot_partial_dependence(self, features, save_path=None, target_class=None):  
-        if is_classifier(self.model):  
-            target_type = type_of_target(self.y)  
-            if target_type == "multiclass":  
-                if target_class is None:  
-                    target_class = 0  # Default to first class if not specified  
-                display = PartialDependenceDisplay.from_estimator(  
-                    self.model, self.X, features, target=target_class, kind="average"  
-                )  
-            else:  
-                display = PartialDependenceDisplay.from_estimator(  
-                    self.model, self.X, features, kind="average"  
-                )  
-        else:  
-            display = PartialDependenceDisplay.from_estimator(  
-                self.model, self.X, features, kind="average"  
-            )  
-    
-        if save_path:  
-            plt.savefig(save_path)  
-            plt.close()  
-        return display  
+    def plot_partial_dependence(self, features, save_path=None, target_class=None):
+        """
+        Plots partial dependence plots for the given features.
+
+        Parameters:
+        features (list): List of features for which to plot partial dependence.
+        save_path (str, optional): Path to save the plot. If None, the plot is not saved.
+        target_class (int, optional): Class for which to plot partial dependence in case of multiclass classification.
+
+        Returns:
+        display: The PartialDependenceDisplay object.
+        """
+        if is_classifier(self.model):
+            target_type = type_of_target(self.y)
+            if target_type == "multiclass":
+                if target_class is None:
+                    target_class = 0  # Default to first class if not specified
+                display = PartialDependenceDisplay.from_estimator(
+                    self.model, self.X, features, target=target_class, kind="average"
+                )
+            else:
+                display = PartialDependenceDisplay.from_estimator(
+                    self.model, self.X, features, kind="average"
+                )
+        else:
+            display = PartialDependenceDisplay.from_estimator(
+                self.model, self.X, features, kind="average"
+            )
+
+        if save_path:
+            display.figure_.savefig(save_path)  # Save the figure
+            plt.close(display.figure_)  # Close the figure to free up memory
+
+        return display
 
     def plot_pdp_interact(self, features, save_path=None, target_class=None):  
         if is_classifier(self.model):  

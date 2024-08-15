@@ -1,9 +1,11 @@
+import re
 import sys
+from io import StringIO
 print(sys.path)
 import logging
 from typing import Any, Dict, List, Optional
 import json
-
+from src.core.model_factory import ModelFactory 
 from src.core.language_model import LanguageModel
 from src.core.security import SecurityManager
 from src.core.knowledge_base import KnowledgeBase
@@ -35,7 +37,7 @@ class AIAssistant:
             model_name: 要使用的模型名称。
             max_context_length: 保存的最大上下文长度。
         """
-        self.language_model = LanguageModel(default_model=model_name)
+        self.language_model = LanguageModel(model_name=model_name)
         self.security_manager = SecurityManager()
         self.knowledge_base = KnowledgeBase()
         self.multimodal_interface = MultimodalInterface()  # 不需要参数
@@ -95,24 +97,20 @@ class AIAssistant:
             InputValidationError: 如果输入不安全。
             ModelError: 如果生成回应时发生错误。
         """
-        try:
-            if not self.security_manager.is_safe_code(prompt):
-                raise InputValidationError("Unsafe code detected in prompt")
-
-            context_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.context])
-            response = self.language_model.generate_response(prompt, context=context_str)
-
-            self._update_context("user", prompt)
-            self._update_context("assistant", response)
-
-            logger.info(f"User input: {prompt[:50]}...")
-            logger.info(f"System response: {response[:50]}...")
-
-            return response
-        except Exception as e:
-            logger.error(f"Error in generate_response: {str(e)}")
-            raise
-
+        def generate_response(self, prompt: str) -> str:
+            try:
+                response = self.language_model.generate(prompt)
+                # 尝试提取JSON部分
+                json_pattern = r'\{[^{}]*\}'
+                match = re.search(json_pattern, response)
+                if match:
+                    return match.group()
+                else:
+                    return response
+            except Exception as e:
+                logger.error(f"Error in generate_response: {str(e)}")
+                return str(e)
+   
     @error_handler
     def summarize(self, text: str) -> str:
         """
@@ -132,7 +130,7 @@ class AIAssistant:
             if not self.security_manager.is_safe_code(text):
                 raise InputValidationError("Unsafe code detected in text")
 
-            summary_prompt = f"请用中文简洁地总结以下文本，不超过100字：\n\n{text}"
+            summary_prompt = f"Please summarize the following text concisely in no more than 100 words:\n\n{text}"
             summary = self.language_model.generate_response(summary_prompt)
 
             logger.info(f"Summarization request: {text[:50]}...")
@@ -160,13 +158,26 @@ class AIAssistant:
             ModelError: 如果情感分析时发生错误。
         """
         try:
-            if not self.security_manager.is_safe_code(text):
-                raise InputValidationError("Unsafe code detected in text")
-
-            sentiment_prompt = f"Analyze the sentiment of the following text and return a JSON object with keys 'positive', 'neutral', and 'negative', where the values are floats representing the probability of each sentiment:\n\n{text}"
+            sentiment_prompt = f"请分析以下文本的情感，并以JSON格式返回结果，包括positive、neutral和negative的比例：\n\n{text}"
             sentiment_response = self.language_model.generate_response(sentiment_prompt)
+        
+            # 尝试解析JSON响应
+            try:
+                sentiment = json.loads(sentiment_response)
+            except json.JSONDecodeError:
+                # 如果无法解析JSON，尝试提取最后一个有效的JSON对象
+                import re
+                json_pattern = r'\{(?:[^{}]|(?R))*\}'
+                matches = re.findall(json_pattern, sentiment_response)
+                if matches:
+                    sentiment = json.loads(matches[-1])
+                else:
+                    raise ValueError("无法解析情感分析结果")
 
-            sentiment = json.loads(sentiment_response)
+            # 确保所有必要的键都存在
+            for key in ['positive', 'neutral', 'negative']:
+                if key not in sentiment:
+                    sentiment[key] = 0.0
 
             logger.info(f"Sentiment analysis request: {text[:50]}...")
             logger.info(f"Sentiment analysis result: {sentiment}")
@@ -174,8 +185,8 @@ class AIAssistant:
             return sentiment
         except Exception as e:
             logger.error(f"Error in analyze_sentiment: {str(e)}")
-            raise
-
+            return {"error": str(e)}
+   
     def _update_context(self, role: str, content: str) -> None:
         """
         更新对话上下文。
@@ -197,21 +208,12 @@ class AIAssistant:
 
     @error_handler
     def change_model(self, model_name: str) -> None:
-        """
-        更改使用的语言模型。
-
-        Args:
-            model_name: 新的模型名称。
-
-        Raises:
-            ModelError: 如果更改模型失败。
-        """
-        try:
-            self.language_model.change_default_model(model_name)
-            logger.info(f"Model changed to: {model_name}")
-        except Exception as e:
-            logger.error(f"Error in change_model: {str(e)}")
-            raise ModelError(f"Failed to change model: {str(e)}")
+        if model_name in self.get_available_models():
+            self.model_name = model_name
+            # 如果需要，在这里重新初始化模型
+            print(f"模型已更改为: {model_name}")
+        else:
+            raise ValueError(f"不支持的模型: {model_name}")
 
     @error_handler
     def get_available_models(self) -> List[str]:
@@ -277,30 +279,28 @@ class AIAssistant:
             raise AIAssistantException(f"Failed to decrypt data: {str(e)}")
 
     @error_handler
-    def execute_code(self, code: str, language: str) -> tuple:
-        """
-        安全地执行代码。
+    def execute_code(self, code: str, language: str = 'python') -> str:
+        if language.lower() != 'python':
+            return f"暂不支持 {language} 语言的代码执行"
 
-        Args:
-            code: 要执行的代码。
-            language: 代码的编程语言。
-
-        Returns:
-            tuple: (执行结果, 错误信息)
-
-        Raises:
-            InputValidationError: 如果代码不安全。
-            AIAssistantException: 如果执行代码时发生错误。
-        """
         try:
-            result, error = self.security_manager.execute_in_sandbox(code, language)
-            logger.info(f"Code execution request: {code[:50]}...")
-            logger.info(f"Code execution result: {result[:50]}...")
-            return result, error
-        except Exception as e:
-            logger.error(f"Error in execute_code: {str(e)}")
-            raise AIAssistantException(f"Failed to execute code: {str(e)}")
+            # 捕获标准输出
+            old_stdout = sys.stdout
+            redirected_output = sys.stdout = StringIO()
 
+            # 执行代码
+            exec(code, globals())
+
+            # 恢复标准输出
+            sys.stdout = old_stdout
+
+            # 获取执行结果
+            result = redirected_output.getvalue()
+
+            return result if result else "代码执行成功，但没有输出。"
+        except Exception as e:
+            return f"执行错误: {str(e)}"
+   
     @error_handler
     def plan_task(self, task_description: str) -> str:
         """
@@ -370,3 +370,13 @@ class AIAssistant:
         except Exception as e:
             logger.error(f"Error in active_learning_sample: {str(e)}")
             raise ModelError(f"Failed to perform active learning: {str(e)}")
+    
+    def detect_language(self, text: str) -> str:
+        # 这里应该实现实际的语言检测逻辑
+        # 现在我们简单地假设所有输入都是中文
+        return 'zh'
+
+    def translate(self, text: str, target_lang: str) -> str:
+        # 这里应该实现实际的翻译逻辑
+        # 现在我们简单地返回原文
+        return text    

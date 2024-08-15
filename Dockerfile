@@ -1,19 +1,23 @@
-FROM ai_nirvana_base:latest
+FROM ai_nirvana_base:latest  
 
-WORKDIR /app
+WORKDIR /app  
 
-COPY . .
-COPY pytest.ini .
-COPY run_docker_tests.py .
+# 安装 Poetry  
+RUN pip install --no-cache-dir poetry  
 
-# 安装任何额外的项目特定依赖（如果有的话）
-RUN if [ -f requirements-project.txt ]; then \
-        pip install --no-cache-dir -r requirements-project.txt; \
-    fi
+# 复制 Poetry 相关文件  
+COPY pyproject.toml poetry.lock ./  
 
-# 验证 PyTorch 安装
-RUN python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
+# 安装依赖  
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi  
 
-CMD ["python", "src/main.py"]
+# 复制其他项目文件  
+COPY . .  
+
+# 验证 PyTorch 安装  
+RUN python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"  
+
+CMD ["python", "src/main.py"]  
 
 HEALTHCHECK CMD python -c "import requests; requests.get('http://localhost:8000')"

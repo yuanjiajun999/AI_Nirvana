@@ -2,36 +2,63 @@ import unittest
 from src.core.knowledge_base import KnowledgeBase
 
 class TestKnowledgeBase(unittest.TestCase):
+
     def setUp(self):
         self.kb = KnowledgeBase()
 
-    def test_add_and_get_knowledge(self):
-        self.kb.add_knowledge("test_key", "test_value")
-        self.assertEqual(self.kb.get_knowledge("test_key"), "test_value")
+    def test_add_knowledge(self):
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        self.assertIn("AI", self.kb.list_all_knowledge())
+
+    def test_add_invalid_key(self):
+        with self.assertRaises(ValueError):
+            self.kb.add_knowledge("", "Invalid Key")
+
+    def test_get_knowledge(self):
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        self.assertEqual(self.kb.get_knowledge("AI"), "Artificial Intelligence")
+
+    def test_get_non_existing_knowledge(self):
+        with self.assertRaises(KeyError):
+            self.kb.get_knowledge("NonExist")
 
     def test_update_knowledge(self):
-        self.kb.add_knowledge("test_key", "initial_value")
-        self.kb.update_knowledge("test_key", "updated_value")
-        self.assertEqual(self.kb.get_knowledge("test_key"), "updated_value")
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        self.kb.update_knowledge("AI", "Advanced AI")
+        self.assertEqual(self.kb.get_knowledge("AI"), "Advanced AI")
 
-    def test_update_nonexistent_knowledge(self):
+    def test_update_non_existing_knowledge(self):
         with self.assertRaises(KeyError):
-            self.kb.update_knowledge("nonexistent_key", "value")
+            self.kb.update_knowledge("NonExist", "Value")
 
     def test_delete_knowledge(self):
-        self.kb.add_knowledge("test_key", "test_value")
-        self.kb.delete_knowledge("test_key")
-        self.assertIsNone(self.kb.get_knowledge("test_key"))
-
-    def test_delete_nonexistent_knowledge(self):
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        self.kb.delete_knowledge("AI")
         with self.assertRaises(KeyError):
-            self.kb.delete_knowledge("nonexistent_key")
+            self.kb.get_knowledge("AI")
+
+    def test_delete_non_existing_knowledge(self):
+        with self.assertRaises(KeyError):
+            self.kb.delete_knowledge("NonExist")
 
     def test_list_all_knowledge(self):
-        self.kb.add_knowledge("key1", "value1")
-        self.kb.add_knowledge("key2", "value2")
-        all_knowledge = self.kb.list_all_knowledge()
-        self.assertEqual(all_knowledge, {"key1": "value1", "key2": "value2"})
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        self.kb.add_knowledge("ML", "Machine Learning")
+        knowledge = self.kb.list_all_knowledge()
+        self.assertEqual(len(knowledge), 2)
+        self.assertIn("AI", knowledge)
+        self.assertIn("ML", knowledge)
+
+    def test_retrieve(self):
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        self.kb.add_knowledge("ML", "Machine Learning")
+        results = self.kb.retrieve("Intelligence")
+        self.assertIn("Artificial Intelligence", results)
+
+    def test_retrieve_no_match(self):
+        self.kb.add_knowledge("AI", "Artificial Intelligence")
+        results = self.kb.retrieve("Biology")
+        self.assertEqual(len(results), 0)
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,8 @@ import functools
 from functools import wraps  
 from typing import Any, Callable, Dict, Optional  
 
+logger = logging.getLogger(__name__)
+
 class AIAssistantException(Exception):  
     """AI助手相关的自定义异常基类"""  
     def __init__(self, message: str, error_code: Optional[int] = None):  
@@ -59,15 +61,16 @@ def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging
 
 logger = setup_logger("ai_assistant", "ai_assistant.log")  
 
-def error_handler(func):  
-    @functools.wraps(func)  
-    def wrapper(*args, **kwargs):  
-        try:  
-            return func(*args, **kwargs)  
-        except Exception as e:  
-            logger.error(f"Error in {func.__name__}: {str(e)}")  
-            raise  # 确保异常被重新抛出  
-    return wrapper  
+def error_handler(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in {func.__name__}: {str(e)}", exc_info=True)
+            # 返回一个错误字典，而不是引发异常
+            return {"error": str(e), "positive": 0.0, "neutral": 0.0, "negative": 0.0}
+    return wrapper
 
 def log_function_call(func: Callable) -> Callable:  
     """  

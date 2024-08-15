@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict, List, Optional
 import json
-
+from src.core.model_interface import ModelInterface
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -10,14 +10,14 @@ from src.utils.error_handler import ModelError, error_handler, logger
 load_dotenv()
 
 class LanguageModel:
-    def __init__(self, default_model: str = "gpt-3.5-turbo-0125"):
-        self.api_key = "sk-vRu126d626325944f7040b39845200bafd41123d8f3g48Ol"  # 直接设置 API 密钥
-        self.default_model = default_model
-        self.client = OpenAI(api_key=self.api_key, base_url="https://api.gptsapi.net/v1")
-        logger.info(f"LanguageModel initialized with model: {default_model}")
+    def __init__(self, model_name: str = "gpt-3.5-turbo-0125"):
+        self.model_name = model_name
+        self.api_key = os.getenv("API_KEY")
+        self.client = OpenAI(api_key=self.api_key, base_url=os.getenv("API_BASE"))
+        logger.info(f"LanguageModel initialized with model: {self.model_name}")
 
     @error_handler
-    def generate_response(self, prompt: str, context: str = "", model: Optional[str] = None) -> str:
+    def generate_response(self, prompt: str, model: Optional[str] = None, context: Optional[str] = None) -> str:
         """
         生成响应。
 
@@ -32,22 +32,20 @@ class LanguageModel:
         Raises:
             ModelError: 如果生成响应时发生错误
         """
-        model = model or self.default_model
+        model = model or self.model_name
+        messages = [{"role": "system", "content": context or "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}]
+        
         try:
             response = self.client.chat.completions.create(
                 model=model,
-                messages=[
-                    {"role": "system", "content": context},
-                    {"role": "user", "content": prompt}
-                ]
+                messages=messages
             )
-            result = response.choices[0].message.content
-            logger.info(f"Generated response for prompt: {prompt[:50]}...")
-            return result
+            return response.choices[0].message.content
         except Exception as e:
-            logger.error(f"Error in generating response: {e}")
-            raise ModelError(f"Failed to generate response: {str(e)}")
+            raise ModelError(f"Error generating response: {str(e)}")
 
+        
     @error_handler
     def get_available_models(self) -> List[str]:
         """
@@ -61,12 +59,18 @@ class LanguageModel:
         """
         try:
             models = self.client.models.list()
-            model_list = [model.id for model in models.data]
-            logger.info(f"Retrieved available models: {model_list}")
-            return model_list
+            return [model.id for model in models.data]
         except Exception as e:
-            logger.error(f"Error in fetching available models: {e}")
-            raise ModelError(f"Failed to fetch available models: {str(e)}")
+            logger.error(f"Error retrieving available models: {str(e)}")
+            return []
+
+    @error_handler
+    def change_model(self, new_model: str) -> None:
+        if new_model in self.get_available_models():
+            self.model_name = new_model
+            logger.info(f"Model changed to: {self.model_name}")
+        else:
+            raise ValueError(f"Model {new_model} is not available.")
 
     @error_handler
     def change_default_model(self, model: str) -> None:
