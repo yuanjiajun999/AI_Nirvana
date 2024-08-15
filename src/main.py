@@ -58,7 +58,8 @@ AVAILABLE_COMMANDS = [
     'vars', 'explain', 'encrypt', 'decrypt', 'add_knowledge', 'get_knowledge', 
     'list_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
     'test_complex', 'test_models', 'test_code_safety', 'qa','init_active_learner',
-    'run_active_learning', 'al_model', 'al_committee', 'al_plot'
+    'run_active_learning', 'al_model', 'al_committee', 'al_plot','label_initial_data',
+    'view_committee',
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -327,6 +328,34 @@ class AINirvana:
         self.active_learner = ActiveLearner(self.X_pool, self.y_pool, self.X_test, self.y_test, random_state=42)
         print("主动学习器已初始化。")
 
+    def label_initial_data(self, n_samples=10):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized. Please use 'init_active_learner' command first.")
+    
+        initial_indices = self.active_learner.uncertainty_sampling(n_samples)
+        self.active_learner.label_samples(initial_indices)
+        print(f"{n_samples} samples have been labeled.")
+    
+    def set_active_learning_model(self, new_model):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized. Please use 'init_active_learner' command first.")
+        self.active_learner.set_model(new_model)
+        print(f"Model updated to: {type(new_model).__name__}")
+   
+    def view_committee(self):
+        if hasattr(self.active_learner, 'committee'):
+            print(f"Active learning committee consists of {len(self.active_learner.committee)} models:")
+            for i, model in enumerate(self.active_learner.committee, 1):
+                print(f"  Model {i}: {type(model).__name__}")
+        else:
+            print("No active learning committee has been created yet.")
+    def set_model(self, new_model):
+        self.model = new_model
+        self.is_fitted = False  # 重置拟合状态，因为这是一个新模型
+    
+    def is_active_learner_initialized(self):
+        return self.active_learner is not None
+
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
     # 在实际应用中，您可能需要从文件或数据库加载真实数据
@@ -348,23 +377,24 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 
 def get_new_model_from_user():
-    print("选择一个新的模型:")
+    print("Select a new model:")
     print("1. Random Forest")
     print("2. Support Vector Machine")
     print("3. Logistic Regression")
-    choice = input("请输入你的选择 (1/2/3): ")
+    choice = input("Enter your choice (1/2/3): ")
     
     if choice == '1':
-        n_estimators = int(input("输入树的数量 (默认 100): ") or 100)
-        return RandomForestClassifier(n_estimators=n_estimators, random_state=42)
+        from sklearn.ensemble import RandomForestClassifier
+        return RandomForestClassifier(random_state=42)
     elif choice == '2':
-        kernel = input("输入核函数类型 (linear/rbf/poly, 默认 rbf): ") or 'rbf'
-        return SVC(kernel=kernel, random_state=42)
+        from sklearn.svm import SVC
+        return SVC(random_state=42)
     elif choice == '3':
-        C = float(input("输入正则化参数 C (默认 1.0): ") or 1.0)
-        return LogisticRegression(C=C, random_state=42)
+        from sklearn.linear_model import LogisticRegression
+        return LogisticRegression(random_state=42)
     else:
-        print("无效的选择，使用默认的 Random Forest")
+        print("Invalid choice. Using default Random Forest.")
+        from sklearn.ensemble import RandomForestClassifier
         return RandomForestClassifier(random_state=42)
     
 def handle_sentiment(ai_nirvana):
@@ -563,21 +593,33 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                 ai_nirvana.clean_active_learning_data()
             return {"continue": True}
         elif command == "al_model":
-            action = input("Enter 'get' to get current model or 'set' to set a new model: ")
-            if action == "get":
-                model = ai_nirvana.get_active_learning_model()
-                print(f"Current active learning model: {model}")
-            elif action == "set":
-                new_model = get_new_model_from_user()
-                ai_nirvana.set_active_learning_model(new_model)
-                print("New model set for active learning.")
-            else:
-                print("Invalid action. Please enter 'get' or 'set'.")
+            while True:
+                action = input("Enter 'get' to get current model or 'set' to set a new model (or 'cancel' to exit): ").strip().lower()
+                if action == 'cancel':
+                    print("Operation cancelled.")
+                    break
+                elif action in ['get', 'set']:
+                    if action == "get":
+                        model = ai_nirvana.get_active_learning_model()
+                        print(f"Current active learning model: {model}")
+                    elif action == "set":
+                        new_model = get_new_model_from_user()
+                        ai_nirvana.set_active_learning_model(new_model)
+                        print("New model set for active learning.")
+                    break
+                else:
+                    print("Invalid input. Please enter 'get', 'set', or 'cancel'.")
             return {"continue": True}
         elif command == "al_committee":
-            n_models = int(input("Enter number of models for the committee: "))
-            ai_nirvana.create_active_learning_committee(n_models)
-            print("Active learning committee created.")
+            if not ai_nirvana.is_active_learner_initialized():
+                print("Error: Active learner not initialized. Please use 'init_active_learner' command first.")
+            else:
+                try:
+                    n_models = int(input("Enter number of models for the committee: "))
+                    ai_nirvana.create_active_learning_committee(n_models)
+                    print(f"Active learning committee with {n_models} models created.")
+                except ValueError as e:
+                    print(f"Error: {str(e)}")
             return {"continue": True}
         elif command == "al_plot":
             if hasattr(ai_nirvana, 'accuracy_history'):
@@ -586,7 +628,16 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             else:
                 print("No learning history available. Please run active learning first.")
             return {"continue": True}
-        
+        elif command == "label_initial_data":
+            try:
+                n_samples = int(input("Enter the number of initial samples to label: "))
+                ai_nirvana.label_initial_data(n_samples)
+            except ValueError as e:
+                print(f"Error: {str(e)}")
+            return {"continue": True}
+        elif command == "view_committee":
+            ai_nirvana.view_committee()
+            return {"continue": True}
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -630,6 +681,8 @@ def print_help() -> None:
             'al_model': '获取或设置主动学习模型',
             'al_committee': '创建主动学习委员会',
             'al_plot': '绘制主动学习曲线',
+            'label_initial_data': '标记数据',
+            'view_committee': '再次查看委员会',
         }
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
