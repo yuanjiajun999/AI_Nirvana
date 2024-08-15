@@ -3,14 +3,22 @@ import io
 import sys
 import argparse
 import logging
+import time
+import numpy as np
+from tqdm import tqdm
 import concurrent.futures
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from typing import Dict, Any, List
 from io import StringIO
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from tests.complex_text_analysis import test_complex_text_analysis
 from tests.model_comparison import test_model_comparison
 from tests.code_execution_safety import test_code_execution_safety
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
 import pandas as pd 
 from src.core.code_executor import CodeExecutor
 from src.core.model_factory import ModelFactory
@@ -41,6 +49,7 @@ from src.core.semi_supervised_learning import AdvancedSemiSupervisedTrainer
 from src.core.reinforcement_learning import DQNAgent
 from src.core.knowledge_base import KnowledgeBase
 from src.core.enhanced_ai_assistant import EnhancedAIAssistant  # 新增导入
+from src.core.active_learning import ActiveLearner
 
 logger = logging.getLogger(__name__)
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
@@ -48,7 +57,8 @@ AVAILABLE_COMMANDS = [
     'quit', 'clear', 'sentiment', 'execute', 'summarize', 'change_model', 
     'vars', 'explain', 'encrypt', 'decrypt', 'add_knowledge', 'get_knowledge', 
     'list_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
-    'test_complex', 'test_models', 'test_code_safety', 'qa'
+    'test_complex', 'test_models', 'test_code_safety', 'qa','init_active_learner',
+    'run_active_learning', 'al_model', 'al_committee', 'al_plot'
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -71,6 +81,8 @@ class AINirvana:
         self.privacy_enhancer = PrivacyEnhancement()
         self.variable_state = {}
         self.knowledge_base = KnowledgeBase()
+        self.active_learner = None  # 初始化为 None
+        self.accuracy_history = None
         print(f"AINirvana instance created with model: {self.model_name}")
 
     @error_handler
@@ -211,8 +223,7 @@ class AINirvana:
         language = self.assistant.detect_language(task_description)
         return self.assistant.plan_task(task_description, language)
 
-    def translate(self, text: str, target_lang: str) -> str:
-        source_lang = self.assistant.detect_language(text)
+    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
         return self.assistant.translate(text, source_lang, target_lang)
 
     def handle_qa(ai_nirvana):
@@ -243,6 +254,119 @@ class AINirvana:
             print(f"发生错误: {str(e)}")
             return None
 
+    def initialize_active_learner(self, X_pool, y_pool, X_test, y_test):
+        self.active_learner = ActiveLearner(X_pool, y_pool, X_test, y_test, random_state=42)
+
+    def perform_active_learning(self, initial_samples, n_iterations, samples_per_iteration, strategy='uncertainty'):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized. Call initialize_active_learner first.")
+    
+        print("Starting active learning loop. Press Ctrl+C to interrupt.")
+        accuracy_history = []
+        try:
+            with tqdm(total=n_iterations, desc="Active Learning Progress") as pbar:
+                for i in range(n_iterations):
+                    start_time = time.time()
+                    if i == 0:
+                        # 处理初始样本
+                        self.active_learner.label_samples(range(initial_samples))
+                        accuracy = self.active_learner.active_learning_step(0, strategy)  # 0 表示不需要额外采样
+                    else:
+                        accuracy = self.active_learner.active_learning_step(samples_per_iteration, strategy)
+                    accuracy_history.append(accuracy)
+                    elapsed_time = time.time() - start_time
+                    pbar.set_postfix({"Accuracy": f"{accuracy:.4f}", "Time": f"{elapsed_time:.2f}s"})
+                    pbar.update(1)
+                    time.sleep(0.1)
+        except KeyboardInterrupt:
+            print("\nActive learning interrupted by user.")
+    
+        final_accuracy = accuracy_history[-1] if accuracy_history else None
+        self.accuracy_history = accuracy_history
+        return final_accuracy, accuracy_history
+    
+    def get_active_learning_model(self):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized.")
+        return self.active_learner.get_model()
+
+    def set_active_learning_model(self, new_model):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized.")
+        self.active_learner.set_model(new_model)
+
+    def create_active_learning_committee(self, n_models=3):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized.")
+        self.active_learner.create_committee(n_models)
+
+    def plot_active_learning_curve(self, accuracy_history):
+        if self.active_learner is None:
+            raise ValueError("Active learner not initialized.")
+        self.active_learner.plot_learning_curve(accuracy_history)
+
+    def clean_active_learning_data(self):
+        if self.active_learner is not None:
+            del self.active_learner.X_pool
+            del self.active_learner.y_pool
+            del self.active_learner.X_test
+            del self.active_learner.y_test
+            import gc
+            gc.collect()
+            print("Active learning data cleaned to free up memory.")    
+    
+    def load_data_for_active_learning(self):
+        self.X_pool, self.y_pool, self.X_test, self.y_test = load_data_for_active_learning()
+        print("数据已加载到 AINirvana 实例中。")
+
+    def initialize_active_learner(self):
+        if not hasattr(self, 'X_pool'):
+            print("数据尚未加载。正在加载示例数据...")
+            self.load_data_for_active_learning()
+        
+        self.active_learner = ActiveLearner(self.X_pool, self.y_pool, self.X_test, self.y_test, random_state=42)
+        print("主动学习器已初始化。")
+
+def load_data_for_active_learning():
+    # 这里我们使用一个简单的合成数据集作为示例
+    # 在实际应用中，您可能需要从文件或数据库加载真实数据
+    print("正在生成示例数据集...")
+    X, y = make_classification(n_samples=1000, n_features=20, n_informative=2, n_redundant=2,
+                               n_repeated=0, n_classes=2, n_clusters_per_class=2, random_state=42)
+    
+    # 将数据分为训练集（作为未标记池）和测试集
+    X_pool, X_test, y_pool, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    print(f"生成的数据集大小：")
+    print(f"未标记池：{X_pool.shape[0]} 样本")
+    print(f"测试集：{X_test.shape[0]} 样本")
+    
+    return X_pool, y_pool, X_test, y_test
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+
+def get_new_model_from_user():
+    print("选择一个新的模型:")
+    print("1. Random Forest")
+    print("2. Support Vector Machine")
+    print("3. Logistic Regression")
+    choice = input("请输入你的选择 (1/2/3): ")
+    
+    if choice == '1':
+        n_estimators = int(input("输入树的数量 (默认 100): ") or 100)
+        return RandomForestClassifier(n_estimators=n_estimators, random_state=42)
+    elif choice == '2':
+        kernel = input("输入核函数类型 (linear/rbf/poly, 默认 rbf): ") or 'rbf'
+        return SVC(kernel=kernel, random_state=42)
+    elif choice == '3':
+        C = float(input("输入正则化参数 C (默认 1.0): ") or 1.0)
+        return LogisticRegression(C=C, random_state=42)
+    else:
+        print("无效的选择，使用默认的 Random Forest")
+        return RandomForestClassifier(random_state=42)
+    
 def handle_sentiment(ai_nirvana):
     text = input("请输入要分析情感的文本：")
     sentiment = ai_nirvana.analyze_sentiment(text)
@@ -415,6 +539,54 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             answer = ai_nirvana.assistant.answer_question(question)
             print(f"回答：{answer}")
             return {"continue": True}
+        elif command == "init_active_learner":
+            ai_nirvana.initialize_active_learner()
+            return {"continue": True}
+        elif command == "run_active_learning":
+            if ai_nirvana.active_learner is None:
+                print("Active learner not initialized. Please use 'init_active_learner' command first.")
+                return {"continue": True}
+            initial_samples = int(input("Enter initial samples: "))
+            n_iterations = int(input("Enter number of iterations: "))
+            samples_per_iteration = int(input("Enter samples per iteration: "))
+            strategy = input("Enter sampling strategy (default: uncertainty): ") or "uncertainty"
+            final_accuracy, accuracy_history = ai_nirvana.perform_active_learning(
+                initial_samples, n_iterations, samples_per_iteration, strategy
+            )
+            if final_accuracy is not None:
+                print(f"Final accuracy: {final_accuracy}")
+            choice = input("Do you want to plot the learning curve? (y/n): ")
+            if choice.lower() == 'y':
+                ai_nirvana.plot_active_learning_curve(accuracy_history)
+            choice = input("Do you want to clean the active learning data to free up memory? (y/n): ")
+            if choice.lower() == 'y':
+                ai_nirvana.clean_active_learning_data()
+            return {"continue": True}
+        elif command == "al_model":
+            action = input("Enter 'get' to get current model or 'set' to set a new model: ")
+            if action == "get":
+                model = ai_nirvana.get_active_learning_model()
+                print(f"Current active learning model: {model}")
+            elif action == "set":
+                new_model = get_new_model_from_user()
+                ai_nirvana.set_active_learning_model(new_model)
+                print("New model set for active learning.")
+            else:
+                print("Invalid action. Please enter 'get' or 'set'.")
+            return {"continue": True}
+        elif command == "al_committee":
+            n_models = int(input("Enter number of models for the committee: "))
+            ai_nirvana.create_active_learning_committee(n_models)
+            print("Active learning committee created.")
+            return {"continue": True}
+        elif command == "al_plot":
+            if hasattr(ai_nirvana, 'accuracy_history'):
+                ai_nirvana.plot_active_learning_curve(ai_nirvana.accuracy_history)
+                print("Learning curve plotted.")
+            else:
+                print("No learning history available. Please run active learning first.")
+            return {"continue": True}
+        
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -452,7 +624,12 @@ def print_help() -> None:
             'test_complex': '执行复杂文本分析测试',
             'test_models': '执行模型比较测试',
             'test_code_safety': '执行代码安全性测试',
-            'qa': '问答功能'
+            'qa': '问答功能',
+            'init_active_learner': '初始化主动学习器',
+            'run_active_learning': '执行主动学习循环',
+            'al_model': '获取或设置主动学习模型',
+            'al_committee': '创建主动学习委员会',
+            'al_plot': '绘制主动学习曲线',
         }
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
@@ -460,7 +637,10 @@ def print_help() -> None:
     print("- 执行代码时，某些操作（如文件操作和模块导入）出于安全考虑是受限的。")
     print("- 支持基本的Python操作，包括变量赋值、条件语句、循环等。")
     print("- 如果遇到'未定义'的错误，可能是因为该操作被安全限制所阻止。")
-    
+    print("- 请按正确顺序使用主动学习相关命令：先初始化主动学习器，再执行主动学习。")
+    print("- 主动学习可能涉及大量数据和计算，请确保有足够的系统资源。")
+    print("- 长时间运行的操作可以通过 Ctrl+C 中断。")
+
 def main(config: Config):  
     ai_nirvana = AINirvana(config)  
     print("欢迎使用 AI Nirvana 智能助手！")  

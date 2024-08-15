@@ -191,3 +191,20 @@ class ActiveLearner:
 
     def label_samples(self, indices):  
         self.labeled_indices = np.union1d(self.labeled_indices, indices).astype(int)
+
+    def active_learning_step(self, n_samples, strategy='uncertainty'):
+        selected_indices = self._sample(n_samples, strategy)
+        X_new = self.X_pool[selected_indices]
+        y_new = self.y_pool[selected_indices]
+    
+        if X_new.ndim == 1:
+            X_new = X_new.reshape(1, -1)
+    
+        X_train, y_train = self.get_labeled_data()
+        X_train = np.vstack((X_train, X_new))
+        y_train = np.concatenate((y_train, y_new))
+    
+        self.train(X_train, y_train)
+        self.update_pool(selected_indices)
+    
+        return self.evaluate()  # 确保返回准确率  

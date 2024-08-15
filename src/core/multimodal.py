@@ -60,11 +60,16 @@ class MultimodalInterface:
         probabilities = torch.nn.functional.softmax(logits, dim=-1)
         return {"image_classification": probabilities.tolist()[0]}
 
-    def process(self, input_data: Union[str, bytes, Image.Image, List[Union[str, bytes, Image.Image]]]):
-        if isinstance(input_data, list):
-            return [self.process_single(item) for item in input_data]
-        return self.process_single(input_data)
-
+    def process(self, input_data):
+        if isinstance(input_data, str):
+            return self.process_text(input_data)
+        elif isinstance(input_data, bytes):
+            return self.process_image(input_data)
+        elif isinstance(input_data, Image.Image):
+            return self.process_image(input_data)
+        else:
+            raise ValueError("Unsupported input type. Expected str, bytes, or PIL.Image.Image.")
+    
     def process_single(self, input_data: Union[str, bytes, Image.Image]):
         if isinstance(input_data, str):
             return self.process_input("text", input_data)
