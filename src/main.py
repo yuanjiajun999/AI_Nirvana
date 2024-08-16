@@ -6,6 +6,7 @@ import logging
 import time
 import numpy as np
 from tqdm import tqdm
+import featuretools as ft
 import concurrent.futures
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -50,6 +51,7 @@ from src.core.reinforcement_learning import DQNAgent
 from src.core.knowledge_base import KnowledgeBase
 from src.core.enhanced_ai_assistant import EnhancedAIAssistant  # 新增导入
 from src.core.active_learning import ActiveLearner
+from src.core.auto_feature_engineering import AutoFeatureEngineer
 
 logger = logging.getLogger(__name__)
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
@@ -59,7 +61,9 @@ AVAILABLE_COMMANDS = [
     'list_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
     'test_complex', 'test_models', 'test_code_safety', 'qa','init_active_learner',
     'run_active_learning', 'al_model', 'al_committee', 'al_plot','label_initial_data',
-    'view_committee',
+    'view_committee','init_feature_engineer', 'create_entity_set', 'generate_features',
+    'get_important_features', 'remove_low_info_features','remove_correlated_features', 'create_custom_feature',
+    'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features'
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -84,6 +88,7 @@ class AINirvana:
         self.knowledge_base = KnowledgeBase()
         self.active_learner = None  # 初始化为 None
         self.accuracy_history = None
+        self.feature_engineer = None  # 初始化为 None
         print(f"AINirvana instance created with model: {self.model_name}")
 
     @error_handler
@@ -355,6 +360,85 @@ class AINirvana:
     
     def is_active_learner_initialized(self):
         return self.active_learner is not None
+    
+    def initialize_feature_engineer(self, data, target_column):
+        self.feature_engineer = AutoFeatureEngineer(data, target_column)
+        print("Feature engineer initialized successfully.")
+
+    def create_entity_set(self, index_column, time_index=None):
+        if index_column not in self.data.columns:
+            print(f"索引列 '{index_column}' 不存在，正在创建...")
+            self.data[index_column] = range(len(self.data))
+    
+        self.entityset = ft.EntitySet(id="data")
+        self.entityset = self.entityset.add_dataframe(
+            dataframe_name="data",
+            dataframe=self.data,
+            index=index_column,
+            time_index=time_index
+        )
+        print("实体集创建成功。")
+        return self.entityset
+
+    def generate_features(self, max_depth, primitives=None):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+    
+        if primitives is None:
+            # 使用默认原语
+            primitives = ["count", "sum", "mean", "max", "min", "std"]  # 示例默认原语
+    
+        return self.feature_engineer.generate_features(max_depth, primitives)
+
+    def get_important_features(self, n=10, method='correlation'):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        return self.feature_engineer.get_important_features(n, method)
+
+    def remove_low_information_features(self, threshold=0.95):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        return self.feature_engineer.remove_low_information_features(threshold)
+
+    def remove_highly_correlated_features(self, threshold=0.9):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        return self.feature_engineer.remove_highly_correlated_features(threshold)
+
+    def create_custom_feature(self, feature_name, function):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        self.feature_engineer.create_custom_feature(feature_name, function)
+
+    def get_feature_types(self):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        return self.feature_engineer.get_feature_types()
+
+    def get_feature_descriptions(self):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        return self.feature_engineer.get_feature_descriptions()
+
+    def get_feature_matrix(self):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        return self.feature_engineer.get_feature_matrix()
+
+    def normalize_features(self, method='standard'):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        self.feature_engineer.normalize_features(method)
+
+    def encode_categorical_features(self, method='onehot'):
+        if self.feature_engineer is None:
+            raise ValueError("Feature engineer not initialized. Call initialize_feature_engineer first.")
+        self.feature_engineer.encode_categorical_features(method)    
+
+    def create_entity_set(self, index_column, time_index=None):
+        if self.feature_engineer is None:
+            raise ValueError("特征工程器尚未初始化。请先使用 'init_feature_engineer' 命令。")
+        return self.feature_engineer.create_entity_set(index_column, time_index)    
 
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
@@ -638,6 +722,114 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
         elif command == "view_committee":
             ai_nirvana.view_committee()
             return {"continue": True}
+        
+        elif command == "init_feature_engineer":
+            data_source = input("请选择数据源 (1: 示例数据, 2: 本地文件): ")
+        
+            if data_source == "1":
+                 n_samples = int(input("请输入样本数量（默认1000）: ") or "1000")
+                 n_features = int(input("请输入特征数量（默认10）: ") or "10")
+                 data = AutoFeatureEngineer.generate_sample_data(n_samples, n_features)
+                 target_column = 'target'
+                 print(f"已生成示例数据，包含 {n_samples} 个样本和 {n_features} 个特征。目标列为 'target'")
+            elif data_source == "2":
+                data_path = input("请输入数据文件路径: ")
+                target_column = input("请输入目标列名称: ")
+                try:
+                    data = pd.read_csv(data_path)
+                    print(f"成功读取数据文件，包含 {data.shape[0]} 个样本和 {data.shape[1]} 个列。")
+                except Exception as e:
+                    print(f"读取数据文件时出错: {str(e)}")
+                    return {"continue": True}
+            else:
+                print("无效的选择。请输入 1 或 2。")
+                return {"continue": True}
+        
+            try:
+                ai_nirvana.initialize_feature_engineer(data, target_column)
+                print("特征工程器初始化成功。")
+            except Exception as e:
+                print(f"初始化特征工程器时出错: {str(e)}")
+            return {"continue": True}
+
+        elif command == "create_entity_set":
+            index_column = input("请输入索引列名称（如果不存在将自动创建）: ").strip()
+            time_index = input("请输入时间索引列名称（如果没有请直接回车）: ").strip() or None
+            try:
+                ai_nirvana.create_entity_set(index_column, time_index)
+                print("实体集创建成功。")
+            except Exception as e:
+                print(f"创建实体集时出错: {str(e)}")
+            return {"continue": True}
+
+        elif command == "generate_features":
+            max_depth = int(input("Enter max depth for feature generation: "))
+            use_custom = input("Use custom primitives? (y/n): ").lower() == 'y'
+            primitives = None
+            if use_custom:
+                primitives_input = input("Enter primitives (comma-separated) or press Enter for default: ").strip()
+                if primitives_input:
+                    primitives = [p.strip() for p in primitives_input.split(',')]
+                else:
+                    print("No custom primitives entered. Using default primitives.")
+    
+            try:
+                feature_matrix, feature_defs = ai_nirvana.generate_features(max_depth, primitives)
+                print(f"Generated {len(feature_defs)} features.")
+            except Exception as e:
+                print(f"Error generating features: {str(e)}")
+            return {"continue": True}
+
+        elif command == "get_important_features":
+            n = int(input("Enter number of important features to retrieve: "))
+            method = input("Enter method (correlation/mutual_info): ")
+            important_features = ai_nirvana.get_important_features(n, method)
+            print(f"Top {n} important features: {important_features}")
+            return {"continue": True}
+
+        elif command == "remove_low_info_features":
+            threshold = float(input("Enter threshold for low information features: "))
+            removed_features = ai_nirvana.remove_low_information_features(threshold)
+            print(f"Removed {len(removed_features)} low information features.")
+            return {"continue": True}
+
+        elif command == "remove_correlated_features":
+            threshold = float(input("Enter correlation threshold: "))
+            removed_features = ai_nirvana.remove_highly_correlated_features(threshold)
+            print(f"Removed {len(removed_features)} highly correlated features.")
+            return {"continue": True}
+
+        elif command == "create_custom_feature":
+            feature_name = input("Enter the name for the custom feature: ")
+            function_str = input("Enter the Python function to generate the feature: ")
+            function = eval(f"lambda row: {function_str}")
+            ai_nirvana.create_custom_feature(feature_name, function)
+            print(f"Custom feature '{feature_name}' created successfully.")
+            return {"continue": True}
+
+        elif command == "get_feature_types":
+            feature_types = ai_nirvana.get_feature_types()
+            for feature, type_ in feature_types.items():
+                print(f"{feature}: {type_}")
+            return {"continue": True}
+
+        elif command == "get_feature_descriptions":
+            descriptions = ai_nirvana.get_feature_descriptions()
+            for desc in descriptions:
+                print(desc)
+            return {"continue": True}
+
+        elif command == "normalize_features":
+            method = input("Enter normalization method (standard/minmax): ")
+            ai_nirvana.normalize_features(method)
+            print("Features normalized successfully.")
+            return {"continue": True}
+
+        elif command == "encode_categorical_features":
+            method = input("Enter encoding method (onehot/label): ")
+            ai_nirvana.encode_categorical_features(method)
+            print("Categorical features encoded successfully.")
+            return {"continue": True}
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -683,6 +875,17 @@ def print_help() -> None:
             'al_plot': '绘制主动学习曲线',
             'label_initial_data': '标记数据',
             'view_committee': '再次查看委员会',
+            'init_feature_engineer': '初始化特征工程器',
+            'create_entity_set': '创建实体集',
+            'generate_features': '生成特征',
+            'get_important_features': '获取重要特征',
+            'remove_low_info_features': '移除低信息特征',
+            'remove_correlated_features': '移除高度相关特征',
+            'create_custom_feature': '创建自定义特征',
+            'get_feature_types': '获取特征类型',
+            'get_feature_descriptions': '获取特征描述',
+            'normalize_features': '标准化特征',
+            'encode_categorical_features': '编码分类特征',
         }
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
@@ -693,6 +896,11 @@ def print_help() -> None:
     print("- 请按正确顺序使用主动学习相关命令：先初始化主动学习器，再执行主动学习。")
     print("- 主动学习可能涉及大量数据和计算，请确保有足够的系统资源。")
     print("- 长时间运行的操作可以通过 Ctrl+C 中断。")
+    print("'init_feature_engineer' - 初始化特征工程器")
+    print("  - 支持使用示例数据或本地文件")
+    print("  - 使用示例数据时可以指定样本数量和特征数量")
+    print("  - 使用本地文件时需要提供文件路径和目标列名称")
+    print("'get_important_features' - 获取最重要的特征（需要先初始化特征工程器）")
 
 def main(config: Config):  
     ai_nirvana = AINirvana(config)  

@@ -297,3 +297,15 @@ class AutoFeatureEngineer:
                 self.feature_matrix[feature] = self.feature_matrix[feature].astype('category').cat.codes
         else:
             raise ValueError("Invalid encoding method. Choose 'onehot' or 'label'.")
+        
+    @staticmethod
+    def generate_sample_data(n_samples=1000, n_features=10):
+        """生成示例数据用于特征工程测试"""
+        np.random.seed(42)
+        data = pd.DataFrame({
+            f'feature_{i}': np.random.rand(n_samples) for i in range(n_features)
+        })
+        data['target'] = np.random.randint(0, 2, n_samples)  # 二分类目标变量
+        data.index.name = 'sample_id'  # 将索引命名为 'sample_id'
+        data = data.reset_index()  # 将索引转换为列
+        return data 

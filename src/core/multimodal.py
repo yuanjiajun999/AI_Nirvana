@@ -108,3 +108,17 @@ class MultimodalInterface:
             "image_classification": image_result["image_classification"],
             "fused_embedding": fused_embedding.tolist()[0]
         }
+    
+    def process(self, input_data):
+        try:
+            if isinstance(input_data, str):
+                # 直接在这里处理文本
+                # 可以添加任何需要的文本处理逻辑
+                return input_data  # 或者返回处理后的文本
+            elif isinstance(input_data, Image.Image):
+                return self.process_image(input_data)
+            else:
+                raise ValueError("Unsupported input type")
+        except Exception as e:
+            print(f"Error in MultimodalInterface.process: {str(e)}")
+            raise
