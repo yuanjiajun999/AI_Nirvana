@@ -56,7 +56,7 @@ from src.core.auto_feature_engineering import AutoFeatureEngineer
 logger = logging.getLogger(__name__)
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
 AVAILABLE_COMMANDS = [
-    'quit', 'clear', 'sentiment', 'execute', 'summarize', 'change_model', 
+    'quit', 'clear', 'sentiment', 'execute', 'validate_code', 'supported_languages', 'summarize', 'change_model', 
     'vars', 'explain', 'encrypt', 'decrypt', 'add_knowledge', 'get_knowledge', 
     'list_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
     'test_complex', 'test_models', 'test_code_safety', 'qa','init_active_learner',
@@ -189,6 +189,14 @@ class AINirvana:
             sys.stdout = sys.__stdout__  
             sys.stderr = sys.__stderr__   
         
+    @error_handler
+    def validate_code(self, code: str) -> bool:
+        return self.code_executor.validate_code(code)
+
+    @error_handler
+    def get_supported_languages(self) -> List[str]:
+        return self.code_executor.get_supported_languages()
+    
     def encrypt_sensitive_data(self, data: str) -> str:
         return self.assistant.encrypt_sensitive_data(data)
 
@@ -564,6 +572,27 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                 explanation_result = ai_nirvana.explain_code_result(code, result)  
                 print("解释：", explanation_result)  
             return {"continue": True}
+        elif command == "validate_code":
+            print("请输入要验证的 Python 代码（输入空行结束）：")
+            code_lines = []
+            while True:
+                line = input()
+                if line.strip() == "":
+                    break
+                code_lines.append(line)
+            code = "\n".join(code_lines)
+            is_valid = ai_nirvana.validate_code(code)
+            if is_valid:
+                print("代码验证通过，是安全的。")
+            else:
+                print("代码验证失败，可能存在安全风险。")
+            return {"continue": True}
+        elif command == "supported_languages":
+            languages = ai_nirvana.get_supported_languages()
+            print("支持的编程语言:")
+            for lang in languages:
+                print(f"- {lang}")
+            return {"continue": True}
         elif command == "vars":
             print("当前定义的变量:")
             print(ai_nirvana.get_variable_state())
@@ -851,6 +880,8 @@ def print_help() -> None:
             'clear': '清除对话历史和变量状态',
             'sentiment': '对下一条输入进行情感分析',
             'execute': '执行 Python 代码',
+            'validate_code': '验证 Python 代码的安全性',
+            'supported_languages': '显示支持的编程语言列表',
             'summarize': '生成文本摘要',
             'change_model': '更改使用的模型',
             'vars': '显示当前定义的所有变量',
