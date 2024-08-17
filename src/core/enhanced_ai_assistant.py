@@ -46,20 +46,23 @@ class EnhancedAIAssistant:
             return text  # 如果翻译失败，返回原文
         
     @error_handler
-    def process_input(self, input_data: Any, source_language: str = None) -> str:
-        if isinstance(input_data, str):
-            if not source_language:
-                source_language = self.detect_language(input_data)
-            
-            if source_language != 'en':
-                input_data = self.translate(input_data, source_language, 'en')
-
-        response = self.ai_assistant.process_input(input_data)
-
-        if source_language != 'en':
-            response = self.translate(response, 'en', source_language)
-
-        return response
+    def process_input(self, input_data: str, language: str = 'en') -> str:
+        try:
+            # 如果输入不是英语，先翻译成英语
+            if language != 'en':
+                input_data = self.translate(input_data, 'en')
+        
+            # 处理输入数据
+            response = self.generate_response(input_data)
+        
+            # 如果原始语言不是英语，将响应翻译回原始语言
+            if language != 'en':
+                response = self.translate(response, language)
+        
+            return response
+        except Exception as e:
+            logger.error(f"Error in process_input: {str(e)}")
+            return f"An error occurred: {str(e)}"
 
     @error_handler
     def generate_response(self, prompt: str, language: str = 'en') -> str:

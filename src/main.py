@@ -54,6 +54,7 @@ from src.core.enhanced_ai_assistant import EnhancedAIAssistant  # 新增导入
 from src.core.active_learning import ActiveLearner
 from src.core.auto_feature_engineering import AutoFeatureEngineer
 from src.core.digital_twin import DigitalTwin
+from sklearn.ensemble import IsolationForest
 
 logger = logging.getLogger(__name__)
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
@@ -466,10 +467,10 @@ class AINirvana:
         # 定义模型函数
         model = lambda state, t: [state[0] + 1, state[1] * 0.99]
 
-        # 定义 detect_anomalies 方法
         def detect_anomalies(sensor_data):
-            anomalies = [x for x in sensor_data if x > 500]
-            return anomalies
+            clf = IsolationForest(contamination=0.1, random_state=42)
+            anomalies = clf.fit_predict(sensor_data.reshape(-1, 1))
+            return np.where(anomalies == -1)[0]  # 返回异常数据的索引
 
         # 定义 optimize 方法
         def optimize(objective_function, constraints):
@@ -567,6 +568,10 @@ class AINirvana:
             return {"error": str(e)}
 
     def update_digital_twin_model(self, new_model_func):
+        if self.digital_twin is None:
+            print("Error: Digital twin has not been created yet. Use 'create_digital_twin' first.")
+            return
+    
         # 定义异常检测方法
         def detect_anomalies(sensor_data):
             anomalies = [x for x in sensor_data if x > 500]
@@ -577,21 +582,7 @@ class AINirvana:
 
         # 定义优化方法
         def optimize(objective_function, constraints):
-            from scipy.optimize import minimize
-
-            # 初始猜测
-            initial_guess = [1, 1]  # 根据实际情况调整
-
-            # 转换约束条件
-            constraint_dicts = [{'type': c_type, 'fun': c_func} for c_func, c_type in constraints]
-
-            # 执行优化
-            result = minimize(objective_function, initial_guess, constraints=constraint_dicts)
-
-            if not result.success:
-                raise ValueError("Optimization failed: " + result.message)
-        
-            return result.x  # 返回优化后的参数
+            return self.digital_twin.optimize(objective_function, constraints)
 
         # 将 optimize 方法附加到模型函数
         new_model_func.optimize = optimize
@@ -601,10 +592,43 @@ class AINirvana:
         print("物理系统模型已更新并附加了异常检测和优化方法。")
 
     def validate_digital_twin_model(self, validation_data):
-        if self.digital_twin:
-            return self.digital_twin.validate_model(validation_data)
-        else:
-            print("数字孪生系统尚未初始化。")
+        if self.digital_twin is None:
+            print("Error: Digital twin has not been created yet. Use 'create_digital_twin' first.")
+            return
+    
+        # 确保 validation_data 是 numpy 数组
+        if isinstance(validation_data, str):
+            validation_data = np.array([float(x) for x in validation_data.split()])
+        elif not isinstance(validation_data, np.ndarray):
+            validation_data = np.array(validation_data)
+    
+        # 将验证数据分为初始条件和时间步长
+        initial_condition = validation_data[0]
+        time_steps = np.arange(len(validation_data))
+    
+        # 使用模型进行预测
+        predicted_values = self.digital_twin.simulate([initial_condition], time_steps)
+    
+        # 计算均方误差
+        mse = np.mean((predicted_values[:, 0] - validation_data) ** 2)
+    
+        # 将均方误差转换为准确度分数
+        accuracy = 1 / (1 + mse)
+    
+        print(f"模型验证准确性: {accuracy}")
+        print(f"预测值: {predicted_values[:, 0]}")
+        print(f"实际值: {validation_data}")
+        return accuracy
+   
+    def optimize_digital_twin(self, objective_function, constraints) -> Dict:
+        if self.digital_twin is None:
+            return {"error": "Digital twin has not been created yet."}
+        try:
+            optimal_params = self.digital_twin.optimize(objective_function, constraints)
+            return {"success": True, "optimal_parameters": optimal_params.tolist()}
+        except Exception as e:
+            logger.error(f"Error in digital twin optimization: {str(e)}")
+            return {"error": str(e)}       
     
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
