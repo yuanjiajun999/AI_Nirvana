@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
 from src.core.digital_twin import DigitalTwin
+from src.config import Config
+from src.main import AINirvana
 
 def dummy_physical_model(state, t):
     return -0.1 * state
@@ -47,6 +49,22 @@ class TestDigitalTwin(unittest.TestCase):
         validation_data = np.array([0.1, 0.2, 0.3, 0.4])
         accuracy = self.digital_twin.validate_model(validation_data)
         self.assertIsInstance(accuracy, float)
+
+    def test_digital_twin_initialization(self):
+        config = Config("config.json")
+        ai_nirvana = AINirvana(config)
+        assert ai_nirvana.digital_twin is not None, "数字孪生系统未能初始化"
+        print("测试通过：数字孪生系统成功初始化。")
+
+    def test_digital_twin_simulation(self):
+        config = Config("config.json")
+        ai_nirvana = AINirvana(config)
+        initial_conditions = [1.0, 2.0]
+        time_steps = [0, 1, 2, 3]
+        result = ai_nirvana.simulate_digital_twin(initial_conditions, time_steps)
+        assert result is not None, "模拟未能成功执行"
+        print("测试通过：数字孪生系统模拟成功。")
+    
 
 if __name__ == '__main__':
     unittest.main()

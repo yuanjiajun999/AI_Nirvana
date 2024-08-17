@@ -4,6 +4,7 @@ import sys
 import argparse
 import logging
 import time
+import scipy.optimize as opt
 import numpy as np
 from tqdm import tqdm
 import featuretools as ft
@@ -52,6 +53,7 @@ from src.core.knowledge_base import KnowledgeBase
 from src.core.enhanced_ai_assistant import EnhancedAIAssistant  # 新增导入
 from src.core.active_learning import ActiveLearner
 from src.core.auto_feature_engineering import AutoFeatureEngineer
+from src.core.digital_twin import DigitalTwin
 
 logger = logging.getLogger(__name__)
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
@@ -63,7 +65,9 @@ AVAILABLE_COMMANDS = [
     'run_active_learning', 'al_model', 'al_committee', 'al_plot','label_initial_data',
     'view_committee','init_feature_engineer', 'create_entity_set', 'generate_features',
     'get_important_features', 'remove_low_info_features','remove_correlated_features', 'create_custom_feature',
-    'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features'
+    'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features',
+    'create_digital_twin', 'simulate_digital_twin', 'monitor_digital_twin',
+    'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model'
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -89,6 +93,8 @@ class AINirvana:
         self.active_learner = None  # 初始化为 None
         self.accuracy_history = None
         self.feature_engineer = None  # 初始化为 None
+        self.digital_twin = None  # 初始时未创建
+        self.initialize_modules()  # 自动检测并初始化模块
         print(f"AINirvana instance created with model: {self.model_name}")
 
     @error_handler
@@ -447,7 +453,159 @@ class AINirvana:
         if self.feature_engineer is None:
             raise ValueError("特征工程器尚未初始化。请先使用 'init_feature_engineer' 命令。")
         return self.feature_engineer.create_entity_set(index_column, time_index)    
+    
+    def initialize_modules(self):
+        try:
+            # 使用自定义模型创建 DigitalTwin 实例
+            self.create_custom_digital_twin()
+            print("数字孪生系统已自动初始化。")
+        except Exception as e:
+            print(f"数字孪生系统初始化失败: {e}")
 
+    def create_custom_digital_twin(self):
+        # 定义模型函数
+        model = lambda state, t: [state[0] + 1, state[1] * 0.99]
+
+        # 定义 detect_anomalies 方法
+        def detect_anomalies(sensor_data):
+            anomalies = [x for x in sensor_data if x > 500]
+            return anomalies
+
+        # 定义 optimize 方法
+        def optimize(objective_function, constraints):
+            from scipy.optimize import minimize
+            import numpy as np
+
+            # 初始猜测值
+            initial_guess = [1.0, 500.0]  # 或者其他接近预期解的猜测值
+
+            # 转换约束条件
+            constraint_dicts = [{'type': c_type, 'fun': c_func} for c_func, c_type in constraints]
+
+            # 设置优化选项，增加最大迭代次数和函数评估次数
+            options = {'maxiter': 10000, 'maxfev': 50000, 'disp': True, 'rhobeg': 1.0, 'tol': 1e-6}
+
+            # 使用 'COBYLA' 算法
+            result = minimize(objective_function, initial_guess, constraints=constraint_dicts, method='COBYLA', options=options)
+
+            if not result.success:
+                print(f"Optimization warning: {result.message}")
+                print(f"Final optimization result: {result.x}")
+                print(f"Final objective value: {result.fun}")
+    
+            return result.x  # 返回优化后的参数，即使优化不成功
+       
+        # 将方法添加到模型
+        model.detect_anomalies = detect_anomalies
+        model.optimize = optimize
+
+        # 创建 DigitalTwin 实例
+        self.digital_twin = DigitalTwin(model)
+        print("数字孪生系统已创建。")
+        
+    def get_physical_system_model(self):
+        # 这是物理系统模型函数的占位符，可以根据需求调整
+        def model(state, t):
+            # 定义物理系统的状态方程
+            return state  # 这是一个简单的占位符，需要根据实际情况定义
+        return model
+    
+    def create_digital_twin(self, model_func):
+        # 定义异常检测方法
+        def detect_anomalies(sensor_data):
+            anomalies = [x for x in sensor_data if x > 500]
+            return anomalies
+
+        # 将 detect_anomalies 方法附加到模型函数
+        model_func.detect_anomalies = detect_anomalies
+
+        # 定义优化方法
+        def optimize(objective_function, constraints):
+            from scipy.optimize import minimize
+
+            # 初始猜测
+            initial_guess = [1, 1]  # 根据实际情况调整
+
+            # 转换约束条件
+            constraint_dicts = [{'type': c_type, 'fun': c_func} for c_func, c_type in constraints]
+
+            # 执行优化
+            result = minimize(objective_function, initial_guess, constraints=constraint_dicts)
+
+            if not result.success:
+                raise ValueError("Optimization failed: " + result.message)
+        
+            return result.x  # 返回优化后的参数
+
+        # 将 optimize 方法附加到模型函数
+        model_func.optimize = optimize
+
+        # 初始化数字孪生系统
+        self.digital_twin = DigitalTwin(model_func)
+        print("数字孪生系统已创建并附加了异常检测和优化方法。")
+
+    def simulate_digital_twin(self, initial_conditions, time_steps):
+        if self.digital_twin:
+            return self.digital_twin.simulate(initial_conditions, time_steps)
+        else:
+            print("数字孪生系统尚未初始化。")
+
+    def monitor_digital_twin(self, sensor_data):
+        if self.digital_twin:
+            return self.digital_twin.monitor(sensor_data)
+        else:
+            print("数字孪生系统尚未初始化。")
+
+    def optimize_digital_twin(self, objective_function, constraints) -> Dict:
+        if self.digital_twin is None:
+            return {"error": "Digital twin has not been created yet."}
+        try:
+            optimal_params = self.digital_twin.optimize(objective_function, constraints)
+            return {"success": True, "optimal_parameters": optimal_params.tolist()}
+        except Exception as e:
+            logger.error(f"Error in digital twin optimization: {str(e)}")
+            return {"error": str(e)}
+
+    def update_digital_twin_model(self, new_model_func):
+        # 定义异常检测方法
+        def detect_anomalies(sensor_data):
+            anomalies = [x for x in sensor_data if x > 500]
+            return anomalies
+
+        # 将 detect_anomalies 方法附加到新的模型函数
+        new_model_func.detect_anomalies = detect_anomalies
+
+        # 定义优化方法
+        def optimize(objective_function, constraints):
+            from scipy.optimize import minimize
+
+            # 初始猜测
+            initial_guess = [1, 1]  # 根据实际情况调整
+
+            # 转换约束条件
+            constraint_dicts = [{'type': c_type, 'fun': c_func} for c_func, c_type in constraints]
+
+            # 执行优化
+            result = minimize(objective_function, initial_guess, constraints=constraint_dicts)
+
+            if not result.success:
+                raise ValueError("Optimization failed: " + result.message)
+        
+            return result.x  # 返回优化后的参数
+
+        # 将 optimize 方法附加到模型函数
+        new_model_func.optimize = optimize
+
+        # 更新数字孪生模型
+        self.digital_twin.update_model(new_model_func)
+        print("物理系统模型已更新并附加了异常检测和优化方法。")
+
+    def validate_digital_twin_model(self, validation_data):
+        if self.digital_twin:
+            return self.digital_twin.validate_model(validation_data)
+        else:
+            print("数字孪生系统尚未初始化。")
+    
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
     # 在实际应用中，您可能需要从文件或数据库加载真实数据
@@ -859,6 +1017,59 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             ai_nirvana.encode_categorical_features(method)
             print("Categorical features encoded successfully.")
             return {"continue": True}
+        
+        elif command == "create_digital_twin":
+            model_str = input("请输入物理系统模型函数（作为lambda表达式）: ")
+            physical_system_model = eval(model_str)
+            ai_nirvana.create_digital_twin(physical_system_model)
+            return {"continue": True}
+
+        elif command == "simulate_digital_twin":
+            initial_conditions = list(map(float, input("请输入初始条件（以空格分隔）: ").split()))
+            time_steps = list(map(float, input("请输入时间步长（以空格分隔）: ").split()))
+            simulation_result = ai_nirvana.simulate_digital_twin(initial_conditions, time_steps)
+            print(f"模拟结果: {simulation_result}")
+            return {"continue": True}
+
+        elif command == "monitor_digital_twin":
+            sensor_data = np.array(list(map(float, input("请输入传感器数据（以空格分隔）: ").split())))
+            anomalies = ai_nirvana.monitor_digital_twin(sensor_data)
+            print(f"检测到的异常: {anomalies}")
+            return {"continue": True}
+
+        elif command == "optimize_digital_twin":
+            if ai_nirvana.digital_twin is None:
+                print("Error: Digital twin has not been created yet. Use 'create_digital_twin' first.")
+                return {"continue": True}
+    
+            try:
+                objective_function = eval(input("请输入目标函数（作为lambda表达式）: "))
+                constraints = eval(input("请输入约束条件（作为列表的元组）: "))
+        
+                results = ai_nirvana.optimize_digital_twin(objective_function, constraints)
+        
+                if "error" in results:
+                    print(f"Error in optimization: {results['error']}")
+                else:
+                    print("Optimization completed.")
+                    print(f"Optimal parameters: {results['optimal_parameters']}")
+            except Exception as e:
+                print(f"Error in optimization process: {str(e)}")
+    
+            return {"continue": True}
+
+        elif command == "update_digital_twin_model":
+            new_model = eval(input("请输入新的物理系统模型函数: "))
+            ai_nirvana.update_digital_twin_model(new_model)
+            print("物理系统模型已更新。")
+            return {"continue": True}
+
+        elif command == "validate_digital_twin_model":
+            validation_data = np.array(list(map(float, input("请输入验证数据（以空格分隔）: ").split())))
+            accuracy = ai_nirvana.validate_digital_twin_model(validation_data)
+            print(f"模型验证准确性: {accuracy}")
+            return {"continue": True}
+        
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -917,6 +1128,12 @@ def print_help() -> None:
             'get_feature_descriptions': '获取特征描述',
             'normalize_features': '标准化特征',
             'encode_categorical_features': '编码分类特征',
+            'create_digital_twin': '创建一个新的数字孪生系统',
+            'simulate_digital_twin': '模拟数字孪生系统状态变化',
+            'monitor_digital_twin': '监控数字孪生系统状态并检测异常',
+            'optimize_digital_twin': '优化数字孪生系统参数',
+            'update_digital_twin_model': '更新数字孪生系统的物理模型',
+            'validate_digital_twin_model': '验证数字孪生系统模型的准确性',
         }
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
@@ -932,6 +1149,12 @@ def print_help() -> None:
     print("  - 使用示例数据时可以指定样本数量和特征数量")
     print("  - 使用本地文件时需要提供文件路径和目标列名称")
     print("'get_important_features' - 获取最重要的特征（需要先初始化特征工程器）")
+    print("- 在使用 `create_digital_twin` 命令时，请确保物理系统模型函数定义正确且符合要求。")
+    print("- 在进行模拟、监控和优化操作前，请确认数字孪生系统已经成功创建。")
+    print("- 使用 `update_digital_twin_model` 更新物理模型时，请谨慎操作，确保新模型的准确性和稳定性。")
+    print("- 进行大规模模拟和优化任务时，请注意系统资源的使用，避免因资源不足导致的性能问题。")
+    print("- 在处理复杂的物理系统模型时，建议进行充分的测试，以确保系统行为符合预期。")
+    print("- 数字孪生系统的各项功能依赖于输入数据的准确性，请确保输入的初始条件、时间步长、传感器数据等信息的准确性。")
 
 def main(config: Config):  
     ai_nirvana = AINirvana(config)  

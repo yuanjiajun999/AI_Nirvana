@@ -6,5 +6,6 @@
     "api_base": "https://api.gptsapi.net/v1",
     "use_gpu": false,
     "system_prompt": "You are a helpful AI assistant.",
-    "max_context_length": 5
+    "max_context_length": 5,
+    "enable_digital_twin": true
 }
