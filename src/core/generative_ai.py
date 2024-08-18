@@ -1,3 +1,5 @@
+import os
+from openai import OpenAI
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForImageClassification
 from transformers import pipeline, GPT2LMHeadModel, GPT2Tokenizer
@@ -9,6 +11,18 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 from torch.optim import AdamW
 from tqdm import tqdm
+import logging
+
+logger = logging.getLogger(__name__)  
+
+def error_handler(func):  
+    def wrapper(*args, **kwargs):  
+        try:  
+            return func(*args, **kwargs)  
+        except Exception as e:  
+            logger.error(f"Error in {func.__name__}: {str(e)}")  
+            raise  
+    return wrapper  
 
 class CustomDataset(Dataset):
     def __init__(self, texts, tokenizer, max_length):
@@ -24,72 +38,56 @@ class CustomDataset(Dataset):
         encoding = self.tokenizer(text, truncation=True, padding='max_length', max_length=self.max_length, return_tensors='pt')
         return {key: val.squeeze(0) for key, val in encoding.items()}
 
-class GenerativeAI:
-    def __init__(self, model_name: str = "gpt2", device: str = "cuda" if torch.cuda.is_available() else "cpu"):
-        self.device = device
-        self.model_name = model_name
-        self.model, self.tokenizer = self._load_model_and_tokenizer()
-        self.text_generation_pipeline = pipeline("text-generation", model=self.model, tokenizer=self.tokenizer, device=self.device)
-    
+class GenerativeAI:  
+    def __init__(self):  
+        self.client = OpenAI(  
+            api_key=os.getenv("API_KEY"),  
+            base_url=os.getenv("API_BASE")  
+        )  
+        self.model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")   
+
+    @error_handler  
+    def _load_model_and_tokenizer(self):  
+        model = AutoModelForCausalLM.from_pretrained(self.model_name).to(self.device)  
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)  
+        return model, tokenizer  
+
+    def generate_text(self, prompt, max_tokens=100, temperature=0.7, num_return_sequences=1):
         try:
-            self.translation_pipeline = pipeline("translation", model="Helsinki-NLP/opus-mt-en-zh", device=self.device)
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=temperature,
+                n=num_return_sequences,
+            )
+            generated_texts = [choice.message.content for choice in response.choices]
+            return generated_texts
         except Exception as e:
-            logger.warning(f"Failed to load translation pipeline: {str(e)}")
-            self.translation_pipeline = None
+            print(f"An error occurred during text generation: {str(e)}")
+            return None
 
-        try:
-            self.image_classification_pipeline = pipeline("image-classification", model="microsoft/resnet-50", device=self.device)
-        except Exception as e:
-            logger.warning(f"Failed to load image classification pipeline: {str(e)}")
-            self.image_classification_pipeline = None
+    @error_handler  
+    def translate_text(self, text: str, target_language: str = "zh") -> str:  
+        if self.translation_pipeline is None:  
+            self.translation_pipeline = pipeline("translation", model="Helsinki-NLP/opus-mt-en-ROMANCE", device=self.device)  
+        translation = self.translation_pipeline(text, target_language=target_language)  
+        translated_text = translation[0]['translation_text'] if translation else text  
+        logger.info(f"Translated text from {text[:50]}... to {target_language}")  
+        return translated_text  
 
-        try:
-            self.image_captioning_pipeline = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning", device=self.device)
-        except Exception as e:
-            logger.warning(f"Failed to load image captioning pipeline: {str(e)}")
-            self.image_captioning_pipeline = None
-
-        logger.info(f"GenerativeAI initialized with model: {model_name} on device: {device}")
-   
-    @error_handler
-    def _load_model_and_tokenizer(self):
-        model = AutoModelForCausalLM.from_pretrained(self.model_name).to(self.device)
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        return model, tokenizer
-
-    @error_handler
-    def generate_text(self, prompt: str, max_length: int = 100, num_return_sequences: int = 1,
-                      temperature: float = 0.7, top_k: int = 50, top_p: float = 0.95) -> List[str]:
-        outputs = self.text_generation_pipeline(
-            prompt,
-            max_length=max_length,
-            num_return_sequences=num_return_sequences,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            do_sample=True
-        )
-        generated_texts = [output['generated_text'] for output in outputs]
-        logger.info(f"Generated {len(generated_texts)} text(s) from prompt: {prompt[:50]}...")
-        return generated_texts
-
-    @error_handler
-    def translate_text(self, text: str, target_language: str = "zh") -> str:
-        if self.translation_pipeline is None:
-            logger.error("Translation pipeline is not available")
-            return text
-        translation = self.translation_pipeline(text, target_language=target_language)
-        translated_text = translation[0]['translation_text'] if translation else text
-        logger.info(f"Translated text from {text[:50]}... to {target_language}")
-        return translated_text
-
-    @error_handler
-    def classify_image(self, image: Union[str, Image.Image], top_k: int = 5) -> List[Dict[str, Any]]:
-        if isinstance(image, str):
-            image = Image.open(image)
-        results = self.image_classification_pipeline(image, top_k=top_k)
-        logger.info(f"Classified image with top {top_k} labels")
-        return results
+    @error_handler  
+    def classify_image(self, image: Union[str, Image.Image], top_k: int = 5) -> List[Dict[str, Any]]:  
+        if self.image_classification_pipeline is None:  
+            self.image_classification_pipeline = pipeline("image-classification", model="microsoft/resnet-50", device=self.device)  
+        if isinstance(image, str):  
+            image = Image.open(image)  
+        results = self.image_classification_pipeline(image, top_k=top_k)  
+        logger.info(f"Classified image with top {top_k} labels")  
+        return results  
     
     @error_handler
     def fine_tune(self, train_data: List[str], epochs: int = 3, learning_rate: float = 2e-5, batch_size: int = 4):
@@ -175,48 +173,64 @@ class GenerativeAI:
         logger.info(f"Generated summary for text: {text[:50]}...")
         return summary
 
-# pragma: no cover  
-if __name__ == "__main__":
-    ai = GenerativeAI()
+    def cleanup(self):  
+        # 释放资源  
+        del self.model  
+        del self.tokenizer  
+        del self.translation_pipeline  
+        del self.image_classification_pipeline  
+        del self.image_captioning_pipeline  
+        torch.cuda.empty_cache()  
+        logger.info("Resources cleaned up") 
+        
+# 主函数修改示例  
+if __name__ == "__main__":  
+    ai = GenerativeAI()  
     
-    # 文本生成示例
-    prompt = "The quick brown fox"
-    result = ai.generate_text(prompt)
-    print("Generated Text:", result)
+    try:  
+        # 文本生成示例  
+        prompt = "The quick brown fox"  
+        result = ai.generate_text(prompt)  
+        print("Generated Text:", result)  
 
-    # 文本翻译示例
-    text = "Hello, world!"
-    translation = ai.translate_text(text)
-    print("Translated Text:", translation)
+        # 文本翻译示例  
+        text = "Hello, world!"  
+        translation = ai.translate_text(text)  
+        print("Translated Text:", translation) 
+        
+        # 图像分类示例
+        image_path = "path/to/your/image.jpg"
+        classification = ai.classify_image(image_path)
+        print("Image Classification:", classification)
 
-    # 图像分类示例
-    image_path = "path/to/your/image.jpg"
-    classification = ai.classify_image(image_path)
-    print("Image Classification:", classification)
+        # 问答示例
+        context = "The capital of France is Paris. It is known for its beautiful architecture and cuisine."
+        question = "What is the capital of France?"
+        answer = ai.answer_question(context, question)
+        print("Answer:", answer)
 
-    # 问答示例
-    context = "The capital of France is Paris. It is known for its beautiful architecture and cuisine."
-    question = "What is the capital of France?"
-    answer = ai.answer_question(context, question)
-    print("Answer:", answer)
+        # 情感分析示例
+        sentiment_text = "I love this product! It's amazing!"
+        sentiment = ai.analyze_sentiment(sentiment_text)
+        print("Sentiment:", sentiment)
 
-    # 情感分析示例
-    sentiment_text = "I love this product! It's amazing!"
-    sentiment = ai.analyze_sentiment(sentiment_text)
-    print("Sentiment:", sentiment)
+        # 文本摘要示例
+        long_text = "Long text to be summarized..." * 10
+        summary = ai.summarize_text(long_text)
+        print("Summary:", summary)
 
-    # 文本摘要示例
-    long_text = "Long text to be summarized..." * 10
-    summary = ai.summarize_text(long_text)
-    print("Summary:", summary)
+        # 图像描述生成示例
+        image_path = "path/to/your/image.jpg"
+        caption = ai.generate_image_caption(image_path)
+        print("Image Caption:", caption)
 
-    # 图像描述生成示例
-    image_path = "path/to/your/image.jpg"
-    caption = ai.generate_image_caption(image_path)
-    print("Image Caption:", caption)
+        # 微调示例
+        train_data = ["Example text 1", "Example text 2", "Example text 3"]
+        ai.fine_tune(train_data, epochs=1)  # 使用较少的 epoch 进行演示
 
-    # 微调示例
-    train_data = ["Example text 1", "Example text 2", "Example text 3"]
-    ai.fine_tune(train_data, epochs=1)  # 使用较少的 epoch 进行演示
+        # ... (rest of the main function code)
 
-    # ... (rest of the main function code)
+    except Exception as e:  
+        print(f"An error occurred: {str(e)}")  
+    finally:  
+        ai.cleanup()      

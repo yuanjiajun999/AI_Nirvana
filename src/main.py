@@ -4,6 +4,7 @@ import sys
 import argparse
 import logging
 import time
+from openai import OpenAI 
 import scipy.optimize as opt
 import numpy as np
 from tqdm import tqdm
@@ -57,6 +58,10 @@ from src.core.digital_twin import DigitalTwin
 from sklearn.ensemble import IsolationForest
 
 logger = logging.getLogger(__name__)
+
+# Flask server code
+app = Flask(__name__)
+
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
 AVAILABLE_COMMANDS = [
     'quit', 'clear', 'sentiment', 'execute', 'validate_code', 'supported_languages', 'summarize', 'change_model', 
@@ -68,10 +73,13 @@ AVAILABLE_COMMANDS = [
     'get_important_features', 'remove_low_info_features','remove_correlated_features', 'create_custom_feature',
     'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features',
     'create_digital_twin', 'simulate_digital_twin', 'monitor_digital_twin',
-    'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model'
+    'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model', 'generate_text',
 ]
 # 加载 .env 文件
 load_dotenv()
+print("API_KEY:", os.getenv("API_KEY"))
+print("API_BASE:", os.getenv("API_BASE"))
+print("MODEL_NAME:", os.getenv("MODEL_NAME"))
 
 class AINirvana:
     def __init__(self, config: Config):
@@ -80,7 +88,7 @@ class AINirvana:
         
         self.code_executor = CodeExecutor()
         self.config = config
-        self.model_name = self.config.get('model', 'gpt-3.5-turbo')
+        self.model_name = os.getenv('MODEL_NAME', 'gpt-3.5-turbo')  # 使用环境变量中的 MODEL_NAME
         self.max_context_length = self.config.get('max_context_length', 5)
         self.model = ModelFactory.create_model("LanguageModel", model_name=self.model_name)
         self.assistant = EnhancedAIAssistant()  # 使用新的EnhancedAIAssistant
@@ -628,7 +636,14 @@ class AINirvana:
             return {"success": True, "optimal_parameters": optimal_params.tolist()}
         except Exception as e:
             logger.error(f"Error in digital twin optimization: {str(e)}")
-            return {"error": str(e)}       
+            return {"error": str(e)} 
+
+    def generate_text(self, prompt: str) -> str:
+        try:
+            return self.generative_ai.generate_text(prompt)
+        except Exception as e:
+            logger.error(f"生成文本时发生错误: {str(e)}")
+            return f"生成文本时发生错误: {str(e)}"          
     
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
@@ -1093,6 +1108,15 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             accuracy = ai_nirvana.validate_digital_twin_model(validation_data)
             print(f"模型验证准确性: {accuracy}")
             return {"continue": True}
+
+        elif command == "generate_text":
+            prompt = input("请输入要生成文本的提示词：")
+            try:
+                result = ai_nirvana.generative_ai.generate_text(prompt)
+                print(f"生成的文本：{result}")
+            except Exception as e:
+                print(f"生成文本时发生错误: {str(e)}")
+            return {"continue": True}
         
         else:
             response = ai_nirvana.process(command)
@@ -1210,7 +1234,7 @@ def main(config: Config):
             traceback.print_exc()  # 打印详细的错误堆栈  
 
     print("感谢使用 AI Nirvana 智能助手，再见！")
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI Nirvana Assistant")
     parser.add_argument("--config", default="config.json", help="Path to the configuration file")
