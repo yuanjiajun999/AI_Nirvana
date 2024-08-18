@@ -52,24 +52,35 @@ class GenerativeAI:
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)  
         return model, tokenizer  
 
-    def generate_text(self, prompt, max_tokens=100, temperature=0.7, num_return_sequences=1):
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=max_tokens,
-                temperature=temperature,
-                n=num_return_sequences,
-            )
-            generated_texts = [choice.message.content for choice in response.choices]
-            return generated_texts
-        except Exception as e:
-            print(f"An error occurred during text generation: {str(e)}")
-            return None
+    def generate_text(self, prompt, max_tokens=100, temperature=0.7, num_return_sequences=1):  
+        try:  
+            response = self.client.chat.completions.create(  
+                model=self.model_name,  
+                messages=[  
+                    {"role": "system", "content": "You are a helpful assistant."},  
+                    {"role": "user", "content": prompt},  
+                ],  
+                max_tokens=max_tokens,  # 使用 max_tokens 而不是 max_length  
+                temperature=temperature,  
+                n=num_return_sequences,  
+            )  
+        
+            generated_texts = [choice.message.content for choice in response.choices]  
+        
+            # 如果只请求一个序列，直接返回字符串而不是列表  
+            if num_return_sequences == 1:  
+                return generated_texts[0]  
+            else:  
+                return generated_texts  
 
+        except Exception as e:  
+            print(f"An error occurred during text generation: {str(e)}")  
+            return None  
+
+        finally:  
+            # 添加日志记录  
+            logger.info(f"Generated text for prompt: {prompt[:50]}...")
+ 
     @error_handler  
     def translate_text(self, text: str, target_language: str = "zh") -> str:  
         if self.translation_pipeline is None:  
