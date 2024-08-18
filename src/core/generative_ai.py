@@ -52,7 +52,7 @@ class GenerativeAI:
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)  
         return model, tokenizer  
 
-    def generate_text(self, prompt, max_tokens=100, temperature=0.7, num_return_sequences=1):  
+    def generate_text(self, prompt, max_tokens=1000, temperature=0.7, num_return_sequences=1, truncate=False):  
         try:  
             response = self.client.chat.completions.create(  
                 model=self.model_name,  
@@ -60,13 +60,21 @@ class GenerativeAI:
                     {"role": "system", "content": "You are a helpful assistant."},  
                     {"role": "user", "content": prompt},  
                 ],  
-                max_tokens=max_tokens,  # 使用 max_tokens 而不是 max_length  
+                max_tokens=max_tokens,  
                 temperature=temperature,  
                 n=num_return_sequences,  
             )  
-        
+
             generated_texts = [choice.message.content for choice in response.choices]  
-        
+
+            # 记录 token 使用情况  
+            total_tokens = response.usage.total_tokens  
+            logger.info(f"Total tokens used: {total_tokens}")  
+
+            # 如果需要截断  
+            if truncate:  
+                generated_texts = [text[:max_tokens] for text in generated_texts]  
+
             # 如果只请求一个序列，直接返回字符串而不是列表  
             if num_return_sequences == 1:  
                 return generated_texts[0]  
@@ -74,12 +82,12 @@ class GenerativeAI:
                 return generated_texts  
 
         except Exception as e:  
-            print(f"An error occurred during text generation: {str(e)}")  
+            logger.error(f"An error occurred during text generation: {str(e)}", exc_info=True)  
             return None  
 
         finally:  
-            # 添加日志记录  
-            logger.info(f"Generated text for prompt: {prompt[:50]}...")
+            # 添加详细的日志记录  
+            logger.info(f"Generated text for prompt: {prompt[:50]}... (max_tokens: {max_tokens}, temperature: {temperature})")  
  
     @error_handler  
     def translate_text(self, text: str, target_language: str = "zh") -> str:  
