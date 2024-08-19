@@ -12,6 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch.optim import AdamW
 from tqdm import tqdm
 import logging
+import torch.nn.functional as F
 
 logger = logging.getLogger(__name__)  
 
@@ -138,11 +139,24 @@ class GenerativeAI:
         for epoch in range(epochs):
             for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
                 outputs = self.finetune_model(**batch)
-                loss = outputs.loss
-                loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
-        
+            
+                # 手动计算损失
+                logits = outputs.logits
+                shift_logits = logits[..., :-1, :].contiguous()
+                shift_labels = batch['input_ids'][..., 1:].contiguous()
+                loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+
+                print("Model Outputs:", outputs)
+                print("Calculated Loss:", loss)
+
+                if loss is not None:
+                    print("Current Loss:", loss.item())
+                    loss.backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
+                else:
+                    print("Loss is None, skipping backward pass.")
+    
     @error_handler
     def save_model(self, path: str):
         self.model.save_pretrained(path)
