@@ -38,18 +38,37 @@ class CustomDataset(Dataset):
         encoding = self.tokenizer(text, truncation=True, padding='max_length', max_length=self.max_length, return_tensors='pt')
         return {key: val.squeeze(0) for key, val in encoding.items()}
 
-class GenerativeAI:  
-    def __init__(self):  
-        self.client = OpenAI(  
-            api_key=os.getenv("API_KEY"),  
-            base_url=os.getenv("API_BASE")  
-        )  
-        self.model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")   
+class GenerativeAI:
+    def __init__(self):
+        self.client = OpenAI(
+            api_key=os.getenv("API_KEY"),
+            base_url=os.getenv("API_BASE")
+        )
+        self.model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")
+        self.finetune_model_name = os.getenv("FINETUNE_MODEL_NAME", "distilgpt2")
+        
+        # 强制指定为CPU
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        # 初始化 image_classification_pipeline
+        self.image_classification_pipeline = pipeline("image-classification", model="microsoft/resnet-50", device=0 if torch.cuda.is_available() else -1)
+        # 初始化 image_captioning_pipeline
+        self.image_captioning_pipeline = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base", device=0 if torch.cuda.is_available() else -1)
+        
+        # 加载微调模型
+        self.finetune_model, self.tokenizer = self._load_finetune_model_and_tokenizer()
 
+    @error_handler
+    def _load_finetune_model_and_tokenizer(self):
+        model = AutoModelForCausalLM.from_pretrained(self.finetune_model_name).to(self.device)
+        tokenizer = AutoTokenizer.from_pretrained(self.finetune_model_name)
+        tokenizer.pad_token = tokenizer.eos_token  # 设置 pad_token
+        return model, tokenizer
+        
     @error_handler  
-    def _load_model_and_tokenizer(self):  
-        model = AutoModelForCausalLM.from_pretrained(self.model_name).to(self.device)  
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)  
+    def _load_model_and_tokenizer(self, model_name):  
+        model = AutoModelForCausalLM.from_pretrained(model_name).to(self.device)  
+        tokenizer = AutoTokenizer.from_pretrained(model_name)  
         return model, tokenizer  
 
     def generate_text(self, prompt, max_tokens=1000, temperature=0.7, num_return_sequences=1, truncate=False):  
@@ -109,47 +128,21 @@ class GenerativeAI:
         return results  
     
     @error_handler
-    def fine_tune(self, train_data: List[str], epochs: int = 3, learning_rate: float = 2e-5, batch_size: int = 4):
-        train_texts, val_texts = train_test_split(train_data, test_size=0.1)
-        
+    def fine_tune(self, train_texts, epochs=1, learning_rate=2e-5, batch_size=2):
         train_dataset = CustomDataset(train_texts, self.tokenizer, max_length=128)
-        val_dataset = CustomDataset(val_texts, self.tokenizer, max_length=128)
-        
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size)
-        
-        optimizer = AdamW(self.model.parameters(), lr=learning_rate)
-        
+
+        optimizer = AdamW(self.finetune_model.parameters(), lr=learning_rate)
+        self.finetune_model.train()
+
         for epoch in range(epochs):
-            self.model.train()
-            total_loss = 0
             for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
-                inputs = {k: v.to(self.device) for k, v in batch.items()}
-                outputs = self.model(**inputs, labels=inputs["input_ids"])
+                outputs = self.finetune_model(**batch)
                 loss = outputs.loss
-                total_loss += loss.item()
-                
-                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-            
-            avg_loss = total_loss / len(train_loader)
-            logger.info(f"Epoch {epoch+1}/{epochs}, Average loss: {avg_loss:.4f}")
-            
-            # Validation
-            self.model.eval()
-            val_loss = 0
-            with torch.no_grad():
-                for batch in val_loader:
-                    inputs = {k: v.to(self.device) for k, v in batch.items()}
-                    outputs = self.model(**inputs, labels=inputs["input_ids"])
-                    val_loss += outputs.loss.item()
-            
-            avg_val_loss = val_loss / len(val_loader)
-            logger.info(f"Validation loss: {avg_val_loss:.4f}")
+                optimizer.zero_grad()
         
-        logger.info("Fine-tuning completed.")
-
     @error_handler
     def save_model(self, path: str):
         self.model.save_pretrained(path)
@@ -252,4 +245,4 @@ if __name__ == "__main__":
     except Exception as e:  
         print(f"An error occurred: {str(e)}")  
     finally:  
-        ai.cleanup()      
+        ai.cleanup()  
