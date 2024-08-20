@@ -75,7 +75,8 @@ AVAILABLE_COMMANDS = [
     'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features',
     'create_digital_twin', 'simulate_digital_twin', 'monitor_digital_twin',
     'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model', 'generate_text',
-     'classify_image', 'caption_image', 'fine_tune_model', 'save_model', 'load_model',
+    'classify_image', 'caption_image', 'fine_tune_model', 'save_model', 'load_model','create_agent', 'train_agent',
+    'run_agent', 'setup_rl_agent', 'rl_decide',
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -658,11 +659,112 @@ class AINirvana:
     def fine_tune(self, train_data, epochs=1, learning_rate=2e-5, batch_size=2):
         return self.generative_ai.fine_tune(train_data, epochs=epochs, learning_rate=learning_rate, batch_size=batch_size)
 
-    def save_model(self, path):
-        return self.generative_ai.save_model(path)
+    def save_model(self, filename: str, model_type: str = 'general'):
+        if model_type == 'general':
+            # 保存通用模型（如果有的话）
+            self.generative_ai.save_model(filename)
+        elif model_type == 'agent':
+            # 保存智能代理模型
+            if hasattr(self, 'agent'):
+                self.agent.save(filename)
+            else:
+                raise ValueError("No agent model to save.")
+        else:
+            raise ValueError("Invalid model type. Use 'general' or 'agent'.")
+        print(f"Saved {model_type} model to {filename}")
 
-    def load_model(self, path):
-        return self.generative_ai.load_model(path)          
+    def load_model(self, filename: str, model_type: str = 'general'):
+        if model_type == 'general':
+            # 加载通用模型
+            self.generative_ai.load_model(filename)
+        elif model_type == 'agent':
+            # 加载智能代理模型
+            if hasattr(self, 'agent'):
+                self.agent.load(filename)
+            else:
+                raise ValueError("No agent initialized. Use 'create_agent' first.")
+        else:
+            raise ValueError("Invalid model type. Use 'general' or 'agent'.")
+        print(f"Loaded {model_type} model from {filename}")
+        
+    def create_agent(self, state_size: int, action_size: int):
+        self.agent = DQNAgent(state_size, action_size)
+        print(f"Created DQN agent with state size {state_size} and action size {action_size}")
+
+    def train_agent(self, environment_name: str, episodes: int, max_steps: int):
+        import gym
+        try:
+            env = gym.make(environment_name)
+            if not hasattr(self, 'agent'):
+                state_size = env.observation_space.shape[0]
+                action_size = env.action_space.n
+                self.agent = DQNAgent(state_size, action_size)
+        
+            print("Checking DQNAgent attributes before training:")
+            self.check_agent_attributes()
+        
+            for episode in range(episodes):
+                state = env.reset()
+                if hasattr(self.agent, 'perceive'):
+                    state = self.agent.perceive(state)
+                else:
+                    state = np.reshape(state, [1, self.agent.state_size])
+                for step in range(max_steps):
+                    action = self.agent.act(state)
+                    next_state, reward, done, _ = env.step(action)
+                    if hasattr(self.agent, 'perceive'):
+                        next_state = self.agent.perceive(next_state)
+                    else:
+                        next_state = np.reshape(next_state, [1, self.agent.state_size])
+                    self.agent.remember(state, action, reward, next_state, done)
+                    state = next_state
+                    if done:
+                        print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")
+                        break
+                self.agent.replay(32)
+        
+            print(f"Trained agent for {episodes} episodes in {environment_name}")
+        except AttributeError as e:
+            print(f"AttributeError occurred: {e}")
+            print("Please check if all required methods are implemented in DQNAgent class.")
+            self.check_agent_attributes()
+        except Exception as e:
+            print(f"An error occurred during training: {e}")
+
+    def run_agent(self, environment_name: str, episodes: int, max_steps: int):
+        import gym
+        env = gym.make(environment_name)
+        for episode in range(episodes):
+            state = env.reset()
+            state = self.agent.perceive(state)
+            for step in range(max_steps):
+                action = self.agent.act(state)
+                next_state, reward, done, _ = env.step(action)
+                next_state = self.agent.perceive(next_state)
+                state = next_state
+                if done:
+                    print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")
+                    break
+        print(f"Ran agent for {episodes} episodes in {environment_name}")
+
+    def setup_rl_agent(self, state_size, action_size):
+        self.rl_agent = DQNAgent(state_size, action_size)
+        print(f"RL agent set up with state size {state_size} and action size {action_size}")
+
+    def rl_decide(self, state):
+        if not hasattr(self, 'rl_agent'):
+            raise ValueError("RL agent not set up. Use 'setup_rl_agent' first.")
+        action = self.rl_agent.act(state)
+        return action         
+
+    def check_agent_attributes(self):
+        if hasattr(self, 'agent'):
+            print("DQNAgent attributes:")
+            for attr in dir(self.agent):
+                if not attr.startswith('__'):
+                    print(f"- {attr}")
+        else:
+            print("Agent has not been created yet.") 
     
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
@@ -1165,32 +1267,60 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             return {"continue": True}
 
         elif command == "save_model":
-            path = input("请输入保存模型的目录路径：").strip()
-            if not os.path.isdir(path):
-                try:
-                    os.makedirs(path)
-                    print(f"创建目录：{path}")
-                except Exception as e:
-                    print(f"创建目录失败：{str(e)}")
-                    return {"continue": True}
+            filename = input("Enter filename to save model: ")
+            model_type = input("Enter model type (general/agent): ").lower()
             try:
-                ai_nirvana.save_model(path)
-                print("模型保存完成")
-            except Exception as e:
-                print(f"保存模型时出错：{str(e)}")
-            return {"continue": True}
+                ai_nirvana.save_model(filename, model_type)
+                return {"message": f"{model_type.capitalize()} model saved successfully.", "continue": True}
+            except ValueError as e:
+                return {"message": f"Error saving model: {str(e)}", "continue": True}
 
         elif command == "load_model":
-            path = input("请输入加载模型的目录路径：").strip()
-            if not os.path.isdir(path):
-                print("输入的路径不是一个有效的目录")
-                return {"continue": True}
+            filename = input("Enter filename to load model: ")
+            model_type = input("Enter model type (general/agent): ").lower()
             try:
-                ai_nirvana.load_model(path)
-                print("模型加载完成")
-            except Exception as e:
-                print(f"加载模型时出错：{str(e)}")
+                ai_nirvana.load_model(filename, model_type)
+                return {"message": f"{model_type.capitalize()} model loaded successfully.", "continue": True}
+            except ValueError as e:
+                return {"message": f"Error loading model: {str(e)}", "continue": True}
+
+        elif command == "create_agent":
+            state_size = int(input("Enter state size: "))
+            action_size = int(input("Enter action size: "))
+            ai_nirvana.create_agent(state_size, action_size)
             return {"continue": True}
+
+        elif command == "train_agent":
+            environment_name = input("Enter environment name (e.g., 'CartPole-v1'): ")
+            episodes = int(input("Enter number of episodes: "))
+            max_steps = int(input("Enter maximum steps per episode: "))
+            ai_nirvana.train_agent(environment_name, episodes, max_steps)
+            return {"continue": True}
+
+        elif command == "run_agent":
+            environment_name = input("Enter environment name (e.g., 'CartPole-v1'): ")
+            episodes = int(input("Enter number of episodes: "))
+            max_steps = int(input("Enter maximum steps per episode: "))
+            ai_nirvana.run_agent(environment_name, episodes, max_steps)
+            return {"continue": True}
+
+        elif command == "setup_rl_agent":
+            try:
+                state_size = int(input("Enter state size: "))
+                action_size = int(input("Enter action size: "))
+                ai_nirvana.setup_rl_agent(state_size, action_size)
+                return {"message": "RL agent set up successfully.", "continue": True}
+            except ValueError as e:
+                return {"message": f"Error setting up RL agent: {str(e)}", "continue": True}
+
+        elif command == "rl_decide":
+            try:
+                state = input("Enter the current state (comma-separated values): ")
+                state = [float(x.strip()) for x in state.split(',')]
+                action = ai_nirvana.rl_decide(state)
+                return {"message": f"RL agent decided on action: {action}", "continue": True}
+            except Exception as e:
+                return {"message": f"Error in RL decision: {str(e)}", "continue": True}
 
         else:
             response = ai_nirvana.process(command)
@@ -1260,9 +1390,15 @@ def print_help() -> None:
             'classify_image': '对图像进行分类',
             'caption_image': '为图像生成描述',
             'fine_tune_model': '微调模型',
-            'save_model': '保存模型',
-            'load_model': '加载模型',
-        }
+            'save_model': '保存模型（通用模型或智能代理模型)',
+            'load_model': '加载模型（通用模型或智能代理模型)',
+            'create_agent' : '加 创建一个新的 DQN 智能代理',
+            'train_agent' : '在指定环境中训练智能代理',
+            'run_agent' : '在指定环境中运行智能代理',
+            'setup_rl_agent' : '设置强化学习代理',
+            'rl_decide' : '让强化学习代理根据给定状态做出决策',
+
+        }    
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
     print("\n注意：")
@@ -1289,7 +1425,14 @@ def print_help() -> None:
     print("- 使用 'save_model' 和 'load_model' 命令时，请确保指定正确的文件路径。")
     print("- 图像处理和模型微调功能可能需要较长时间，请耐心等待。")
     print("- 在使用模型相关功能时，请确保系统有足够的计算资源。")
-
+    print("- 'save_model' 和 'load_model' 命令现在可以处理both通用模型和智能代理模型。使用时请指定模型类型（'general' 或 'agent'）。")
+    print("- 在使用智能代理相关功能（如 'create_agent'、'train_agent'）之前，请确保已安装必要的依赖，如 TensorFlow 和 OpenAI Gym。")
+    print("- 智能代理的训练可能需要较长时间，请耐心等待。训练过程中会显示进度信息。")
+    print("- 在使用 'rl_decide' 命令时，请确保先使用 'setup_rl_agent' 设置了强化学习代理。")
+    print("- 如果遇到任何未预期的错误或异常行为，请检查日志文件以获取更详细的信息。")
+    print("- 定期保存您的工作成果和模型，以防意外情况发生。")
+    print("- 如果您是在共享环境中使用本系统，请注意保护敏感数据和模型的安全。")
+    
 def main(config: Config):  
     ai_nirvana = AINirvana(config)  
     print("欢迎使用 AI Nirvana 智能助手！")  

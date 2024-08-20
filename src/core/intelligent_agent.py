@@ -75,6 +75,8 @@ class IntelligentAgent(abc.ABC):
         """Run the agent in the given environment for a specified number of episodes."""
         for episode in range(episodes):
             state = environment.reset()
+            print("State shape:", np.shape(state))
+            print("Expected state size:", self.state_size)
             state = np.reshape(state, [1, self.state_size])
             for step in range(max_steps):
                 action = self.act(state)
@@ -111,3 +113,20 @@ class DQNAgent(IntelligentAgent):
 
     def act(self, state: np.ndarray) -> int:
         return self.decide(state)
+
+    def run(self, env, episodes, max_steps):
+        for episode in range(episodes):
+            state = env.reset()
+            state = self.perceive(state)
+            for step in range(max_steps):
+                action = self.act(state)
+                next_state, reward, done, _ = env.step(action)
+                next_state = self.perceive(next_state)
+                self.remember(state, action, reward, next_state, done)
+                state = next_state
+                if done:
+                    print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")
+                    break
+            self.replay(32)  # 假设每集之后进行一次经验回放
+
+    
