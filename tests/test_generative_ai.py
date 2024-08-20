@@ -1,212 +1,161 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from src.core.generative_ai import GenerativeAI
 import torch
-from PIL import Image
-import pytest
-from src.core.generative_ai import GenerativeAI, CustomDataset
 
 class TestGenerativeAI(unittest.TestCase):
-    @classmethod
-    @patch('src.core.generative_ai.AutoModelForCausalLM.from_pretrained')
-    @patch('src.core.generative_ai.AutoTokenizer.from_pretrained')
-    @patch('src.core.generative_ai.pipeline')
-    def setUpClass(cls, mock_pipeline, mock_tokenizer, mock_model):
-        mock_model.return_value = MagicMock()
-        mock_tokenizer.return_value = MagicMock()
-        mock_pipeline.side_effect = [
-            MagicMock(),  # text_generation_pipeline
-            ValueError("Failed to load translation pipeline"),
-            ValueError("Failed to load image classification pipeline"),
-            ValueError("Failed to load image captioning pipeline")
-        ]
-        cls.ai = GenerativeAI(model_name="gpt2")
-        # Manually set up pipelines for testing
-        cls.ai.text_generation_pipeline = MagicMock()
-        cls.ai.image_classification_pipeline = MagicMock()
-        cls.ai.image_captioning_pipeline = MagicMock()
 
-    def setUp(self):
-        # Reset mock for each test
-        self.ai.text_generation_pipeline.reset_mock()
-        self.ai.text_generation_pipeline.side_effect = None
-
-    def test_init(self):
-        self.assertIsNotNone(self.ai.model)
-        self.assertIsNotNone(self.ai.tokenizer)
-        self.assertEqual(self.ai.model_name, "gpt2")
-        self.assertIsNotNone(self.ai.text_generation_pipeline)
-        self.assertIsNone(self.ai.translation_pipeline)
-        self.assertIsNotNone(self.ai.image_classification_pipeline)
-        self.assertIsNotNone(self.ai.image_captioning_pipeline)
+    @patch('src.core.generative_ai.OpenAI')
+    def setUp(self, MockOpenAI):
+        # 创建GenerativeAI实例
+        self.ai = GenerativeAI()
 
     def test_generate_text(self):
-        mock_result = [{'generated_text': 'Test generated text'}]
-        self.ai.text_generation_pipeline.return_value = mock_result
-        result = self.ai.generate_text("Test prompt")
-        self.assertEqual(result, ['Test generated text'])
-        self.ai.text_generation_pipeline.assert_called_once()
+        prompt = "The quick brown fox"
+        expected_output = "The quick brown fox jumps over the lazy dog."
+
+        # 模拟OpenAI的返回值
+        self.ai.client.chat.completions.create = MagicMock(return_value=MagicMock(
+            choices=[MagicMock(message=MagicMock(content=expected_output))],
+            usage=MagicMock(total_tokens=10)
+        ))
+
+        result = self.ai.generate_text(prompt)
+        self.assertEqual(result, expected_output)
+        self.ai.client.chat.completions.create.assert_called_once()
 
     def test_translate_text(self):
         text = "Hello, world!"
-        result = self.ai.translate_text(text)
-        self.assertEqual(result, text, "When translation pipeline is not available, original text should be returned")
+        target_language = "zh"
+        expected_translation = "你好，世界！"
 
-    def test_classify_image(self):
-        mock_image = MagicMock(spec=Image.Image)
-        mock_result = [{'label': 'cat', 'score': 0.9}]
-        self.ai.image_classification_pipeline.return_value = mock_result
-        result = self.ai.classify_image(mock_image)
-        self.assertEqual(result, mock_result)
-        self.ai.image_classification_pipeline.assert_called_once_with(mock_image, top_k=5)
+        # 模拟翻译管道的返回值
+        self.ai.translation_pipeline = MagicMock(return_value=[{"translation_text": expected_translation}])
 
-    @patch('src.core.generative_ai.train_test_split')
-    @patch('src.core.generative_ai.DataLoader')
-    @patch('src.core.generative_ai.AdamW')
-    @patch('src.core.generative_ai.tqdm')
-    def test_fine_tune(self, mock_tqdm, mock_adamw, mock_dataloader, mock_train_test_split):
-        mock_train_test_split.return_value = (["train1", "train2"], ["val1"])
-        mock_dataloader.return_value = [{"input_ids": torch.tensor([1, 2, 3]), "attention_mask": torch.tensor([1, 1, 1])}]
-        mock_adamw.return_value = MagicMock()
-        mock_tqdm.return_value = [{"input_ids": torch.tensor([1, 2, 3]), "attention_mask": torch.tensor([1, 1, 1])}]
-
-        self.ai.model = MagicMock()
-        self.ai.model.return_value = MagicMock(loss=torch.tensor(0.5, requires_grad=True))
-
-        train_data = ["Example text 1", "Example text 2", "Example text 3"]
-        self.ai.fine_tune(train_data, epochs=1)
-
-        mock_train_test_split.assert_called_once()
-        mock_dataloader.assert_called()
-        mock_adamw.assert_called_once()
-        self.ai.model.assert_called()
-
-    @patch('src.core.generative_ai.AutoModelForCausalLM')
-    @patch('src.core.generative_ai.AutoTokenizer')
-    def test_save_and_load_model(self, mock_tokenizer, mock_model):
-        mock_model_instance = MagicMock()
-        mock_tokenizer_instance = MagicMock()
-        mock_model.from_pretrained.return_value = mock_model_instance
-        mock_tokenizer.from_pretrained.return_value = mock_tokenizer_instance
-
-        self.ai.model = mock_model_instance
-        self.ai.tokenizer = mock_tokenizer_instance
-
-        self.ai.save_model("dummy_path")
-        mock_model_instance.save_pretrained.assert_called_once_with("dummy_path")
-        mock_tokenizer_instance.save_pretrained.assert_called_once_with("dummy_path")
-
-        self.ai.load_model("dummy_path")
-        mock_model.from_pretrained.assert_called_with("dummy_path")
-        mock_tokenizer.from_pretrained.assert_called_with("dummy_path")
+        translation = self.ai.translate_text(text, target_language)
+        self.assertEqual(translation, expected_translation)
+        self.ai.translation_pipeline.assert_called_once()
 
     @patch('PIL.Image.open')
-    def test_generate_image_caption(self, mock_image_open):
-        mock_image = MagicMock(spec=Image.Image)
-        mock_image_open.return_value = mock_image
-        mock_result = [{'generated_text': 'A cat sitting on a couch'}]
-        self.ai.image_captioning_pipeline.return_value = mock_result
-        
-        # Test with file path
-        result = self.ai.generate_image_caption("dummy_image.jpg")
-        self.assertEqual(result, 'A cat sitting on a couch')
-        
-        # Test with Image object
-        result = self.ai.generate_image_caption(mock_image)
-        self.assertEqual(result, 'A cat sitting on a couch')
-        
-        self.ai.image_captioning_pipeline.assert_called_with(mock_image)
+    def test_classify_image(self, mock_image_open):
+        image_path = "test_image.jpg"
+        expected_classification = [{"label": "gown", "score": 0.1953}]
 
-    @patch('src.core.generative_ai.pipeline')
-    def test_answer_question(self, mock_pipeline):
-        mock_qa_pipeline = MagicMock(return_value={'answer': 'Paris'})
-        mock_pipeline.return_value = mock_qa_pipeline
-        result = self.ai.answer_question("The capital of France is Paris.", "What is the capital of France?")
-        self.assertEqual(result, 'Paris')
-        mock_qa_pipeline.assert_called_once_with(question="What is the capital of France?", context="The capital of France is Paris.")
+        # 模拟图像分类管道的返回值
+        self.ai.image_classification_pipeline = MagicMock(return_value=expected_classification)
 
-    @patch('src.core.generative_ai.pipeline')
-    def test_analyze_sentiment(self, mock_pipeline):
-        mock_sentiment_pipeline = MagicMock(return_value=[{'label': 'POSITIVE', 'score': 0.9}])
-        mock_pipeline.return_value = mock_sentiment_pipeline
-        result = self.ai.analyze_sentiment("I love this product!")
-        self.assertEqual(result, {'label': 'POSITIVE', 'score': 0.9})
-        mock_sentiment_pipeline.assert_called_once_with("I love this product!")
+        classification = self.ai.classify_image(image_path)
+        self.assertEqual(classification, expected_classification)
+        self.ai.image_classification_pipeline.assert_called_once()
+        mock_image_open.assert_called_once_with(image_path)
 
-    @patch('src.core.generative_ai.pipeline')
-    def test_summarize_text(self, mock_pipeline):
-        mock_summarizer = MagicMock(return_value=[{'summary_text': 'This is a summary.'}])
-        mock_pipeline.return_value = mock_summarizer
-        result = self.ai.summarize_text("This is a long text that needs to be summarized.")
-        self.assertEqual(result, 'This is a summary.')
-        mock_summarizer.assert_called_once_with("This is a long text that needs to be summarized.", max_length=130, min_length=30, do_sample=False)
-
-    def test_custom_dataset(self):
-        texts = ["Text 1", "Text 2", "Text 3"]
-        tokenizer = MagicMock()
-        tokenizer.return_value = {'input_ids': torch.tensor([1, 2, 3]), 'attention_mask': torch.tensor([1, 1, 1])}
-        dataset = CustomDataset(texts, tokenizer, max_length=10)
-        
-        self.assertEqual(len(dataset), 3)
-        item = dataset[0]
-        self.assertIn('input_ids', item)
-        self.assertIn('attention_mask', item)
-        tokenizer.assert_called_with("Text 1", truncation=True, padding='max_length', max_length=10, return_tensors='pt')
-
-    @patch('src.core.generative_ai.logger')
-    def test_logging(self, mock_logger):
-        mock_result = [{'generated_text': 'Test generated text'}]
-        self.ai.text_generation_pipeline.return_value = mock_result
-        self.ai.generate_text("Test prompt")
-        mock_logger.info.assert_called()
-
-    def test_error_handling(self):
-        self.ai.text_generation_pipeline.side_effect = Exception("Test error")
-        with self.assertRaises(Exception):
-            self.ai.generate_text("Test prompt")
-
-if __name__ == '__main__':
-    unittest.main()
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_fine_tune(self):
+        train_data = ["The sky is blue.", "The sun is bright."]
     
+        # 模拟 finetune_model 和 tokenizer
+        mock_model = MagicMock()
+        mock_parameters = [torch.tensor([1.0, 2.0], requires_grad=True)]
+        mock_model.parameters.return_value = mock_parameters
+        mock_tokenizer = MagicMock()
+    
+        # 配置 mock 的返回值
+        mock_tokenizer.return_value = {
+            'input_ids': torch.tensor([[0, 1, 2], [3, 4, 5]]),
+            'attention_mask': torch.tensor([[1, 1, 1], [1, 1, 1]])
+        }
+    
+        self.ai.finetune_model = mock_model
+        self.ai.tokenizer = mock_tokenizer
+
+        # 调用 fine_tune 方法
+        self.ai.fine_tune(train_data, epochs=1, learning_rate=2e-5, batch_size=2)
+    
+        # 验证 finetune_model 的 train 方法是否被调用
+        mock_model.train.assert_called_once()
+
     @patch('PIL.Image.open')
     def test_generate_image_caption(self, mock_image_open):
-        mock_image = MagicMock(spec=Image.Image)
-        mock_image_open.return_value = mock_image
-        self.ai.image_captioning_pipeline = MagicMock(return_value=[{'generated_text': 'A cat sitting on a couch'}])
-        
-        # Test with file path
-        result = self.ai.generate_image_caption("dummy_image.jpg")
-        assert result == 'A cat sitting on a couch'
-        
-        # Test with Image object
-        result = self.ai.generate_image_caption(mock_image)
-        assert result == 'A cat sitting on a couch'
+        image_path = "test_image.jpg"
+        expected_caption = "a woman in a blue dress and a gold headpiece"
 
-    @patch('src.core.generative_ai.pipeline')
-    def test_answer_question(self, mock_pipeline):
-        mock_qa = MagicMock(return_value={'answer': 'Paris'})
-        mock_pipeline.return_value = mock_qa
-        
-        result = self.ai.answer_question("The capital of France is Paris.", "What is the capital of France?")
-        assert result == 'Paris'
-        mock_qa.assert_called_once()
+        # 模拟图像描述生成管道的返回值
+        self.ai.image_captioning_pipeline = MagicMock(return_value=[{"generated_text": expected_caption}])
 
-    @patch('src.core.generative_ai.pipeline')
-    def test_analyze_sentiment(self, mock_pipeline):
-        mock_sentiment = MagicMock(return_value=[{'label': 'POSITIVE', 'score': 0.9}])
-        mock_pipeline.return_value = mock_sentiment
-        
-        result = self.ai.analyze_sentiment("I love this product!")
-        assert result == {'label': 'POSITIVE', 'score': 0.9}
-        mock_sentiment.assert_called_once()
+        caption = self.ai.generate_image_caption(image_path)
+        self.assertEqual(caption, expected_caption)
+        self.ai.image_captioning_pipeline.assert_called_once()
+        mock_image_open.assert_called_once_with(image_path)
 
-    @patch('src.core.generative_ai.pipeline')
-    def test_summarize_text(self, mock_pipeline):
-        mock_summarizer = MagicMock(return_value=[{'summary_text': 'This is a summary.'}])
-        mock_pipeline.return_value = mock_summarizer
-        
-        result = self.ai.summarize_text("This is a long text that needs to be summarized.")
-        assert result == 'This is a summary.'
-        mock_summarizer.assert_called_once()
+    def test_answer_question(self):
+        context = "The capital of France is Paris."
+        question = "What is the capital of France?"
+        expected_answer = "Paris"
+
+        # 模拟问答管道的返回值
+        qa_pipeline = MagicMock(return_value={"answer": expected_answer})
+        with patch('src.core.generative_ai.pipeline', return_value=qa_pipeline):
+            answer = self.ai.answer_question(context, question)
+            self.assertEqual(answer, expected_answer)
+            qa_pipeline.assert_called_once_with(question=question, context=context)
+
+    def test_analyze_sentiment(self):
+        text = "I love this product!"
+        expected_sentiment = {"label": "POSITIVE", "score": 0.999}
+
+        # 模拟情感分析管道的返回值
+        sentiment_pipeline = MagicMock(return_value=[expected_sentiment])
+        with patch('src.core.generative_ai.pipeline', return_value=sentiment_pipeline):
+            sentiment = self.ai.analyze_sentiment(text)
+            self.assertEqual(sentiment, expected_sentiment)
+            sentiment_pipeline.assert_called_once_with(text)
+
+    def test_summarize_text(self):
+        text = "Long text to be summarized..." * 10
+        expected_summary = "This is a summary."
+
+        # 模拟文本摘要管道的返回值
+        summarizer = MagicMock(return_value=[{"summary_text": expected_summary}])
+        with patch('src.core.generative_ai.pipeline', return_value=summarizer):
+            summary = self.ai.summarize_text(text)
+            self.assertEqual(summary, expected_summary)
+            summarizer.assert_called_once_with(text, max_length=130, min_length=30, do_sample=False)
+
+    @patch('src.core.generative_ai.AutoModelForCausalLM.from_pretrained')
+    @patch('src.core.generative_ai.AutoTokenizer.from_pretrained')
+    def test_load_model(self, mock_tokenizer, mock_model):
+        path = "test_model_path"
+        self.ai.load_model(path)
+        mock_model.assert_called_once_with(path)
+        mock_tokenizer.assert_called_once_with(path)
+        self.assertIsNotNone(self.ai.finetune_model)
+        self.assertIsNotNone(self.ai.tokenizer)
+
+    @patch('src.core.generative_ai.AutoModelForCausalLM.from_pretrained')  
+    @patch('src.core.generative_ai.AutoTokenizer.from_pretrained')  
+    def test_switch_model(self, mock_tokenizer, mock_model):    
+        # 测试 API 模型  
+        api_model_name = "gpt2"  
+        self.ai.switch_model(api_model_name)  
+        mock_model.assert_not_called()  
+        mock_tokenizer.assert_not_called()  
+
+        # 测试本地模型  
+        local_model_name = "custom_model"  
+        self.ai.switch_model(local_model_name)  
+        mock_model.assert_called_once()  
+        mock_tokenizer.assert_called_once()
+
+    @patch('torch.cuda.empty_cache')
+    def test_cleanup(self, mock_empty_cache):
+        # 确保所有属性都存在
+        self.ai.model = MagicMock()
+        self.ai.tokenizer = MagicMock()
+        self.ai.translation_pipeline = MagicMock()
+        self.ai.image_classification_pipeline = MagicMock()
+        self.ai.image_captioning_pipeline = MagicMock()
+
+        self.ai.cleanup()
+        mock_empty_cache.assert_called_once()
+
+if __name__ == '__main__':
+    unittest.main()

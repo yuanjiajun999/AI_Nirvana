@@ -4,6 +4,7 @@ import sys
 import argparse
 import logging
 import time
+from langdetect import detect
 from openai import OpenAI 
 import scipy.optimize as opt
 import numpy as np
@@ -74,6 +75,7 @@ AVAILABLE_COMMANDS = [
     'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features',
     'create_digital_twin', 'simulate_digital_twin', 'monitor_digital_twin',
     'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model', 'generate_text',
+     'classify_image', 'caption_image', 'fine_tune_model', 'save_model', 'load_model',
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -638,12 +640,29 @@ class AINirvana:
             logger.error(f"Error in digital twin optimization: {str(e)}")
             return {"error": str(e)} 
 
-    def generate_text(self, prompt: str) -> str:
-        try:
-            return self.generative_ai.generate_text(prompt)
-        except Exception as e:
-            logger.error(f"生成文本时发生错误: {str(e)}")
-            return f"生成文本时发生错误: {str(e)}"          
+    def generate_text(self, prompt, max_tokens=100, temperature=0.7):
+        result = self.generative_ai.generate_text(prompt, max_tokens=max_tokens, temperature=temperature)
+        if result:
+            print(f"生成的文本（检测到的语言：{detect(prompt)}）：")
+            print(result)
+        else:
+            print("生成文本时出错。")
+        return result
+
+    def classify_image(self, image_path):
+        return self.generative_ai.classify_image(image_path)
+
+    def generate_image_caption(self, image_path):
+        return self.generative_ai.generate_image_caption(image_path)
+
+    def fine_tune(self, train_data, epochs=1, learning_rate=2e-5, batch_size=2):
+        return self.generative_ai.fine_tune(train_data, epochs=epochs, learning_rate=learning_rate, batch_size=batch_size)
+
+    def save_model(self, path):
+        return self.generative_ai.save_model(path)
+
+    def load_model(self, path):
+        return self.generative_ai.load_model(path)          
     
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
@@ -1110,14 +1129,69 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             return {"continue": True}
 
         elif command == "generate_text":
-            prompt = input("请输入要生成文本的提示词：")
-            try:
-                result = ai_nirvana.generative_ai.generate_text(prompt)
-                print(f"生成的文本：{result}")
-            except Exception as e:
-                print(f"生成文本时发生错误: {str(e)}")
+            prompt = input("请输入文本生成的提示：")
+            max_tokens = int(input("请输入最大生成令牌数（默认100）：") or "100")
+            temperature = float(input("请输入温度参数（0-1之间，默认0.7）：") or "0.7")
+            ai_nirvana.generate_text(prompt, max_tokens=max_tokens, temperature=temperature)
             return {"continue": True}
-        
+
+        elif command == "classify_image":
+            image_path = input("请输入图像路径：").strip()
+            # 移除可能的引号
+            image_path = image_path.strip("\"'")
+            try:
+                result = ai_nirvana.classify_image(image_path)
+                print("图像分类结果：", result)
+            except Exception as e:
+                print(f"处理图像时出错: {str(e)}")
+            return {"continue": True}
+
+        elif command == "caption_image":
+            image_path = input("请输入图像路径：")
+            result = ai_nirvana.generative_ai.generate_image_caption(image_path)
+            print("图像描述：", result)
+            return {"continue": True}
+
+        elif command == "fine_tune_model":
+            train_data = input("请输入训练数据（以逗号分隔）：").split(',')
+            epochs = int(input("请输入训练轮数（默认1）：") or "1")
+            learning_rate = float(input("请输入学习率（默认2e-5）：") or "2e-5")
+            batch_size = int(input("请输入批次大小（默认2）：") or "2")
+            try:
+                ai_nirvana.fine_tune(train_data, epochs=epochs, learning_rate=learning_rate, batch_size=batch_size)
+                print("模型微调完成")
+            except Exception as e:
+                print(f"模型微调过程中发生错误: {str(e)}")
+            return {"continue": True}
+
+        elif command == "save_model":
+            path = input("请输入保存模型的目录路径：").strip()
+            if not os.path.isdir(path):
+                try:
+                    os.makedirs(path)
+                    print(f"创建目录：{path}")
+                except Exception as e:
+                    print(f"创建目录失败：{str(e)}")
+                    return {"continue": True}
+            try:
+                ai_nirvana.save_model(path)
+                print("模型保存完成")
+            except Exception as e:
+                print(f"保存模型时出错：{str(e)}")
+            return {"continue": True}
+
+        elif command == "load_model":
+            path = input("请输入加载模型的目录路径：").strip()
+            if not os.path.isdir(path):
+                print("输入的路径不是一个有效的目录")
+                return {"continue": True}
+            try:
+                ai_nirvana.load_model(path)
+                print("模型加载完成")
+            except Exception as e:
+                print(f"加载模型时出错：{str(e)}")
+            return {"continue": True}
+
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -1182,6 +1256,12 @@ def print_help() -> None:
             'optimize_digital_twin': '优化数字孪生系统参数',
             'update_digital_twin_model': '更新数字孪生系统的物理模型',
             'validate_digital_twin_model': '验证数字孪生系统模型的准确性',
+            'generate_text': '生成文本',
+            'classify_image': '对图像进行分类',
+            'caption_image': '为图像生成描述',
+            'fine_tune_model': '微调模型',
+            'save_model': '保存模型',
+            'load_model': '加载模型',
         }
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
@@ -1203,6 +1283,12 @@ def print_help() -> None:
     print("- 进行大规模模拟和优化任务时，请注意系统资源的使用，避免因资源不足导致的性能问题。")
     print("- 在处理复杂的物理系统模型时，建议进行充分的测试，以确保系统行为符合预期。")
     print("- 数字孪生系统的各项功能依赖于输入数据的准确性，请确保输入的初始条件、时间步长、传感器数据等信息的准确性。")
+    print("- 'generate_text' 命令用于生成文本，可以指定最大令牌数和温度参数。")
+    print("- 'classify_image' 和 'caption_image' 命令需要提供有效的图像文件路径。")
+    print("- 'fine_tune_model' 命令用于微调模型，需要提供训练数据和相关参数。")
+    print("- 使用 'save_model' 和 'load_model' 命令时，请确保指定正确的文件路径。")
+    print("- 图像处理和模型微调功能可能需要较长时间，请耐心等待。")
+    print("- 在使用模型相关功能时，请确保系统有足够的计算资源。")
 
 def main(config: Config):  
     ai_nirvana = AINirvana(config)  

@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+from langdetect import detect
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForImageClassification
 from transformers import pipeline, GPT2LMHeadModel, GPT2Tokenizer
@@ -76,61 +77,35 @@ class GenerativeAI:
         tokenizer = AutoTokenizer.from_pretrained(model_name)  
         return model, tokenizer  
 
-    def generate_text(self, prompt, max_tokens=100, temperature=0.7, num_return_sequences=1, truncate=False):
-        generated_texts = None
+    def generate_text(self, prompt, max_tokens=100, temperature=0.7):
         try:
-            if hasattr(self, 'finetune_model') and self.finetune_model is not None:
-                # 使用本地模型生成文本
-                inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=512).to(self.device)
+            # 检测输入语言
+            input_language = detect(prompt)
             
-                outputs = self.finetune_model.generate(
-                    **inputs,
-                    max_new_tokens=max_tokens,
-                    temperature=temperature,
-                    num_return_sequences=num_return_sequences,
-                    do_sample=True,
-                    top_k=50,
-                    top_p=0.95,
-                    no_repeat_ngram_size=2,
-                    pad_token_id=self.tokenizer.eos_token_id
-                )
+            # 添加语言指示到系统消息
+            system_message = f"You are a helpful assistant. Please respond in {input_language}."
+            
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
 
-                generated_texts = [self.tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
-            else:
-                # 使用 API 生成文本
-                response = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": prompt},
-                    ],
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    n=num_return_sequences,
-                )
+            generated_text = response.choices[0].message.content
+            
+            # 记录 token 使用情况
+            total_tokens = response.usage.total_tokens
+            logger.info(f"Total tokens used: {total_tokens}")
 
-                generated_texts = [choice.message.content for choice in response.choices]
-
-                # 记录 token 使用情况
-                total_tokens = response.usage.total_tokens
-                logger.info(f"Total tokens used: {total_tokens}")
-
-            # 如果需要截断
-            if truncate:
-                generated_texts = [text[:max_tokens] for text in generated_texts]
+            return generated_text
 
         except Exception as e:
             logger.error(f"An error occurred during text generation: {str(e)}", exc_info=True)
             return None
-
-        finally:
-            logger.info(f"Generated text for prompt: {prompt[:50]}... (max_tokens: {max_tokens}, temperature: {temperature})")
-
-        # 如果只请求一个序列，直接返回字符串而不是列表
-        if num_return_sequences == 1 and generated_texts:
-            return generated_texts[0]
-        else:
-            return generated_texts
 
     @error_handler  
     def translate_text(self, text: str, target_language: str = "zh") -> str:  
@@ -151,33 +126,70 @@ class GenerativeAI:
         logger.info(f"Classified image with top {top_k} labels")  
         return results  
     
-    @error_handler
-    def fine_tune(self, train_texts, epochs=1, learning_rate=2e-5, batch_size=2):
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.finetune_model.resize_token_embeddings(len(self.tokenizer))
-    
+    def fine_tune(self, train_texts, val_texts=None, epochs=5, learning_rate=2e-5, batch_size=4):
         train_dataset = CustomDataset(train_texts, self.tokenizer, max_length=128)
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
+        if val_texts:
+            val_dataset = CustomDataset(val_texts, self.tokenizer, max_length=128)
+            val_loader = DataLoader(val_dataset, batch_size=batch_size)
+
         optimizer = AdamW(self.finetune_model.parameters(), lr=learning_rate)
-        self.finetune_model.train()
+
+        best_val_loss = float('inf')
+        patience = 3
+        no_improve = 0
 
         for epoch in range(epochs):
+            self.finetune_model.train()
+            total_loss = 0
             for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}"):
                 inputs = {k: v.to(self.device) for k, v in batch.items()}
                 outputs = self.finetune_model(**inputs)
-            
                 loss = outputs.loss
-                print(f"Calculated Loss: {loss.item()}")
+                total_loss += loss.item()
 
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
 
-            print(f"Epoch {epoch+1} completed.")
+            avg_train_loss = total_loss / len(train_loader)
+            print(f"Average training loss: {avg_train_loss}")
+
+            # Validation
+            if val_texts:
+                self.finetune_model.eval()
+                total_val_loss = 0
+                with torch.no_grad():
+                    for batch in val_loader:
+                        inputs = {k: v.to(self.device) for k, v in batch.items()}
+                        outputs = self.finetune_model(**inputs)
+                        loss = outputs.loss
+                        total_val_loss += loss.item()
+
+                avg_val_loss = total_val_loss / len(val_loader)
+                print(f"Validation loss: {avg_val_loss}")
+
+                if avg_val_loss < best_val_loss:
+                    best_val_loss = avg_val_loss
+                    no_improve = 0
+                    self.save_model("best_model")
+                else:
+                    no_improve += 1
+
+                if no_improve >= patience:
+                    print("Early stopping")
+                    break
+            else:
+                # 如果没有验证集，每个 epoch 后保存模型
+                self.save_model(f"model_epoch_{epoch+1}")
+
+        print("Fine-tuning completed.")
+        # 保存最终模型
+        self.save_model("final_model")
     
     @error_handler
-    def save_model(self, path: str):
+    def save_model(self, path):
         self.finetune_model.save_pretrained(path)
         self.tokenizer.save_pretrained(path)
         logger.info(f"Model saved to {path}")
@@ -231,26 +243,30 @@ class GenerativeAI:
         if model_name == self.model_name:
             logger.info(f"Model {model_name} is already loaded")
             return
-    
+
         if model_name.startswith("gpt"):
-            # 对于 GPT 模型，我们只需要更新 model_name
             self.model_name = model_name
             logger.info(f"Switched to API model: {model_name}")
         else:
-            # 对于本地模型，我们需要加载新的模型和分词器
+            logger.info(f"Attempting to load local model: {model_name}")
             self.finetune_model, self.tokenizer = self._load_finetune_model_and_tokenizer(model_name)
             self.finetune_model_name = model_name
             logger.info(f"Switched to local model: {model_name}")
 
-    def cleanup(self):  
-        # 释放资源  
-        del self.model  
-        del self.tokenizer  
-        del self.translation_pipeline  
-        del self.image_classification_pipeline  
-        del self.image_captioning_pipeline  
-        torch.cuda.empty_cache()  
-        logger.info("Resources cleaned up") 
+    def cleanup(self):
+        # 释放资源
+        if hasattr(self, 'model'):
+            del self.model
+        if hasattr(self, 'tokenizer'):
+            del self.tokenizer
+        if hasattr(self, 'translation_pipeline'):
+            del self.translation_pipeline
+        if hasattr(self, 'image_classification_pipeline'):
+            del self.image_classification_pipeline
+        if hasattr(self, 'image_captioning_pipeline'):
+            del self.image_captioning_pipeline
+        torch.cuda.empty_cache()
+        logger.info("Resources cleaned up")
         
 # 主函数修改示例  
 if __name__ == "__main__":  
