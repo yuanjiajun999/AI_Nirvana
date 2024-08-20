@@ -74,3 +74,6 @@ dist/
 
 #[alias]
     black = !black .
+    
+final_model/  
+model_epoch_1/
