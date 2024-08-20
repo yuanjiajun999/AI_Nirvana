@@ -1,5 +1,6 @@
 from src.core.generative_ai import GenerativeAI
 from PIL import Image
+import torch
 
 def main():
     # 初始化 GenerativeAI
@@ -7,14 +8,14 @@ def main():
 
     # 文本生成示例
     prompt = "The quick brown fox"
-    generated_text = ai.generate_text(prompt)
-    print("Generated Text:", generated_text)
+    result = ai.generate_text(prompt)
+    print("Generated Text:", result)
 
     # 文本翻译示例
     text = "Hello, world!"
-    translated_text = ai.translate_text(text)
-    print("Translated Text:", translated_text)
-
+    translation = ai.translate_text(text)
+    print("Translated Text:", translation)
+    
     # 图像分类示例
     image_path = "path/to/your/image.jpg"
     classification = ai.classify_image(image_path)
@@ -50,6 +51,12 @@ def main():
 
     # 加载模型示例
     ai.load_model("path/to/saved/model")
+
+    # 切换模型示例
+    ai.switch_model("gpt-3.5-turbo-0125")
+
+    # 清理资源
+    ai.cleanup()
 
 if __name__ == "__main__":
     main()
