@@ -695,45 +695,66 @@ class AINirvana:
         self.agent = DQNAgent(state_size, action_size)
         print(f"Created DQN agent with state size {state_size} and action size {action_size}")
 
-    def train_agent(self, environment_name: str, episodes: int, max_steps: int):
-        import gym
-        try:
-            env = gym.make(environment_name)
-            if not hasattr(self, 'agent'):
-                state_size = env.observation_space.shape[0]
-                action_size = env.action_space.n
-                self.agent = DQNAgent(state_size, action_size)
-        
-            print("Checking DQNAgent attributes before training:")
-            self.check_agent_attributes()
-        
-            for episode in range(episodes):
-                state = env.reset()
-                if hasattr(self.agent, 'perceive'):
-                    state = self.agent.perceive(state)
-                else:
-                    state = np.reshape(state, [1, self.agent.state_size])
-                for step in range(max_steps):
-                    action = self.agent.act(state)
-                    next_state, reward, done, _ = env.step(action)
-                    if hasattr(self.agent, 'perceive'):
-                        next_state = self.agent.perceive(next_state)
-                    else:
-                        next_state = np.reshape(next_state, [1, self.agent.state_size])
-                    self.agent.remember(state, action, reward, next_state, done)
-                    state = next_state
-                    if done:
-                        print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")
-                        break
-                self.agent.replay(32)
-        
-            print(f"Trained agent for {episodes} episodes in {environment_name}")
-        except AttributeError as e:
-            print(f"AttributeError occurred: {e}")
-            print("Please check if all required methods are implemented in DQNAgent class.")
-            self.check_agent_attributes()
-        except Exception as e:
-            print(f"An error occurred during training: {e}")
+    def train_agent(self, environment_name: str, episodes: int, max_steps: int):  
+        import gym  
+        import numpy as np  
+        try:  
+            env = gym.make(environment_name)  
+            if not hasattr(self, 'agent'):  
+                state_size = env.observation_space.shape[0]  
+                action_size = env.action_space.n  
+                self.agent = DQNAgent(state_size, action_size)  
+
+            print("Checking DQNAgent attributes before training:")  
+            self.check_agent_attributes()  
+
+            for episode in range(episodes):  
+                state = env.reset()  
+                if isinstance(state, tuple):  
+                    state = state[0]  # 如果 reset() 返回元组，取第一个元素  
+                print(f"Episode {episode+1}/{episodes}")  
+                print(f"Initial state: {state}")  
+            
+                state = self.agent.process_state(state)  
+                print(f"Processed initial state: {state}, shape: {state.shape}")  
+            
+                for step in range(max_steps):  
+                    action = self.agent.act(state)  
+                    print(f"Action: {action}")  
+                
+                    step_result = env.step(action)  
+                    if len(step_result) == 4:  
+                        next_state, reward, done, _ = step_result  
+                    elif len(step_result) == 5:  
+                        next_state, reward, terminated, truncated, _ = step_result  
+                        done = terminated or truncated  
+                    else:  
+                        raise ValueError(f"Unexpected number of return values from env.step(): {len(step_result)}")  
+                
+                    print(f"Next state: {next_state}")  
+                
+                    next_state = self.agent.process_state(next_state)  
+                    print(f"Processed next state: {next_state}, shape: {next_state.shape}")  
+                    print(f"Reward: {reward}")  
+                    print(f"Done: {done}")  
+                
+                    loss = self.agent.train(state, action, reward, next_state, done)  
+                    print(f"Training loss: {loss}")  
+                
+                    state = next_state  
+                
+                    if done:  
+                        print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")  
+                        break  
+
+                print(f"Epsilon: {self.agent.get_epsilon()}")  
+                print(f"Train count: {self.agent.get_train_count()}")  
+
+            print(f"Trained agent for {episodes} episodes in {environment_name}")  
+        except Exception as e:  
+            print(f"An error occurred during training: {e}")  
+            import traceback  
+            traceback.print_exc()
 
     def run_agent(self, environment_name: str, episodes: int, max_steps: int):
         import gym

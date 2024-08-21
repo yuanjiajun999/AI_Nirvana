@@ -134,15 +134,21 @@ class DQNAgent(BaseAgent):
             # 处理字典输入，将值转换为列表  
             processed = np.array(list(state.values()), dtype=np.float32)  
         elif isinstance(state, (list, tuple, np.ndarray)):  
-            processed = np.concatenate([  
-                DQNAgent.process_state(s) if isinstance(s, (list, tuple, np.ndarray, dict))  
-                else np.array([s], dtype=np.float32) for s in state  
-            ])  
+            if len(state) == 0:  
+                # 处理空列表或数组  
+                processed = np.array([], dtype=np.float32)  
+            elif isinstance(state[0], (list, tuple, np.ndarray, dict)):  
+                # 处理嵌套结构  
+                processed = np.concatenate([DQNAgent.process_state(s) for s in state])  
+            else:  
+                # 处理简单的列表或数组  
+                processed = np.array(state, dtype=np.float32)  
         else:  
+            # 处理单个值  
             processed = np.array([state], dtype=np.float32)  
-        
-        # 确保输出始终是 (1, n) 的形状  
-        return processed.reshape(1, -1)  
+    
+        # 确保输出始终是 (n,) 的形状，而不是 (1, n)  
+        return processed.flatten()
 
     def get_epsilon(self):  
         """  
