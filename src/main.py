@@ -163,49 +163,53 @@ class AINirvana:
         ]  
         return any(pattern in code for pattern in unsafe_patterns)  
 
-    def execute_code(self, code: str) -> str:  
-        if self.is_unsafe_code(code):  
-            return "执行被阻止：不安全的代码"  
+    def execute_code(self, code: str) -> str:
+        if self.is_unsafe_code(code):
+            return "执行被阻止：不安全的代码", {}
 
-        # 捕获标准输出和标准错误  
-        stdout = io.StringIO()  
-        stderr = io.StringIO()  
-        sys.stdout = stdout  
-        sys.stderr = stderr  
+        # 捕获标准输出和标准错误
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        sys.stdout = stdout
+        sys.stderr = stderr
 
-        try:  
-            # 执行代码  
-            local_vars = {}  
-            exec(code, globals(), local_vars)  
-            output = stdout.getvalue()  
-            error = stderr.getvalue()  
+        try:
+            # 执行代码
+            local_vars = {}
+            exec(code, globals(), local_vars)
+            output = stdout.getvalue()
+            error = stderr.getvalue()
 
-            if output:  
-                return f"执行结果:\n{output}"  
-            elif error:  
-                return f"执行过程中出现错误:\n{error}"  
-            else:  
-                # 如果没有输出，显示所有定义的变量  
-                var_output = []  
-                for var, value in local_vars.items():  
-                    if not var.startswith('__'):  
-                        var_output.append(f"{var} = {value}")  
-                if var_output:  
-                    return "定义的变量:\n" + "\n".join(var_output)  
-                else:  
-                    # 如果没有定义新变量，尝试获取最后一个表达式的值  
-                    last_line = code.strip().split('\n')[-1]  
-                    try:  
-                        result = eval(last_line, globals(), local_vars)  
-                        return f"最后一个表达式的值: {result}"  
-                    except:  
-                        return "代码执行成功，但没有输出或定义新变量。"  
-        except Exception as e:  
-            return f"代码执行时发生错误: {str(e)}"  
-        finally:  
-            # 恢复标准输出和标准错误  
-            sys.stdout = sys.__stdout__  
-            sys.stderr = sys.__stderr__   
+            if output:
+                result = f"执行结果:\n{output}"
+            elif error:
+                result = f"执行过程中出现错误:\n{error}"
+            else:
+                # 如果没有输出，显示所有定义的变量
+                var_output = []
+                for var, value in local_vars.items():
+                    if not var.startswith('__'):
+                        var_output.append(f"{var} = {value}")
+                if var_output:
+                    result = "定义的变量:\n" + "\n".join(var_output)
+                else:
+                    # 如果没有定义新变量，尝试获取最后一个表达式的值
+                    last_line = code.strip().split('\n')[-1]
+                    try:
+                        result = eval(last_line, globals(), local_vars)
+                        result = f"最后一个表达式的值: {result}"
+                    except:
+                        result = "代码执行成功，但没有输出或定义新变量。"
+
+            return result, local_vars
+
+        except Exception as e:
+             return f"代码执行时发生错误: {str(e)}", {}
+
+        finally:
+            # 恢复标准输出和标准错误
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__ 
         
     @error_handler
     def validate_code(self, code: str) -> bool:
@@ -868,27 +872,25 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             else:
                 print(f"无效的模型名称：{model_name}")
                 return {"continue": True}
-        elif command == "execute":  
-            print("请输入要执行的 Python 代码（输入空行结束）：")  
-            code_lines = []  
-            while True:  
-                line = input()  
-                if line.strip() == "":  
-                    break  
-                code_lines.append(line)  
-            code = "\n".join(code_lines)  
-            result = ai_nirvana.execute_code(code)  
-    
-            # 在这里添加新的输出格式  
-            print("\n" + "="*40)  
-            print("执行结果:")  
-            print(result)  
-            print("="*40 + "\n")  
-    
-            explanation = input("需要进一步解释结果吗？(yes/no): ")  
-            if explanation.lower() == 'yes':  
-                explanation_result = ai_nirvana.explain_code_result(code, result)  
-                print("解释：", explanation_result)  
+        elif command == "execute":
+            print("请输入要执行的 Python 代码（输入空行结束）：")
+            code_lines = []
+            while True:
+                line = input()
+                if line.strip() == "":
+                    break
+                code_lines.append(line)
+            code = "\n".join(code_lines)
+            result, local_vars = ai_nirvana.execute_code(code)  # 注意这里的改变
+            ai_nirvana.update_variable_state(local_vars)  # 更新变量状态
+            print("\n" + "="*40)
+            print("执行结果:")
+            print(result)
+            print("="*40 + "\n")
+            explanation = input("需要进一步解释结果吗？(yes/no): ")
+            if explanation.lower() == 'yes':
+                explanation_result = ai_nirvana.explain_code_result(code, result)
+                print("解释：", explanation_result)
             return {"continue": True}
         elif command == "validate_code":
             print("请输入要验证的 Python 代码（输入空行结束）：")
