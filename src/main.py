@@ -691,18 +691,24 @@ class AINirvana:
             raise ValueError("Invalid model type. Use 'general' or 'agent'.")
         print(f"Loaded {model_type} model from {filename}")
         
-    def create_agent(self, state_size: int, action_size: int):
-        self.agent = DQNAgent(state_size, action_size)
-        print(f"Created DQN agent with state size {state_size} and action size {action_size}")
+    def create_agent(self, state_size: int, action_size: int, verbose=True):  
+        self.agent = DQNAgent(state_size, action_size, verbose=verbose)  
+        print(f"DQN agent created with state size {state_size} and action size {action_size}")
 
     def train_agent(self, environment_name: str, episodes: int, max_steps: int):  
         import gym  
         import numpy as np  
+
+        env = None  
         try:  
+            environment_name = environment_name.strip()  
+            print(f"Creating environment: '{environment_name}'")  
             env = gym.make(environment_name)  
+
             if not hasattr(self, 'agent'):  
                 state_size = env.observation_space.shape[0]  
                 action_size = env.action_space.n  
+                print(f"State size: {state_size}, Action size: {action_size}")  
                 self.agent = DQNAgent(state_size, action_size)  
 
             print("Checking DQNAgent attributes before training:")  
@@ -711,16 +717,75 @@ class AINirvana:
             for episode in range(episodes):  
                 state = env.reset()  
                 if isinstance(state, tuple):  
+                    state = state[0]  
+                print(f"Initial state shape: {np.array(state).shape}")  
+                state = self.agent.process_state(state)  
+                total_reward = 0  
+                for step in range(max_steps):  
+                    action = self.agent.act(state, train=True)  
+                    step_result = env.step(action)  
+                
+                    if len(step_result) == 5:  
+                        next_state, reward, terminated, truncated, _ = step_result  
+                        done = terminated or truncated  
+                    else:  
+                        next_state, reward, done, _ = step_result  
+                
+                    print(f"Next state shape before processing: {np.array(next_state).shape}")  
+                    next_state = self.agent.process_state(next_state)  
+                    self.agent.remember(state, action, reward, next_state, done)  
+                    state = next_state  
+                    total_reward += reward  
+
+                    if len(self.agent.memory) > self.agent.batch_size:  
+                        self.agent.replay(self.agent.batch_size)  
+                
+                    if done:  
+                        break  
+
+                print(f"Episode: {episode+1}/{episodes}, Score: {total_reward}, Epsilon: {self.agent.epsilon:.4f}")  
+                print(f"Train count: {self.agent.train_count}")  
+
+                self.agent.epsilon = max(self.agent.epsilon_min, self.agent.epsilon * self.agent.epsilon_decay)  
+
+                if episode % self.agent.update_target_frequency == 0:  
+                    self.agent.update_target_model()  
+
+            print(f"Trained agent for {episodes} episodes in {environment_name}")  
+        except Exception as e:  
+            print(f"An error occurred during training: {e}")  
+            import traceback  
+            traceback.print_exc()  
+        finally:  
+            if env:  
+                env.close()
+
+    def run_agent(self, environment_name: str, episodes: int, max_steps: int):  
+        import gym  
+        import numpy as np  
+
+        try:  
+            env = gym.make(environment_name)  
+            if not hasattr(self, 'agent'):  
+                state_size = env.observation_space.shape[0]  
+                action_size = env.action_space.n  
+                self.agent = DQNAgent(state_size, action_size)  
+                print("Warning: No trained agent found. Using a new, untrained agent.")  
+            else:  
+                print("Using existing agent.")  
+
+            total_rewards = []  
+
+            for episode in range(episodes):  
+                state = env.reset()  
+                if isinstance(state, tuple):  
                     state = state[0]  # 如果 reset() 返回元组，取第一个元素  
-                print(f"Episode {episode+1}/{episodes}")  
-                print(f"Initial state: {state}")  
             
                 state = self.agent.process_state(state)  
-                print(f"Processed initial state: {state}, shape: {state.shape}")  
-            
+                episode_reward = 0  
+
                 for step in range(max_steps):  
-                    action = self.agent.act(state)  
-                    print(f"Action: {action}")  
+                    action = self.agent.act(state, train=False)  # 使用贪婪策略  
                 
                     step_result = env.step(action)  
                     if len(step_result) == 4:  
@@ -731,46 +796,24 @@ class AINirvana:
                     else:  
                         raise ValueError(f"Unexpected number of return values from env.step(): {len(step_result)}")  
                 
-                    print(f"Next state: {next_state}")  
-                
                     next_state = self.agent.process_state(next_state)  
-                    print(f"Processed next state: {next_state}, shape: {next_state.shape}")  
-                    print(f"Reward: {reward}")  
-                    print(f"Done: {done}")  
-                
-                    loss = self.agent.train(state, action, reward, next_state, done)  
-                    print(f"Training loss: {loss}")  
+                    episode_reward += reward  
                 
                     state = next_state  
                 
                     if done:  
-                        print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")  
                         break  
 
-                print(f"Epsilon: {self.agent.get_epsilon()}")  
-                print(f"Train count: {self.agent.get_train_count()}")  
+                total_rewards.append(episode_reward)  
+                print(f"Episode: {episode+1}/{episodes}, Score: {episode_reward}")  
 
-            print(f"Trained agent for {episodes} episodes in {environment_name}")  
+            average_reward = np.mean(total_rewards)  
+            print(f"\nAverage score over {episodes} episodes: {average_reward}")  
+        
         except Exception as e:  
-            print(f"An error occurred during training: {e}")  
+            print(f"An error occurred while running the agent: {e}")  
             import traceback  
-            traceback.print_exc()
-
-    def run_agent(self, environment_name: str, episodes: int, max_steps: int):
-        import gym
-        env = gym.make(environment_name)
-        for episode in range(episodes):
-            state = env.reset()
-            state = self.agent.perceive(state)
-            for step in range(max_steps):
-                action = self.agent.act(state)
-                next_state, reward, done, _ = env.step(action)
-                next_state = self.agent.perceive(next_state)
-                state = next_state
-                if done:
-                    print(f"Episode: {episode+1}/{episodes}, Score: {step+1}")
-                    break
-        print(f"Ran agent for {episodes} episodes in {environment_name}")
+            traceback.print_exc()  
 
     def setup_rl_agent(self, state_size, action_size):
         self.rl_agent = DQNAgent(state_size, action_size)
@@ -1321,11 +1364,11 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             ai_nirvana.train_agent(environment_name, episodes, max_steps)
             return {"continue": True}
 
-        elif command == "run_agent":
-            environment_name = input("Enter environment name (e.g., 'CartPole-v1'): ")
-            episodes = int(input("Enter number of episodes: "))
-            max_steps = int(input("Enter maximum steps per episode: "))
-            ai_nirvana.run_agent(environment_name, episodes, max_steps)
+        elif command == "run_agent":  
+            environment_name = input("请输入环境名称（例如 'CartPole-v1'）：")  
+            episodes = int(input("请输入要运行的回合数："))  
+            max_steps = int(input("请输入每个回合的最大步数："))  
+            ai_nirvana.run_agent(environment_name, episodes, max_steps)  
             return {"continue": True}
 
         elif command == "setup_rl_agent":

@@ -41,7 +41,10 @@ class BaseAgent(ABC):
         return process_state(state)  
 
 class DQNAgent(BaseAgent):  
-    def __init__(self, state_size, action_size, learning_rate=0.001, gamma=0.95, epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01, memory_size=10000, batch_size=32, update_target_frequency=100):  
+    def __init__(self, state_size, action_size, learning_rate=0.001, gamma=0.95,   
+                 epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01,   
+                 memory_size=10000, batch_size=32, update_target_frequency=100,   
+                 verbose=True):  
         super().__init__()  
         self.state_size = state_size  
         self.action_size = action_size  
@@ -53,20 +56,32 @@ class DQNAgent(BaseAgent):
         self.learning_rate = learning_rate  
         self.batch_size = batch_size  
         self.update_target_frequency = update_target_frequency  
+        self.verbose = verbose  
         self.model = self._build_model()  
-        self.target_model = self._build_model()  
+        self.target_model = self._build_model(print_summary=False)  
         self.update_target_model()  
         self.step_count = 0  
-        self.train_count = 0  # 添加 train_count 属性  
+        self.train_count = 0  
 
-    def _build_model(self):  
+        if self.verbose:  
+            print("DQNAgent initialized with:")  
+            print(f"State size: {state_size}, Action size: {action_size}")  
+            print(f"Learning rate: {learning_rate}, Gamma: {gamma}")  
+            print(f"Epsilon: {epsilon}, Epsilon decay: {epsilon_decay}, Epsilon min: {epsilon_min}")  
+            print(f"Memory size: {memory_size}, Batch size: {batch_size}")  
+            print(f"Update target frequency: {update_target_frequency}")  
+
+    def _build_model(self, print_summary=True):  
         model = Sequential([  
             Dense(64, activation='relu', input_shape=(self.state_size,)),  
             Dense(64, activation='relu'),  
             Dense(self.action_size, activation='linear')  
         ])  
         model.compile(optimizer=Adam(learning_rate=self.learning_rate), loss='mse')  
-        return model  
+        if self.verbose and print_summary:  
+            print("Model summary:")  
+            model.summary()  
+        return model
 
     def update_target_model(self):  
         self.target_model.set_weights(self.model.get_weights())  
@@ -74,12 +89,12 @@ class DQNAgent(BaseAgent):
     def remember(self, state, action, reward, next_state, done):  
         self.memory.append((state, action, reward, next_state, done))  
 
-    def act(self, state):  
-        state = self.process_state(state).reshape(1, -1)  
-        if np.random.rand() <= self.epsilon:  
+    def act(self, state, train=True):  
+        print(f"Act input state shape: {state.shape}")  
+        if train and np.random.rand() <= self.epsilon:  
             return random.randrange(self.action_size)  
-        act_values = self.model.predict(state)  
-        return np.argmax(act_values[0])  
+        act_values = self.model.predict(state, verbose=0)  
+        return np.argmax(act_values[0]) 
 
     def train(self, state, action, reward, next_state, done):  
         state = self.process_state(state).reshape(1, -1)  
@@ -131,24 +146,22 @@ class DQNAgent(BaseAgent):
         Convert the state to a numpy array of floats in a consistent manner.  
         """  
         if isinstance(state, dict):  
-            # 处理字典输入，将值转换为列表  
             processed = np.array(list(state.values()), dtype=np.float32)  
         elif isinstance(state, (list, tuple, np.ndarray)):  
             if len(state) == 0:  
-                # 处理空列表或数组  
                 processed = np.array([], dtype=np.float32)  
             elif isinstance(state[0], (list, tuple, np.ndarray, dict)):  
-                # 处理嵌套结构  
                 processed = np.concatenate([DQNAgent.process_state(s) for s in state])  
             else:  
-                # 处理简单的列表或数组  
                 processed = np.array(state, dtype=np.float32)  
         else:  
-            # 处理单个值  
             processed = np.array([state], dtype=np.float32)  
     
-        # 确保输出始终是 (n,) 的形状，而不是 (1, n)  
-        return processed.flatten()
+        processed = processed.flatten()  
+        # 确保输出是 2D 数组，形状为 (1, n)  
+        processed = processed.reshape(1, -1)  
+        print(f"Processed state shape: {processed.shape}")  
+        return processed  
 
     def get_epsilon(self):  
         """  
@@ -270,11 +283,12 @@ class PPOAgent(BaseAgent):
         
         return actor, critic  
 
-    def act(self, state):  
-        state = self.process_state(state)
-        state = self.process_state(state).reshape(1, -1)  
-        probs = self.actor(state).numpy()[0]  
-        return np.random.choice(self.action_size, p=probs)  
+    def act(self, state, train=True):  
+        if train and np.random.rand() <= self.epsilon:  
+            return random.randrange(self.action_size)  
+        processed_state = self.process_state(state)  
+        act_values = self.model.predict(processed_state, verbose=0)  
+        return np.argmax(act_values[0])  
 
     def train(self, states, actions, rewards, next_states, dones):  
         states = np.array([self.process_state(s) for s in states])  
@@ -335,9 +349,12 @@ class PPOAgent(BaseAgent):
         return np.mean(actor_losses + critic_losses)
 
     def process_state(self, state):  
-        if len(state.shape) == 3:  
-            return state.squeeze(0)  # Remove the batch dimension if present  
-        return state 
+        if isinstance(state, np.ndarray):  
+            if len(state.shape) == 1:  
+                return np.expand_dims(state, axis=0)  
+        elif isinstance(state, list):  
+            return np.expand_dims(np.array(state), axis=0)  
+        return state  
 
 class SACAgent(BaseAgent):  
     def __init__(self, state_size, action_size, learning_rate=0.0003, gamma=0.99, tau=0.005, alpha=0.2):  
