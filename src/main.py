@@ -204,12 +204,12 @@ class AINirvana:
             return result, local_vars
 
         except Exception as e:
-             return f"代码执行时发生错误: {str(e)}", {}
+            return f"代码执行时发生错误: {str(e)}", {}
 
         finally:
             # 恢复标准输出和标准错误
             sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__ 
+            sys.stderr = sys.__stderr__
         
     @error_handler
     def validate_code(self, code: str) -> bool:
@@ -892,6 +892,7 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                 explanation_result = ai_nirvana.explain_code_result(code, result)
                 print("解释：", explanation_result)
             return {"continue": True}
+
         elif command == "validate_code":
             print("请输入要验证的 Python 代码（输入空行结束）：")
             code_lines = []
