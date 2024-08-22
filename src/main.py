@@ -819,11 +819,25 @@ class AINirvana:
         self.rl_agent = DQNAgent(state_size, action_size)
         print(f"RL agent set up with state size {state_size} and action size {action_size}")
 
-    def rl_decide(self, state):
-        if not hasattr(self, 'rl_agent'):
-            raise ValueError("RL agent not set up. Use 'setup_rl_agent' first.")
-        action = self.rl_agent.act(state)
-        return action         
+    def rl_decide(self):  
+        try:  
+            state_input = input("Enter the current state (comma-separated values): ")  
+            state = np.array([float(x.strip()) for x in state_input.split(',')])  
+        
+            # 确保状态是二维数组，形状为 (1, state_size)  
+            state = state.reshape(1, -1)  
+        
+            if not hasattr(self, 'rl_agent'):  
+                return {"error": "RL agent not initialized. Please use 'setup_rl_agent' first.", "continue": True}  
+        
+            action = self.rl_agent.act(state)  
+        
+            print(f"Chosen action: {action}")  
+            return {"message": f"RL decision made. Chosen action: {action}", "continue": True}  
+        except ValueError as ve:  
+            return {"error": f"Invalid input: {str(ve)}", "continue": True}  
+        except Exception as e:  
+            return {"error": f"Error in RL decision: {str(e)}", "continue": True}      
 
     def check_agent_attributes(self):
         if hasattr(self, 'agent'):
@@ -1380,14 +1394,13 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             except ValueError as e:
                 return {"message": f"Error setting up RL agent: {str(e)}", "continue": True}
 
-        elif command == "rl_decide":
-            try:
-                state = input("Enter the current state (comma-separated values): ")
-                state = [float(x.strip()) for x in state.split(',')]
-                action = ai_nirvana.rl_decide(state)
-                return {"message": f"RL agent decided on action: {action}", "continue": True}
-            except Exception as e:
-                return {"message": f"Error in RL decision: {str(e)}", "continue": True}
+        elif command == "rl_decide":  
+            result = ai_nirvana.rl_decide()  
+            if "error" in result:  
+                print(result["error"])  
+            else:  
+                print(result["message"])  
+            return {"continue": True}
 
         else:
             response = ai_nirvana.process(command)
