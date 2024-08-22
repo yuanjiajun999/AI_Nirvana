@@ -174,6 +174,24 @@ class DQNAgent(BaseAgent):
         Returns the current train count.  
         """  
         return self.train_count  
+
+    def save(self, filename):  
+        self.model.save(filename)  
+        # 同时保存 state_size 和 action_size  
+        np.savez(filename + '_params.npz', state_size=self.state_size, action_size=self.action_size)  
+        print(f"DQN Agent model saved to {filename}")  
+
+    @classmethod  
+    def load(cls, filename):  
+        loaded_model = tf.keras.models.load_model(filename)  
+        # 加载 state_size 和 action_size  
+        params = np.load(filename + '_params.npz')  
+        state_size = params['state_size']  
+        action_size = params['action_size']  
+        agent = cls(state_size, action_size)  
+        agent.model = loaded_model  
+        print(f"DQN Agent model loaded from {filename}")  
+        return agent   
     
 class A2CAgent(BaseAgent):  
     def __init__(self, state_size, action_size, learning_rate=0.001, gamma=0.99):  

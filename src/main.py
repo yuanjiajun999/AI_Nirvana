@@ -66,8 +66,8 @@ app = Flask(__name__)
 # 在文件的适当位置定义 AVAILABLE_COMMANDS
 AVAILABLE_COMMANDS = [
     'quit', 'clear', 'sentiment', 'execute', 'validate_code', 'supported_languages', 'summarize', 'change_model', 
-    'vars', 'explain', 'encrypt', 'decrypt', 'add_knowledge', 'get_knowledge', 
-    'list_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
+    'vars', 'explain', 'encrypt', 'decrypt', 'add_knowledge', 'get_knowledge', 'list_knowledge', 'update_knowledge', 
+    'delete_knowledge', 'search_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
     'test_complex', 'test_models', 'test_code_safety', 'qa','init_active_learner',
     'run_active_learning', 'al_model', 'al_committee', 'al_plot','label_initial_data',
     'view_committee','init_feature_engineer', 'create_entity_set', 'generate_features',
@@ -131,6 +131,25 @@ class AINirvana:
         self.assistant.change_model(model_name)
         self.model_name = model_name  # 更新 AINirvana 实例的 model_name
         print(f"模型已更改为 {model_name}。")
+
+    def add_knowledge(self, key: str, value: Any) -> None:
+        self.knowledge_base.add_knowledge(key, value)
+
+    def get_knowledge(self, key: str) -> Any:
+        return self.knowledge_base.get_knowledge(key)
+
+    def list_all_knowledge(self) -> Dict[str, Any]:
+        return self.knowledge_base.list_all_knowledge()
+
+    def update_knowledge(self, key: str, value: Any) -> None:
+        self.knowledge_base.update_knowledge(key, value)
+
+    def delete_knowledge(self, key: str) -> None:
+        self.knowledge_base.delete_knowledge(key)
+
+    def search_knowledge(self, query: str) -> Dict[str, Any]:
+        return {k: v for k, v in self.knowledge_base.list_all_knowledge().items() 
+                if query.lower() in k.lower() or (isinstance(v, str) and query.lower() in v.lower())}
 
     @error_handler
     def get_available_models(self) -> List[str]:
@@ -663,33 +682,46 @@ class AINirvana:
     def fine_tune(self, train_data, epochs=1, learning_rate=2e-5, batch_size=2):
         return self.generative_ai.fine_tune(train_data, epochs=epochs, learning_rate=learning_rate, batch_size=batch_size)
 
-    def save_model(self, filename: str, model_type: str = 'general'):
-        if model_type == 'general':
-            # 保存通用模型（如果有的话）
-            self.generative_ai.save_model(filename)
-        elif model_type == 'agent':
-            # 保存智能代理模型
-            if hasattr(self, 'agent'):
-                self.agent.save(filename)
-            else:
-                raise ValueError("No agent model to save.")
-        else:
-            raise ValueError("Invalid model type. Use 'general' or 'agent'.")
-        print(f"Saved {model_type} model to {filename}")
+    def save_model(self, filename: str, model_type: str = 'general'):  
+        try:  
+            if model_type == 'general':  
+                # 保存通用模型（如果有的话）  
+                self.generative_ai.save_model(filename)  
+            elif model_type == 'agent':  
+                # 保存智能代理模型  
+                if hasattr(self, 'agent'):  
+                    self.agent.save(filename)  
+                    # 假设 agent 有 state_size 和 action_size 属性  
+                    np.savez(filename + '_params.npz', state_size=self.agent.state_size, action_size=self.agent.action_size)  
+                else:  
+                    raise ValueError("No agent model to save.")  
+            else:  
+                raise ValueError("Invalid model type. Use 'general' or 'agent'.")  
+            print(f"Saved {model_type} model to {filename}")  
+            return {"message": f"{model_type.capitalize()} model saved successfully.", "continue": True}  
+        except Exception as e:  
+            return {"error": str(e), "continue": True}  
 
-    def load_model(self, filename: str, model_type: str = 'general'):
-        if model_type == 'general':
-            # 加载通用模型
-            self.generative_ai.load_model(filename)
-        elif model_type == 'agent':
-            # 加载智能代理模型
-            if hasattr(self, 'agent'):
-                self.agent.load(filename)
-            else:
-                raise ValueError("No agent initialized. Use 'create_agent' first.")
-        else:
-            raise ValueError("Invalid model type. Use 'general' or 'agent'.")
-        print(f"Loaded {model_type} model from {filename}")
+    def load_model(self, filename: str, model_type: str = 'general'):  
+        try:  
+            if model_type == 'general':  
+                # 加载通用模型  
+                self.generative_ai.load_model(filename)  
+            elif model_type == 'agent':  
+                # 加载智能代理模型  
+                if not hasattr(self, 'agent'):  
+                    # 如果 agent 还没有被初始化，我们需要先创建它  
+                    params = np.load(filename + '_params.npz')  
+                    state_size = params['state_size']  
+                    action_size = params['action_size']  
+                    self.agent = DQNAgent(state_size, action_size)  
+                self.agent.load(filename)  
+            else:  
+                raise ValueError("Invalid model type. Use 'general' or 'agent'.")  
+            print(f"Loaded {model_type} model from {filename}")  
+            return {"message": f"{model_type.capitalize()} model loaded successfully.", "continue": True}  
+        except Exception as e:  
+            return {"error": str(e), "continue": True}
         
     def create_agent(self, state_size: int, action_size: int, verbose=True):  
         self.agent = DQNAgent(state_size, action_size, verbose=verbose)  
@@ -1017,22 +1049,55 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
         elif command == "add_knowledge":
             key = input("请输入知识的键：")
             value = input("请输入知识的值：")
-            ai_nirvana.knowledge_base.add_knowledge(key, value)
+            ai_nirvana.add_knowledge(key, value)
             return {"message": f"知识已添加: {key}", "continue": True}
+
         elif command == "get_knowledge":
             key = input("请输入要检索的知识键：")
             try:
-                value = ai_nirvana.knowledge_base.get_knowledge(key)
+                value = ai_nirvana.get_knowledge(key)
                 print(f"知识内容：{value}")
             except KeyError as e:
                 print(f"错误：{str(e)}")
             return {"continue": True}
+
         elif command == "list_knowledge":
-            all_knowledge = ai_nirvana.knowledge_base.list_all_knowledge()
+            all_knowledge = ai_nirvana.list_all_knowledge()
             print("所有知识：")
             for k, v in all_knowledge.items():
                 print(f"{k}: {v}")
             return {"continue": True}
+
+        elif command == "update_knowledge":
+            key = input("请输入要更新的知识键：")
+            value = input("请输入新的知识值：")
+            try:
+                ai_nirvana.knowledge_base.update_knowledge(key, value)
+                print(f"知识已更新: {key}")
+            except KeyError as e:
+                print(f"错误：{str(e)}")
+            return {"continue": True}
+
+        elif command == "delete_knowledge":
+            key = input("请输入要删除的知识键：")
+            try:
+                ai_nirvana.knowledge_base.delete_knowledge(key)
+                print(f"知识已删除: {key}")
+            except KeyError as e:
+                print(f"错误：{str(e)}")
+            return {"continue": True}
+
+        elif command == "search_knowledge":
+            query = input("请输入搜索关键词：").strip()
+            results = ai_nirvana.search_knowledge(query)
+            if results:
+                print("搜索结果：")
+                for k, v in results.items():
+                    print(f"{k}: {v}")
+            else:
+                 print("未找到相关知识。")
+            return {"continue": True}
+
         elif command == "extract_keywords":
             text = input("请输入要提取关键词的文本：")
             keywords = ai_nirvana.assistant.extract_keywords(text)
@@ -1434,6 +1499,9 @@ def print_help() -> None:
             'add_knowledge': '添加知识到知识库',
             'get_knowledge': '检索知识库中的知识',
             'list_knowledge': '列出所有知识库中的知识',
+            'update_knowledge': '更新知识库中的知识',
+            'delete_knowledge': '从知识库中删除知识',
+            'search_knowledge': '在知识库中搜索知识',
             'extract_keywords': '从文本中提取关键词',
             'plan_task': '为给定任务生成计划',
             'translate': '翻译文本到指定语言',
