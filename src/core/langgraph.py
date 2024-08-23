@@ -107,10 +107,7 @@ class LangGraph:
             input_variables=["text"],  
             template="Extract the entities from the following text:\n\n{text}\n\nEntities:"  
         )  
-        return LLMChain(llm=self.llm, prompt=prompt_template)
-    
-    def add_entity(self, entity, entity_type):  
-        self.graph.add_node(entity, type=entity_type)  
+        return LLMChain(llm=self.llm, prompt=prompt_template) 
 
     def add_relation(self, entity1, entity2, relation):  
         self.graph.add_edge(entity1, entity2, relation=relation)  
@@ -240,9 +237,9 @@ class LangGraph:
         entities = [(ent.text, ent.label_) for ent in doc.ents]  
         return entities  
 
-    def add_entity(self, entity: str, properties: Dict[str, Any]):
-        self.graph.add_node(entity, **properties)
-        self.vector_store.add_texts([f"{entity}: {str(properties)}"])
+    def add_entity(self, entity: str, entity_type: str):  
+        self.graph.add_node(entity, type=entity_type)  
+        self.vector_store.add_texts([f"{entity}: Type - {entity_type}"])  
 
     def add_relationship(self, entity1: str, entity2: str, relationship: str):
         self.graph.add_edge(entity1, entity2, relationship=relationship)

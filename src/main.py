@@ -1,6 +1,7 @@
 import os
 import io
 import sys
+import ast
 import argparse
 import logging
 import time
@@ -57,6 +58,7 @@ from src.core.active_learning import ActiveLearner
 from src.core.auto_feature_engineering import AutoFeatureEngineer
 from src.core.digital_twin import DigitalTwin
 from sklearn.ensemble import IsolationForest
+from src.core.langgraph import LangGraph
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +78,8 @@ AVAILABLE_COMMANDS = [
     'create_digital_twin', 'simulate_digital_twin', 'monitor_digital_twin',
     'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model', 'generate_text',
     'classify_image', 'caption_image', 'fine_tune_model', 'save_model', 'load_model','create_agent', 'train_agent',
-    'run_agent', 'setup_rl_agent', 'rl_decide',
+    'run_agent', 'setup_rl_agent', 'rl_decide', 'add_entity', 'update_entity', 'delete_entity', 'add_relation',
+    'get_graph_summary', 'export_graph', 'infer_commonsense','retrieve_knowledge', 'semantic_search',
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -106,6 +109,7 @@ class AINirvana:
         self.accuracy_history = None
         self.feature_engineer = None  # 初始化为 None
         self.digital_twin = None  # 初始时未创建
+        self.lang_graph = LangGraph()
         self.initialize_modules()  # 自动检测并初始化模块
         print(f"AINirvana instance created with model: {self.model_name}")
 
@@ -494,8 +498,11 @@ class AINirvana:
             # 使用自定义模型创建 DigitalTwin 实例
             self.create_custom_digital_twin()
             print("数字孪生系统已自动初始化。")
+
+            self.lang_graph = LangGraph()
+            print("LangGraph 模块已初始化。")
         except Exception as e:
-            print(f"数字孪生系统初始化失败: {e}")
+            print(f"数字孪生系统或 LangGraph 模块初始化失败: {e}")
 
     def create_custom_digital_twin(self):
         # 定义模型函数
@@ -879,7 +886,45 @@ class AINirvana:
                     print(f"- {attr}")
         else:
             print("Agent has not been created yet.") 
+
+    def add_entity(self, entity: str, entity_type: str) -> None:  
+        self.lang_graph.add_entity(entity, entity_type)
     
+    def update_entity(self, name: str, attributes: dict):  
+        result = self.lang_graph.update_entity(name, attributes)  
+        print(f"实体更新结果：{result}")  
+        return result  
+    
+    def delete_entity(self, entity: str):
+        result = self.lang_graph.delete_entity(entity)
+        print(result)
+    
+    def add_relation(self, entity1: str, entity2: str, relation: str):
+        self.lang_graph.add_relationship(entity1, entity2, relation)
+        print(f"关系 {relation} 已添加，实体 {entity1} 和 {entity2} 之间。")        
+    
+    def get_graph_summary(self):  
+        return self.lang_graph.get_graph_summary()
+    
+    def export_graph(self, format: str):
+        result = self.lang_graph.export_graph(format)
+        print(result)
+
+    def infer_commonsense(self, context: str):
+        response = self.lang_graph.infer_commonsense(context)
+        print(f"常识推理结果: {response}")
+    
+    def retrieve_knowledge(self, query: str):
+        response = self.lang_graph.retrieve_knowledge(query)
+        print(f"知识检索结果: {response}")
+    
+    def semantic_search(self, query: str, k: int = 5):
+        results = self.lang_graph.semantic_search(query, k)
+        print(f"语义搜索结果: {results}")  
+
+    def add_relationship(self, entity1: str, entity2: str, relationship: str) -> None:  
+        self.lang_graph.add_relationship(entity1, entity2, relationship)               
+
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
     # 在实际应用中，您可能需要从文件或数据库加载真实数据
@@ -1467,6 +1512,63 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                 print(result["message"])  
             return {"continue": True}
 
+        elif command == "add_entity":  
+            entity = input("请输入实体名称：")  
+            entity_type = input("请输入实体类型：")  
+            result = ai_nirvana.add_entity(entity, entity_type)  
+            print(f"实体添加结果：{result}")  
+            return {"continue": True}   
+
+        elif command == "update_entity":  
+            entity = input("请输入实体名称：")  
+            new_properties_str = input("请输入实体的新属性（字典格式）：")  
+            try:  
+                new_properties = ast.literal_eval(new_properties_str)  
+                if not isinstance(new_properties, dict):  
+                    raise ValueError("输入必须是字典格式")  
+                result = ai_nirvana.update_entity(entity, new_properties)  
+                print(f"实体更新结果：{result}")  
+            except (SyntaxError, ValueError) as e:  
+                print(f"输入格式错误：{e}. 请确保使用正确的字典格式，例如 {{'type': 'City'}}")  
+            return {"continue": True}
+    
+        elif command == "delete_entity":
+            entity = input("请输入要删除的实体名称：")
+            ai_nirvana.delete_entity(entity)
+    
+        elif command == "add_relation":  
+            entity1 = input("请输入第一个实体名称：")  
+            entity2 = input("请输入第二个实体名称：")  
+            relation = input("请输入关系名称：")  
+            try:  
+                ai_nirvana.add_relationship(entity1, entity2, relation)  
+                print(f"关系 {relation} 已添加，实体 {entity1} 和 {entity2} 之间。")  
+            except Exception as e:  
+                print(f"添加关系时发生错误：{str(e)}")  
+            return {"continue": True}
+    
+        elif command == "get_graph_summary":  
+            summary = ai_nirvana.get_graph_summary()  
+            print(f"图摘要: {summary}")  
+            return {"continue": True}
+    
+        elif command == "export_graph":
+            format = input("请输入导出格式（graphml/gexf）：")
+            ai_nirvana.export_graph(format)
+    
+        elif command == "infer_commonsense":
+            context = input("请输入推理上下文：")
+            ai_nirvana.infer_commonsense(context)
+    
+        elif command == "retrieve_knowledge":
+            query = input("请输入查询内容：")
+            ai_nirvana.retrieve_knowledge(query)
+    
+        elif command == "semantic_search":
+            query = input("请输入搜索内容：")
+            k = int(input("请输入返回结果的数量："))
+            ai_nirvana.semantic_search(query, k)
+
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -1545,7 +1647,15 @@ def print_help() -> None:
             'run_agent' : '在指定环境中运行智能代理',
             'setup_rl_agent' : '设置强化学习代理',
             'rl_decide' : '让强化学习代理根据给定状态做出决策',
-
+            'add_entity': '添加实体到知识图',
+            'update_entity': '更新实体信息',
+            'delete_entity': '删除实体',
+            'add_relation': '添加实体之间的关系',
+            'get_graph_summary': '获取知识图的摘要',
+            'export_graph': '导出知识图',
+            'infer_commonsense': '执行常识推理',
+            'retrieve_knowledge': '检索知识图中的知识',
+            'semantic_search': '执行语义搜索',
         }    
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
@@ -1580,7 +1690,17 @@ def print_help() -> None:
     print("- 如果遇到任何未预期的错误或异常行为，请检查日志文件以获取更详细的信息。")
     print("- 定期保存您的工作成果和模型，以防意外情况发生。")
     print("- 如果您是在共享环境中使用本系统，请注意保护敏感数据和模型的安全。")
-    
+    print("- LangGraph支持对实体的添加、更新和删除操作。请确保在添加实体时使用唯一的名称，以避免覆盖已有的实体。")
+    print("- 在更新实体信息时，新属性将覆盖已有的属性。如果只想修改部分属性，请确保只提供需要更新的键值对。")
+    print("- 可以为两个实体添加关系。关系的名称应当具有描述性，以便清晰表达实体之间的关联。删除实体时，该实体的所有关系也将被自动删除。")
+    print("- LangGraph支持基于知识图的常识推理和语义搜索功能。这些功能依赖于知识图中的实体和关系的正确配置。请在进行复杂推理之前，确保图结构的完整性和准确性。")
+    print("- 语义搜索功能可以通过相似度匹配返回相关的实体。搜索结果依赖于嵌入向量的质量，因此建议在关键实体被添加或更新后重新构建嵌入。")
+    print("- 在查询时，建议使用清晰且简洁的语言，以获得更准确的匹配结果。")
+    print("- 导出知识图时，可以选择不同的格式（如GraphML或GEXF）。这些格式适合在外部工具中进行可视化和进一步分析。")
+    print("- 知识图的摘要功能提供了图的基本统计信息，如节点和边的数量。这有助于了解图的整体结构和复杂度。")
+    print("- LangGraph模块依赖于OpenAI API和嵌入模型。在使用该模块前，请确保正确配置API密钥和模型参数。")
+    print("- API调用可能会受限于API的速率限制和配额，请注意控制调用频率以避免超出限制。")
+
 def main(config: Config):  
     ai_nirvana = AINirvana(config)  
     print("欢迎使用 AI Nirvana 智能助手！")  
