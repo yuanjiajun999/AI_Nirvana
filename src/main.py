@@ -80,6 +80,7 @@ AVAILABLE_COMMANDS = [
     'classify_image', 'caption_image', 'fine_tune_model', 'save_model', 'load_model','create_agent', 'train_agent',
     'run_agent', 'setup_rl_agent', 'rl_decide', 'add_entity', 'update_entity', 'delete_entity', 'add_relation',
     'get_graph_summary', 'export_graph', 'infer_commonsense','retrieve_knowledge', 'semantic_search',
+    'get_entity_info', 'get_related_entities', 'get_all_entities', 'get_all_relationships', 'run_agent',
 ]
 # 加载 .env 文件
 load_dotenv()
@@ -925,6 +926,51 @@ class AINirvana:
     def add_relationship(self, entity1: str, entity2: str, relationship: str) -> None:  
         self.lang_graph.add_relationship(entity1, entity2, relationship)               
 
+    def get_related_entities(self, entity):
+        try:
+            related = self.lang_graph.get_related_entities(entity)
+            print(f"与 '{entity}' 相关的实体: {related}")
+            return related
+        except Exception as e:
+            print(f"Error in get_related_entities: {str(e)}")
+            return []
+
+    def get_all_entities(self):
+        try:
+            entities = self.lang_graph.get_all_entities()
+            print(f"所有实体: {entities}")
+            return entities
+        except Exception as e:
+            print(f"Error in get_all_entities: {str(e)}")
+            return []
+
+    def get_entity_info(self, entity):
+        try:
+            info = self.lang_graph.get_entity_info(entity)
+            print(f"实体 '{entity}' 的信息: {info}")
+            return {"result": info, "continue": True}
+        except Exception as e:
+            print(f"Error in get_entity_info: {str(e)}")
+            return {"result": {}, "continue": True}
+
+    def get_all_relationships(self):
+        try:
+            relationships = self.lang_graph.get_all_relationships()
+            print(f"所有关系: {relationships}")
+            return relationships
+        except Exception as e:
+            print(f"Error in get_all_relationships: {str(e)}")
+            return []    
+
+    def run_agent(self, query):
+        try:
+            response = self.lang_graph.run_agent(query)
+            print(f"Agent 响应: {response}")
+            return response
+        except Exception as e:
+            print(f"Error in run_agent: {str(e)}")
+            return "An error occurred while running the agent."    
+    
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
     # 在实际应用中，您可能需要从文件或数据库加载真实数据
@@ -1569,6 +1615,29 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             k = int(input("请输入返回结果的数量："))
             ai_nirvana.semantic_search(query, k)
 
+        elif command == "get_entity_info":
+            entity = input("请输入实体名称：")
+            result = ai_nirvana.get_entity_info(entity)
+            if result:
+                print(f"实体 '{entity}' 的信息: {result}")
+            else:
+                print(f"未找到实体 '{entity}' 的信息")
+            return {"continue": True}
+        
+        elif command == "get_related_entities":
+            entity = input("请输入实体名称：")
+            ai_nirvana.get_related_entities(entity)
+
+        elif command == "get_all_entities":
+            ai_nirvana.get_all_entities()
+
+        elif command == "get_all_relationships":
+            ai_nirvana.get_all_relationships()
+
+        elif command == "run_agent":
+            query = input("请输入查询内容：")
+            ai_nirvana    
+
         else:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -1656,6 +1725,20 @@ def print_help() -> None:
             'infer_commonsense': '执行常识推理',
             'retrieve_knowledge': '检索知识图中的知识',
             'semantic_search': '执行语义搜索',
+            'add_entity': '添加实体到知识图',
+            'update_entity': '更新实体信息',
+            'delete_entity': '删除实体',
+            'add_relation': '添加实体之间的关系',
+            'get_graph_summary': '获取知识图的摘要',
+            'export_graph': '导出知识图',
+            'infer_commonsense': '执行常识推理',
+            'retrieve_knowledge': '检索知识图中的知识',
+            'semantic_search': '执行语义搜索',
+            'get_entity_info': '获取特定实体的信息',
+            'get_related_entities': '获取与特定实体相关的实体',
+            'get_all_entities': '获取所有实体',
+            'get_all_relationships': '获取所有关系',
+            'run_agent': '运行智能代理',
         }    
         print(f"'{cmd}' - {description.get(cmd, '暂无描述')}")
 
