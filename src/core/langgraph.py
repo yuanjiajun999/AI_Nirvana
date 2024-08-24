@@ -279,22 +279,17 @@ class LangGraph:
         else:
             return "Unsupported format"
 
-    def update_entity(self, entity: str, new_properties: Dict[str, Any]):  
+    def update_entity(self, entity: str, new_properties: dict):  
         if entity in self.graph.get_networkx_graph().nodes():  
-            current_properties = self.get_entity_info(entity)  
-            updated_properties = {**current_properties, **new_properties}  
-            self.graph.add_node(entity, **updated_properties)  
-            self.vector_store.add_texts([f"{entity}: {str(updated_properties)}"])  
+            self.graph.get_networkx_graph().nodes[entity].update(new_properties)  
             return f"Entity '{entity}' updated successfully."  
-        else:  
-            return f"Entity '{entity}' not found in the graph."
+        return None 
 
-    def delete_entity(self, entity: str):
-        if entity in self.graph.get_networkx_graph().nodes():
-            self.graph.get_networkx_graph().remove_node(entity)
-            return f"Entity '{entity}' deleted from the graph."
-        else:
-            return f"Entity '{entity}' not found in the graph."
+    def delete_entity(self, entity: str):  
+        if entity in self.graph.get_networkx_graph().nodes():  
+            self.graph.get_networkx_graph().remove_node(entity)  
+            return f"Entity '{entity}' deleted from the graph."  
+        return None 
 
     def get_all_entities(self) -> List[str]:  
         return list(self.graph.get_networkx_graph().nodes())
