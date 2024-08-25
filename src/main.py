@@ -888,17 +888,14 @@ class AINirvana:
         else:
             print("Agent has not been created yet.") 
 
-    def add_entity(self, entity: str, entity_type: str) -> None:  
-        self.lang_graph.add_entity(entity, entity_type)
-    
-    def update_entity(self, name: str, attributes: dict):  
-        result = self.lang_graph.update_entity(name, attributes)  
-        print(f"实体更新结果：{result}")  
-        return result  
-    
-    def delete_entity(self, entity: str):
-        result = self.lang_graph.delete_entity(entity)
-        print(result)
+    def add_entity(self, entity: str, entity_type: str):  
+        return self.lang_graph.add_entity(entity, entity_type)  
+
+    def update_entity(self, entity: str, new_properties: dict):  
+        return self.lang_graph.update_entity(entity, new_properties)  
+
+    def delete_entity(self, entity: str):  
+        return self.lang_graph.delete_entity(entity) 
     
     def add_relation(self, entity1: str, entity2: str, relation: str):
         self.lang_graph.add_relationship(entity1, entity2, relation)
@@ -1562,11 +1559,8 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             entity = input("请输入实体名称：")  
             entity_type = input("请输入实体类型：")  
             result = ai_nirvana.add_entity(entity, entity_type)  
-            if result is not None:  
-                print(f"实体添加结果：{result}")  
-            else:  
-                print("实体添加成功")  
-            return {"continue": True}  
+            print(f"实体添加结果：{result}")  
+            return {"continue": True}
 
         elif command == "update_entity":  
             entity = input("请输入实体名称：")  
@@ -1576,10 +1570,7 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                 if not isinstance(new_properties, dict):  
                     raise ValueError("输入必须是字典格式")  
                 result = ai_nirvana.update_entity(entity, new_properties)  
-                if result is not None:  
-                    print(f"实体更新结果：{result}")  
-                else:  
-                    print("实体更新成功")  
+                print(f"实体更新结果：{result}")  
             except (SyntaxError, ValueError) as e:  
                 print(f"输入格式错误：{e}. 请确保使用正确的字典格式，例如 {{'type': 'City'}}")  
             return {"continue": True}
@@ -1587,11 +1578,8 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
         elif command == "delete_entity":  
             entity = input("请输入要删除的实体名称：")  
             result = ai_nirvana.delete_entity(entity)  
-            if result is not None:  
-                print(f"删除实体结果：{result}")  
-            else:  
-                print("实体删除成功")  
-            return {"continue": True}
+            print(f"删除实体结果：{result}")  
+            return {"continue": True}  
     
         elif command == "add_relation":  
             entity1 = input("请输入第一个实体名称：")  
@@ -1809,14 +1797,11 @@ def main(config: Config):
                 continue  
 
             print("正在处理命令...")  
-            result = handle_command(user_input, ai_nirvana)  
-            print(f"命令处理完成，结果: {result}")  # 修改  
+            result = handle_command(user_input, ai_nirvana)   
 
             if not result.get("continue", True):  
                 print(result.get("message", "再见！"))  
-                break  
-
-            print("准备接收下一个命令")  
+                break   
 
         except Exception as e:  
             print(f"发生错误: {str(e)}")  

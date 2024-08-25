@@ -115,10 +115,6 @@ class LangGraph:
     def get_graph_summary(self):  
         return self.graph.summary()  
 
-    def update_entity(self, entity, attributes):  
-        if entity in self.graph.get_networkx_graph().nodes:  
-            self.graph.add_node(entity, **attributes)  
-
     def get_all_entities(self):  
         return list(self.graph.get_networkx_graph().nodes(data=True))  
 
@@ -238,8 +234,10 @@ class LangGraph:
         return entities  
 
     def add_entity(self, entity: str, entity_type: str):  
-        self.graph.add_node(entity, type=entity_type)  
-        self.vector_store.add_texts([f"{entity}: Type - {entity_type}"])  
+        if entity not in self.graph.get_networkx_graph().nodes():  
+            self.graph.get_networkx_graph().add_node(entity, type=entity_type)  
+            return f"Entity '{entity}' of type '{entity_type}' added successfully."  
+        return f"Entity '{entity}' already exists."  
 
     def add_relationship(self, entity1: str, entity2: str, relationship: str):
         self.graph.add_edge(entity1, entity2, relationship=relationship)
@@ -283,13 +281,13 @@ class LangGraph:
         if entity in self.graph.get_networkx_graph().nodes():  
             self.graph.get_networkx_graph().nodes[entity].update(new_properties)  
             return f"Entity '{entity}' updated successfully."  
-        return None 
+        return f"Entity '{entity}' not found."  
 
     def delete_entity(self, entity: str):  
         if entity in self.graph.get_networkx_graph().nodes():  
             self.graph.get_networkx_graph().remove_node(entity)  
             return f"Entity '{entity}' deleted from the graph."  
-        return None 
+        return f"Entity '{entity}' not found."  
 
     def get_all_entities(self) -> List[str]:  
         return list(self.graph.get_networkx_graph().nodes())
