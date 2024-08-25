@@ -15,8 +15,12 @@ class APIConfig:
 
 class Config:
     def __init__(self, config_file: str = "config.json"):
-        self.config_file = config_file
-        self.config = self.load_config()
+        self.config_file = config_file  
+        self.config = self.load_config()  
+        self.api_key = self.config.get('api_key')
+        if not self.validate_config():  
+            logging.error("Configuration validation failed")  
+            raise ValueError("Invalid configuration") 
         self.predefined_responses = {
             "introduce_yourself": "Hello, I am the AI assistant created for the AI Nirvana project. I'm here to help you with a variety of tasks.",
             "how_are_you": "I'm doing well, thank you for asking.",
@@ -54,20 +58,23 @@ class Config:
             json.dump(default_config, f, indent=4)
         return self.update_config_from_env(default_config)
 
-    def update_config_from_env(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """从环境变量更新配置"""
-        env_mapping = {
-            "OPENAI_API_KEY": "api_key",
-            "MODEL_NAME": "model",
-            "LOG_LEVEL": "log_level",
-            "USE_GPU": "use_gpu",
-            "SYSTEM_PROMPT": "system_prompt",
-            "MAX_CONTEXT_LENGTH": "max_context_length",
-        }
-        for env_var, config_key in env_mapping.items():
-            env_value = os.getenv(env_var)
-            if env_value is not None:
-                config[config_key] = env_value
+    def update_config_from_env(self, config: Dict[str, Any]) -> Dict[str, Any]:  
+        """从环境变量更新配置"""  
+        env_mapping = {  
+            "OPENAI_API_KEY": "api_key",  
+            "MODEL_NAME": "model",  
+            "LOG_LEVEL": "log_level",  
+            "USE_GPU": "use_gpu",  
+            "SYSTEM_PROMPT": "system_prompt",  
+            "MAX_CONTEXT_LENGTH": "max_context_length",  
+        }  
+        for env_var, config_key in env_mapping.items():  
+            env_value = os.getenv(env_var)  
+            if env_value is not None:  
+                if config_key == "api_key" and not env_value.strip():  
+                    logging.warning("API key from environment variable is empty")  
+                else:  
+                    config[config_key] = env_value  
         return config
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -90,20 +97,39 @@ class Config:
             key, "I'm sorry, I don't have a predefined response for that."
         )
 
-    def validate_config(self) -> bool:
-        """验证配置的完整性和正确性"""
-        required_keys = [
-            "model",
-            "log_level",
-            "max_input_length",
-            "api_key",
-            "api_base",
-        ]
-        for key in required_keys:
-            if key not in self.config:
-                logging.error(f"Missing required configuration key: {key}")
-                return False
+    def validate_config(self) -> bool:  
+        """验证配置的完整性和正确性"""  
+        print(f"Validating configuration...")  
+        print(f"API Key: {'*' * (len(self.api_key) - 4) + self.api_key[-4:] if self.api_key else 'Not set'}")  
+        print(f"API Base: {self.config.get('api_base', 'Not set')}")  
+        print(f"Model: {self.config.get('model', 'Not set')}")  
 
-        # 添加其他验证逻辑，例如检查 API 密钥格式、日志级别是否有效等
+        required_keys = [  
+            "model",  
+            "log_level",  
+            "max_input_length",  
+            "api_key",  
+            "api_base",  
+        ]  
+        for key in required_keys:  
+            if key not in self.config:  
+                logging.error(f"Missing required configuration key: {key}")  
+                print(f"Validation failed: Missing {key}")  
+                return False  
 
+        # 特别检查 API 密钥  
+        if not self.config.get("api_key"):  
+            logging.error("API key is missing or empty")  
+            print("Validation failed: API key is missing or empty")  
+            return False  
+
+        # 添加其他验证逻辑，例如检查 API 密钥格式、日志级别是否有效等  
+        # 例如：  
+        valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]  
+        if self.config.get("log_level") not in valid_log_levels:  
+            logging.error(f"Invalid log level: {self.config.get('log_level')}")  
+            print(f"Validation failed: Invalid log level {self.config.get('log_level')}")  
+            return False  
+
+        print("Configuration validation successful")  
         return True

@@ -39,6 +39,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 from src.config import Config
+from src.core.api_client import ApiClient
 from src.core.ai_assistant import AIAssistant
 from src.core.generative_ai import GenerativeAI
 from src.core.multimodal import MultimodalInterface
@@ -96,6 +97,7 @@ class AINirvana:
         
         self.code_executor = CodeExecutor()
         self.config = config
+        self.api_client = ApiClient(config.api_key)  # 使用 ApiClient 替代直接的 LLM 对象   
         self.model_name = os.getenv('MODEL_NAME', 'gpt-3.5-turbo')  # 使用环境变量中的 MODEL_NAME
         self.max_context_length = self.config.get('max_context_length', 5)
         self.model = ModelFactory.create_model("LanguageModel", model_name=self.model_name)
@@ -917,9 +919,20 @@ class AINirvana:
         
         return f"Graph exported as {filename}"  
 
-    def infer_commonsense(self, context: str):
-        response = self.lang_graph.infer_commonsense(context)
-        print(f"常识推理结果: {response}")
+    def infer_commonsense(self, context):  
+        try:  
+            response = self.api_client.chat_completion([  
+                {"role": "system", "content": "You are a helpful assistant that provides commonsense inferences."},  
+                {"role": "user", "content": f"Given the context: '{context}', provide a commonsense inference."}  
+            ])  
+            if response and 'choices' in response and len(response['choices']) > 0:  
+                return response['choices'][0]['message']['content'].strip()  
+            else:  
+                logging.error("Unexpected response format from API")  
+                return None  
+        except Exception as e:  
+            logging.error(f"Error in infer_commonsense: {str(e)}")  
+            return None  
     
     def retrieve_knowledge(self, query: str):
         response = self.lang_graph.retrieve_knowledge(query)
@@ -1612,9 +1625,14 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             print(result)  
             return {"continue": True}  # 添加这行
     
-        elif command == "infer_commonsense":
-            context = input("请输入推理上下文：")
-            ai_nirvana.infer_commonsense(context)
+        elif command == "infer_commonsense":  
+            context = input("请输入推理上下文：")  
+            inference = ai_nirvana.infer_commonsense(context)  
+            if inference:  
+                print(f"常识推理结果: {inference}")  
+            else:  
+                print("无法进行常识推理。请尝试不同的上下文。")  
+            return {"continue": True}
     
         elif command == "retrieve_knowledge":
             query = input("请输入查询内容：")
@@ -1795,59 +1813,72 @@ def print_help() -> None:
     print("- API调用可能会受限于API的速率限制和配额，请注意控制调用频率以避免超出限制。")
 
 def main(config: Config):  
-    ai_nirvana = AINirvana(config)  
-    print("欢迎使用 AI Nirvana 智能助手！")  
-    print("输入 'help' 查看可用命令。")  
+    try:  
+        ai_nirvana = AINirvana(config)  
+        print("欢迎使用 AI Nirvana 智能助手！")  
+        print("输入 'help' 查看可用命令。")  
 
-    while True:  
-        try:  
-            print("\n请输入您的问题或命令（输入空行发送）：")  
-            user_input = input().strip()  
-            if not user_input:  
-                print("您似乎没有输入任何内容。请输入一些文字或命令。")  
-                continue  
+        while True:  
+            try:  
+                print("\n请输入您的问题或命令（输入空行发送）：")  
+                user_input = input().strip()  
+                if not user_input:  
+                    print("您似乎没有输入任何内容。请输入一些文字或命令。")  
+                    continue  
 
-            print("正在处理命令...")  
-            result = handle_command(user_input, ai_nirvana)   
+                print("正在处理命令...")  
+                result = handle_command(user_input, ai_nirvana)   
 
-            if not result.get("continue", True):  
-                print(result.get("message", "再见！"))  
-                break   
+                if not result.get("continue", True):  
+                    print(result.get("message", "再见！"))  
+                    break   
 
-        except Exception as e:  
-            print(f"发生错误: {str(e)}")  
-            print("错误详情:")  
-            import traceback  
-            traceback.print_exc()  # 打印详细的错误堆栈  
+            except KeyboardInterrupt:  
+                print("\n程序被用户中断。")  
+                break  
+            except Exception as e:  
+                logger.error(f"处理输入时发生错误: {str(e)}")  
+                print("抱歉，处理您的输入时遇到了问题。请重试或输入其他命令。")  
 
-    print("感谢使用 AI Nirvana 智能助手，再见！")
+    except Exception as e:  
+        logger.error(f"程序初始化失败: {str(e)}")  
+        print("程序初始化失败，请检查配置并重试。")  
+    finally:  
+        print("感谢使用 AI Nirvana 智能助手，再见！")  
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI Nirvana Assistant")
-    parser.add_argument("--config", default="config.json", help="Path to the configuration file")
-    args = parser.parse_args()
+if __name__ == "__main__":  
+    parser = argparse.ArgumentParser(description="AI Nirvana Assistant")  
+    parser.add_argument("--config", default="config.json", help="Path to the configuration file")  
+    args = parser.parse_args()  
 
-    try:
-        config = Config(args.config)
-        if not config.validate_config():
-            logger.error("Configuration validation failed. Please check your config file.")
-            sys.exit(1)
+    try:  
+        config = Config(args.config)  
+        if not config.validate_config():  
+            logger.error("Configuration validation failed. Please check your config file.")  
+            sys.exit(1)  
 
-        main(config)
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {str(e)}")
-        sys.exit(1)
+        main(config)  
+    except Exception as e:  
+        logger.error(f"An unexpected error occurred: {str(e)}")  
+        sys.exit(1)  
 
-# Flask server code
-app = Flask(__name__)
+# Flask server code  
+app = Flask(__name__)  
 
-@app.route("/process", methods=["POST"])
-def process():
-    input_text = request.json.get("input")
-    config = Config("config.json")
-    ai_nirvana = AINirvana(config)
-    response = ai_nirvana.process(input_text)
-    return jsonify({"response": response})
+@app.route("/process", methods=["POST"])  
+def process():  
+    try:  
+        input_text = request.json.get("input")  
+        if not input_text:  
+            return jsonify({"error": "No input provided"}), 400  
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+        config = Config("config.json")  
+        ai_nirvana = AINirvana(config)  
+        response = ai_nirvana.process(input_text)  
+        return jsonify({"response": response})  
+    except Exception as e:  
+        logger.error(f"Error processing request: {str(e)}")  
+        return jsonify({"error": "An internal error occurred"}), 500  
+
+if __name__ == "__main__":  
+    app.run(host="0.0.0.0", port=8000)  
