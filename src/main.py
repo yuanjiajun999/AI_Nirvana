@@ -5,6 +5,7 @@ import ast
 import argparse
 import logging
 import time
+import networkx as nx
 from langdetect import detect
 from openai import OpenAI 
 import scipy.optimize as opt
@@ -904,9 +905,17 @@ class AINirvana:
     def get_graph_summary(self):  
         return self.lang_graph.get_graph_summary()
     
-    def export_graph(self, format: str):
-        result = self.lang_graph.export_graph(format)
-        print(result)
+    def export_graph(self, format):  
+        if format.lower() not in ['graphml', 'gexf']:  
+            return "不支持的格式。请选择 graphml 或 gexf。"  
+        
+        filename = f"graph.{format.lower()}"  
+        if format.lower() == 'graphml':  
+            nx.write_graphml(self.lang_graph.graph.get_networkx_graph(), filename)  
+        else:  # gexf  
+            nx.write_gexf(self.lang_graph.graph.get_networkx_graph(), filename)  
+        
+        return f"Graph exported as {filename}"  
 
     def infer_commonsense(self, context: str):
         response = self.lang_graph.infer_commonsense(context)
@@ -1597,9 +1606,11 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             print(f"图摘要: {summary}")  
             return {"continue": True}
     
-        elif command == "export_graph":
-            format = input("请输入导出格式（graphml/gexf）：")
-            ai_nirvana.export_graph(format)
+        elif command == "export_graph":  
+            format = input("请输入导出格式（graphml/gexf）：")  
+            result = ai_nirvana.export_graph(format)  
+            print(result)  
+            return {"continue": True}  # 添加这行
     
         elif command == "infer_commonsense":
             context = input("请输入推理上下文：")
