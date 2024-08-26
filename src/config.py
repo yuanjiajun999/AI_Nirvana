@@ -15,6 +15,7 @@ class APIConfig:
 
 class Config:
     def __init__(self, config_file: str = "config.json"):
+        self.logger = logging.getLogger(__name__)
         self.config_file = config_file  
         self.config = self.load_config()  
         self.api_key = self.config.get('api_key')
@@ -29,34 +30,39 @@ class Config:
 
     def load_config(self) -> Dict[str, Any]:
         """加载配置文件，如果不存在则创建默认配置"""
+        default_config = {
+            "model": "gpt-3.5-turbo",
+            "log_level": "INFO",
+            "max_input_length": 1000,
+            "api_key": "",
+            "max_context_length": 5,
+            # ... 其他默认值 ...
+        }
+
         if not os.path.exists(self.config_file):
-            return self.create_default_config()
+            return self.create_default_config(default_config)
 
         try:
             with open(self.config_file, "r") as f:
-                config = json.load(f)
+                loaded_config = json.load(f)
+        
+            # 使用默认配置，然后用加载的配置更新它
+            config = default_config.copy()
+            config.update(loaded_config)
+        
             return self.update_config_from_env(config)
         except json.JSONDecodeError:
             logging.error(
                 f"Error decoding {self.config_file}. Creating default config."
             )
-            return self.create_default_config()
+            return self.create_default_config(default_config)
 
-    def create_default_config(self) -> Dict[str, Any]:
-        """创建默认配置"""
-        default_config = {
-            "model": "gpt-3.5-turbo-0125",
-            "log_level": "INFO",
-            "max_input_length": 100,
-            "api_key": "",
-            "api_base": "https://api.gptsapi.net/v1",
-            "use_gpu": False,
-            "system_prompt": "You are a helpful AI assistant.",
-            "max_context_length": 5,
-        }
+    def create_default_config(self, default_config: Dict[str, Any]) -> Dict[str, Any]:
+        """创建默认配置并保存到文件"""
         with open(self.config_file, "w") as f:
             json.dump(default_config, f, indent=4)
-        return self.update_config_from_env(default_config)
+        logging.info(f"Created default config file: {self.config_file}")
+        return default_config
 
     def update_config_from_env(self, config: Dict[str, Any]) -> Dict[str, Any]:  
         """从环境变量更新配置"""  
@@ -98,6 +104,7 @@ class Config:
         )
 
     def validate_config(self) -> bool:  
+        self.logger.info("Validating configuration...")
         """验证配置的完整性和正确性"""  
         print(f"Validating configuration...")  
         print(f"API Key: {'*' * (len(self.api_key) - 4) + self.api_key[-4:] if self.api_key else 'Not set'}")  

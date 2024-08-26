@@ -1,0 +1,16 @@
+AVAILABLE_COMMANDS = [
+    'quit', 'clear', 'sentiment', 'execute', 'validate_code', 'supported_languages', 'summarize', 'change_model', 
+    'vars', 'explain', 'encrypt', 'decrypt', 'add_knowledge', 'get_knowledge', 'list_knowledge', 'update_knowledge', 
+    'delete_knowledge', 'search_knowledge', 'extract_keywords', 'plan_task', 'translate', 'help',
+    'test_complex', 'test_models', 'test_code_safety', 'qa','init_active_learner',
+    'run_active_learning', 'al_model', 'al_committee', 'al_plot','label_initial_data',
+    'view_committee','init_feature_engineer', 'create_entity_set', 'generate_features',
+    'get_important_features', 'remove_low_info_features','remove_correlated_features', 'create_custom_feature',
+    'get_feature_types', 'get_feature_descriptions','normalize_features', 'encode_categorical_features',
+    'create_digital_twin', 'simulate_digital_twin', 'monitor_digital_twin',
+    'optimize_digital_twin', 'update_digital_twin_model', 'validate_digital_twin_model', 'generate_text',
+    'classify_image', 'caption_image', 'fine_tune_model', 'save_model', 'load_model','create_agent', 'train_agent',
+    'run_agent', 'setup_rl_agent', 'rl_decide', 'add_entity', 'update_entity', 'delete_entity', 'add_relation',
+    'get_graph_summary', 'export_graph', 'infer_commonsense','retrieve_knowledge', 'semantic_search',
+    'get_entity_info', 'get_related_entities', 'get_all_entities', 'get_all_relationships', 'run_agent',
+]

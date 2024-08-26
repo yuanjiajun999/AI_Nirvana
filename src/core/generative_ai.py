@@ -44,33 +44,63 @@ class CustomDataset(Dataset):
 
 class GenerativeAI:
     def __init__(self):
-        self.client = OpenAI(
-            api_key=os.getenv("API_KEY"),
-            base_url=os.getenv("API_BASE")
-        )
-        self.model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")
-        self.finetune_model_name = os.getenv("FINETUNE_MODEL_NAME", "distilgpt2")
-        
-        # 强制指定为CPU
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-        # 初始化 image_classification_pipeline
-        self.image_classification_pipeline = pipeline("image-classification", model="microsoft/resnet-50", device=0 if torch.cuda.is_available() else -1)
-        # 初始化 image_captioning_pipeline
-        self.image_captioning_pipeline = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base", device=0 if torch.cuda.is_available() else -1)
-        
-        # 加载微调模型
-        self.finetune_model, self.tokenizer = self._load_finetune_model_and_tokenizer()
+        try:
+            self.client = self._load_openai_client()
+            self.model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")
+            self.finetune_model_name = os.getenv("FINETUNE_MODEL_NAME", "distilgpt2")
+            
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            
+            self.image_classification_pipeline = self._load_image_classification_pipeline()
+            self.image_captioning_pipeline = self._load_image_captioning_pipeline()
+            
+            self.finetune_model, self.tokenizer = self._load_finetune_model_and_tokenizer()
+            
+            logger.info("GenerativeAI initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize GenerativeAI: {str(e)}")
+            raise
 
-    @error_handler
-    def _load_finetune_model_and_tokenizer(self, model_name=None):
-        if model_name is None:
-            model_name = self.finetune_model_name
-        model = AutoModelForCausalLM.from_pretrained(model_name).to(self.device)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        tokenizer.pad_token = tokenizer.eos_token  # 设置 pad_token
-        return model, tokenizer
-        
+    def _load_openai_client(self):
+        try:
+            client = OpenAI(
+                api_key=os.getenv("API_KEY"),
+                base_url=os.getenv("API_BASE")
+            )
+            logger.info("OpenAI client loaded successfully")
+            return client
+        except Exception as e:
+            logger.error(f"Failed to load OpenAI client: {str(e)}")
+            raise
+
+    def _load_image_classification_pipeline(self):
+        try:
+            pipeline_instance = pipeline("image-classification", model="microsoft/resnet-50", device=0 if torch.cuda.is_available() else -1)
+            logger.info("Image classification pipeline loaded successfully")
+            return pipeline_instance
+        except Exception as e:
+            logger.error(f"Failed to load image classification pipeline: {str(e)}")
+            raise
+
+    def _load_image_captioning_pipeline(self):
+        try:
+            pipeline_instance = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base", device=0 if torch.cuda.is_available() else -1)
+            logger.info("Image captioning pipeline loaded successfully")
+            return pipeline_instance
+        except Exception as e:
+            logger.error(f"Failed to load image captioning pipeline: {str(e)}")
+            raise
+
+    def _load_finetune_model_and_tokenizer(self):
+        try:
+            model = AutoModelForCausalLM.from_pretrained(self.finetune_model_name).to(self.device)
+            tokenizer = AutoTokenizer.from_pretrained(self.finetune_model_name)
+            logger.info(f"Fine-tuned model {self.finetune_model_name} and tokenizer loaded successfully")
+            return model, tokenizer
+        except Exception as e:
+            logger.error(f"Failed to load fine-tuned model and tokenizer: {str(e)}")
+            raise
+       
     @error_handler  
     def _load_model_and_tokenizer(self, model_name):  
         model = AutoModelForCausalLM.from_pretrained(model_name).to(self.device)  
