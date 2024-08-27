@@ -914,9 +914,43 @@ class AINirvana:
             logging.error(f"Error in infer_commonsense: {str(e)}")  
             return None  
     
-    def retrieve_knowledge(self, query: str):
-        response = self.lang_graph.retrieve_knowledge(query)
-        print(f"知识检索结果: {response}")
+    def retrieve_knowledge(self, query: str) -> Dict[str, Any]:
+        try:
+            response = self.lang_graph.retrieve_knowledge(query)
+            
+            if 'error' in response:
+                logger.warning(f"知识检索返回错误: {response['error']}")
+                print(f"知识检索出错: {response['error']}")
+                return response
+
+            logger.info(f"成功处理知识检索: 查询='{query}'")
+            print(f"查询: {response['query']}")
+            print(f"结果: {response['result']}")
+            
+            if response['source_documents']:
+                print("\n相关文档:")
+                for i, doc in enumerate(response['source_documents'], 1):
+                    print(f"{i}. {doc['content']}")
+                    if 'source' in doc['metadata']:
+                        print(f"   来源: {doc['metadata']['source']}")
+            
+            return response
+        except Exception as e:
+            logger.error(f"知识检索处理出错: {str(e)}")
+            return {"error": "知识检索处理失败", "continue": True}
+
+    def interactive_knowledge_retrieval(self):
+        while True:
+            query = input("\n请输入您的问题（输入'quit'退出）: ")
+            if query.lower() == 'quit':
+                break
+            
+            response = self.retrieve_knowledge(query)
+            
+            if 'error' not in response:
+                follow_up = input("\n您还有其他问题吗？(yes/no): ")
+                if follow_up.lower() != 'yes':
+                    break
     
     def semantic_search(self, query: str, k: int = 5):
         results = self.lang_graph.semantic_search(query, k)
@@ -1615,8 +1649,8 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             return {"continue": True}
     
         elif command == "retrieve_knowledge":
-            query = input("请输入查询内容：")
-            ai_nirvana.retrieve_knowledge(query)
+            ai_nirvana.interactive_knowledge_retrieval()
+            return {"continue": True}
     
         elif command == "semantic_search":
             query = input("请输入搜索内容：")

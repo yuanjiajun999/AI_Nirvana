@@ -1,4 +1,6 @@
 import os  
+import openai
+import logging
 import spacy
 from functools import lru_cache  
 from typing import Any, Dict, List, Tuple  
@@ -18,7 +20,9 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.tools import Tool  
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-import openai  
+# 配置日志记录
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 load_dotenv()  
 
@@ -203,9 +207,34 @@ class LangGraph:
             print(f"API error in _cached_run: {str(e)}")
             return "Sorry, an error occurred while processing your request."
 
-    def retrieve_knowledge(self, query: str) -> str:
-        return self._cached_run(query)
-
+    def retrieve_knowledge(self, query: str) -> Dict[str, Any]:
+        try:
+            # 假设 _cached_run 方法返回一个包含结果和源文档的字典
+            response = self._cached_run(query)
+            
+            # 提取最相关的信息
+            result = response.get('result', '')
+            source_docs = response.get('source_documents', [])
+            
+            # 处理源文档
+            processed_docs = []
+            for doc in source_docs[:3]:  # 只取前三个最相关的文档
+                processed_docs.append({
+                    'content': doc.page_content[:100] + '...' if len(doc.page_content) > 100 else doc.page_content,
+                    'metadata': doc.metadata
+                })
+            
+            logger.info(f"成功检索知识: 查询='{query}'")
+            return {
+                "query": query,
+                "result": result,
+                "source_documents": processed_docs,
+                "continue": True
+            }
+        except Exception as e:
+            logger.error(f"知识检索出错: {str(e)}")
+            return {"error": "知识检索失败", "continue": True}
+        
     def reason(self, context: str) -> str:  
         try:  
             response = self.llm.invoke(f"Given the context: {context}, please provide a logical reasoning.")  
