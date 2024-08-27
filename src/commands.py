@@ -62,7 +62,10 @@ from src.core.digital_twin import DigitalTwin
 from sklearn.ensemble import IsolationForest
 from src.core.langgraph import LangGraph
 from src.command_data import AVAILABLE_COMMANDS
-from src.help_info import print_help
+from src.help_info import get_help
+
+logging.basicConfig(level=logging.INFO)  
+logger = logging.getLogger(__name__) 
 
 # 加载 .env 文件
 load_dotenv()
@@ -1057,8 +1060,12 @@ def handle_sentiment(ai_nirvana):
             print(f"  {key}: {value:.2f}")
     return {"continue": True}
 
-def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
+def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:  
+    command = command.lower().strip()
     try:
+        command = command.lower().strip()  
+        logger.info(f"Handling command: {command}") 
+        
         if command not in AVAILABLE_COMMANDS:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -1072,9 +1079,10 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             ai_nirvana.assistant.clear_context()
             ai_nirvana.variable_state.clear()
             return {"message": "对话历史和变量状态已清除。", "continue": True}
-        elif command == "help":
-            print_help()
-            return {"message": "请按照以上帮助信息操作。", "continue": True}
+        elif command in ["help", "get help", "get_help"]:  
+            help_message = get_help()  
+            print(help_message)  
+            return {"message": "请按照以上帮助信息操作。", "continue": True}  
         elif command == "quit":
             return {"message": "谢谢使用 AI Nirvana 智能助手，再见！", "continue": False}
         elif command == "sentiment":
@@ -1688,7 +1696,6 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             print_dialogue_context(ai_nirvana.dialogue_manager.get_dialogue_context())
             return {"continue": True}
 
-    except Exception as e:
-        logger.error(f"处理命令时发生未预期的错误: {str(e)}")
-        print(f"发生错误: {str(e)}。如果问题持续，请联系系统管理员。")
-        return {"continue": True}
+    except Exception as e:  
+        logger.error(f"Error handling command '{command}': {str(e)}")  
+        return {"message": "处理命令时发生错误，请重试或联系支持。", "continue": True}  

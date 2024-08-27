@@ -7,7 +7,7 @@ from retry import retry
 from src.config import Config
 from src.commands import AINirvana, handle_command
 from src.command_data import AVAILABLE_COMMANDS
-from src.help_info import print_help
+from src.help_info import get_help
 from flask import Flask, jsonify, request
 import logging
 
