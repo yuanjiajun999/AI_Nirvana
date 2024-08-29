@@ -29,17 +29,24 @@ class AIAssistant:
         max_context_length: 保存的最大上下文长度。
     """
 
-    def __init__(self, model_name: str = "gpt-3.5-turbo", max_context_length: int = 5):
+    def __init__(self, config: Optional[Dict[str, Any]] = None, api_client: Optional[Any] = None, model_name: str = "gpt-3.5-turbo", max_context_length: int = 5):
         """
         初始化 AI 助手。
 
         Args:
+            config: 系统配置对象。
+            api_client: API 客户端实例。
             model_name: 要使用的模型名称。
             max_context_length: 保存的最大上下文长度。
         """
-        self.language_model = LanguageModel(model_name=model_name)
+        self.language_model = ModelFactory.create_model(
+            "LanguageModel", 
+            config=config, 
+            api_client=api_client, 
+            model_name=model_name
+        )
         self.security_manager = SecurityManager()
-        self.knowledge_base = KnowledgeBase()
+        self.knowledge_base = KnowledgeBase(config, api_client)  # 传递 config 和 api_client
         self.multimodal_interface = MultimodalInterface()  # 不需要参数
         self.reasoning_engine = ReasoningEngine()
         self.context: List[Dict[str, str]] = []

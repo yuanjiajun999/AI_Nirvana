@@ -22,11 +22,12 @@ from src.core.language_model import LanguageModel
 logger = logging.getLogger(__name__)
 
 class EnhancedAIAssistant:
-    def __init__(self):
-        self.ai_assistant = AIAssistant()
+    def __init__(self, config, api_client):
+        self.ai_assistant = AIAssistant(config, api_client)
         self.lang_chain_agent = LangChainAgent()
         self.cipher_suite = Fernet(Fernet.generate_key())
-        self.language_model = LanguageModel()  # 确保已导入 LanguageModel
+        self.language_model = LanguageModel(config=config, api_client=api_client)
+
     
     @error_handler
     def detect_language(self, text: str) -> str:

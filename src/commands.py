@@ -74,24 +74,25 @@ print("API_BASE:", os.getenv("API_BASE"))
 print("MODEL_NAME:", os.getenv("MODEL_NAME"))
 
 class AINirvana:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, api_client: ApiClient):  
+        logger.info(f"AINirvana.__init__ called with config: {config}, api_client: {api_client}")  
         # 注册模型
         ModelFactory.register_model("LanguageModel", LanguageModel)
         
         self.code_executor = CodeExecutor()
-        self.config = config
-        self.api_client = ApiClient(config.api_key)  # 使用 ApiClient 替代直接的 LLM 对象   
+        self.config = config  
+        self.api_client = api_client  # 直接使用传入的 api_client    
         self.model_name = os.getenv('MODEL_NAME', 'gpt-3.5-turbo')  # 使用环境变量中的 MODEL_NAME
         self.max_context_length = self.config.get('max_context_length', 5)
-        self.model = ModelFactory.create_model("LanguageModel", model_name=self.model_name)
-        self.assistant = EnhancedAIAssistant()  # 使用新的EnhancedAIAssistant
+        self.model = ModelFactory.create_model("LanguageModel", config=config, api_client=api_client, model_name=self.model_name)
+        self.assistant = EnhancedAIAssistant(config, api_client)
         self.generative_ai = GenerativeAI()
         self.multimodal_interface = MultimodalInterface()
         self.dialogue_manager = DialogueManager(max_history=self.max_context_length)
         self.security_manager = SecurityManager()
         self.privacy_enhancer = PrivacyEnhancement()
         self.variable_state = {}
-        self.knowledge_base = KnowledgeBase()
+        self.knowledge_base = KnowledgeBase(config=config, api_client=api_client)
         self.active_learner = None  # 初始化为 None
         self.accuracy_history = None
         self.feature_engineer = None  # 初始化为 None
@@ -123,24 +124,20 @@ class AINirvana:
         self.model_name = model_name  # 更新 AINirvana 实例的 model_name
         print(f"模型已更改为 {model_name}。")
 
-    def add_knowledge(self, key: str, value: Any) -> None:
-        self.knowledge_base.add_knowledge(key, value)
+    def kb_add(self, key: str, value: str) -> str:  
+        return self.knowledge_base.add(key, value)  
 
-    def get_knowledge(self, key: str) -> Any:
-        return self.knowledge_base.get_knowledge(key)
+    def kb_query(self, key: str) -> str:  
+        return self.knowledge_base.query(key)  
 
-    def list_all_knowledge(self) -> Dict[str, Any]:
-        return self.knowledge_base.list_all_knowledge()
+    def kb_update(self, key: str, value: str) -> str:  
+        return self.knowledge_base.update(key, value)  
 
-    def update_knowledge(self, key: str, value: Any) -> None:
-        self.knowledge_base.update_knowledge(key, value)
+    def kb_delete(self, key: str) -> str:  
+        return self.knowledge_base.delete(key)  
 
-    def delete_knowledge(self, key: str) -> None:
-        self.knowledge_base.delete_knowledge(key)
-
-    def search_knowledge(self, query: str) -> Dict[str, Any]:
-        return {k: v for k, v in self.knowledge_base.list_all_knowledge().items() 
-                if query.lower() in k.lower() or (isinstance(v, str) and query.lower() in v.lower())}
+    def kb_list(self) -> str:  
+        return self.knowledge_base.list_all()  
 
     @error_handler
     def get_available_models(self) -> List[str]:
@@ -1061,7 +1058,7 @@ def handle_sentiment(ai_nirvana):
     return {"continue": True}
 
 def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:  
-    command = command.lower().strip()
+    command = command.lower().strip()   
     try:
         command = command.lower().strip()  
         logger.info(f"Handling command: {command}") 
@@ -1178,57 +1175,40 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             result = ai_nirvana.decrypt_sensitive_data(encrypted_data)
             print(result)
             return {"continue": True}
-        elif command == "add_knowledge":
-            key = input("请输入知识的键：")
-            value = input("请输入知识的值：")
-            ai_nirvana.add_knowledge(key, value)
-            return {"message": f"知识已添加: {key}", "continue": True}
+        elif command == "kb_add":  
+            key = input("请输入知识的键：")  
+            value = input("请输入知识的值：")  
+            result = ai_nirvana.add_knowledge(key, value)  
+            return {"message": f"添加结果：{result['message']}", "continue": True}  
 
-        elif command == "get_knowledge":
-            key = input("请输入要检索的知识键：")
-            try:
-                value = ai_nirvana.get_knowledge(key)
-                print(f"知识内容：{value}")
-            except KeyError as e:
-                print(f"错误：{str(e)}")
-            return {"continue": True}
+        elif command == "kb_query":  
+            query = input("请输入您的问题：")  
+            result = ai_nirvana.query_knowledge(query)  
+            if result.get("found", False):  
+                message = f"查询结果：{result['content']}"  
+                if result.get("source") == "AI generated":  
+                    message += "\n(此回答由 AI 生成并已添加到知识库)"  
+                else:  
+                    message += f"\n相似度得分：{result.get('score', 'N/A')}"  
+            else:  
+                message = "未找到相关知识，且 AI 生成失败。"  
+            return {"message": message, "continue": True}  
 
-        elif command == "list_knowledge":
-            all_knowledge = ai_nirvana.list_all_knowledge()
-            print("所有知识：")
-            for k, v in all_knowledge.items():
-                print(f"{k}: {v}")
-            return {"continue": True}
+        elif command == "kb_update":  
+            key = input("请输入要更新的知识键：")  
+            value = input("请输入新的知识值：")  
+            result = ai_nirvana.update_knowledge(key, value)  
+            return {"message": f"更新结果：{result['message']}", "continue": True}  
 
-        elif command == "update_knowledge":
-            key = input("请输入要更新的知识键：")
-            value = input("请输入新的知识值：")
-            try:
-                ai_nirvana.knowledge_base.update_knowledge(key, value)
-                print(f"知识已更新: {key}")
-            except KeyError as e:
-                print(f"错误：{str(e)}")
-            return {"continue": True}
+        elif command == "kb_delete":  
+            key = input("请输入要删除的知识键：")  
+            result = ai_nirvana.delete_knowledge(key)  
+            return {"message": f"删除结果：{result['message']}", "continue": True}  
 
-        elif command == "delete_knowledge":
-            key = input("请输入要删除的知识键：")
-            try:
-                ai_nirvana.knowledge_base.delete_knowledge(key)
-                print(f"知识已删除: {key}")
-            except KeyError as e:
-                print(f"错误：{str(e)}")
-            return {"continue": True}
-
-        elif command == "search_knowledge":
-            query = input("请输入搜索关键词：").strip()
-            results = ai_nirvana.search_knowledge(query)
-            if results:
-                print("搜索结果：")
-                for k, v in results.items():
-                    print(f"{k}: {v}")
-            else:
-                 print("未找到相关知识。")
-            return {"continue": True}
+        elif command == "kb_list":  
+            keys = ai_nirvana.list_all_knowledge()  
+            message = "知识库中的所有知识：\n" + "\n".join(f"- {key}" for key in keys)  
+            return {"message": message, "continue": True}  
 
         elif command == "extract_keywords":
             text = input("请输入要提取关键词的文本：")
@@ -1657,7 +1637,22 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             return {"continue": True}
     
         elif command == "retrieve_knowledge":
-            ai_nirvana.interactive_knowledge_retrieval()
+            query = input("您好！您想了解什么问题（输入'quit'退出）: ")
+            if query.lower() == 'quit':
+                return {"continue": True}
+        
+            result = ai_nirvana.lang_graph.retrieve_knowledge(query)
+        
+            print(f"查询: {result['query']}")
+            print(f"结果: {result['result']}")
+            print(f"来源: {result['source']}")
+        
+            if 'score' in result:
+                print(f"相似度得分: {result['score']}")
+        
+            if result['source'] == "AI generated":
+                print("(此回答由 AI 生成并已添加到知识库)")
+        
             return {"continue": True}
     
         elif command == "semantic_search":
@@ -1694,7 +1689,7 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             print("\n回答：")
             print_assistant_response(response)
             print_dialogue_context(ai_nirvana.dialogue_manager.get_dialogue_context())
-            return {"continue": True}
+            return {"message": response, "continue": True} 
 
     except Exception as e:  
         logger.error(f"Error handling command '{command}': {str(e)}")  

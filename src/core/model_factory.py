@@ -1,6 +1,5 @@
 from typing import Dict, Type, List
-from .model_interface import ModelInterface 
-
+from .model_interface import ModelInterface
 
 class ModelFactory:
     _models: Dict[str, Type[ModelInterface]] = {}
@@ -18,5 +17,6 @@ class ModelFactory:
     @classmethod
     def get_available_models(cls) -> List[str]:
         return list(cls._models.keys())
+
     
     

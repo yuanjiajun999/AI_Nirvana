@@ -1,32 +1,68 @@
 import json
+import logging 
 import os
 from typing import Dict, Any, List
 import threading
 import logging
-from datetime import datetime, timedelta
-import shutil
-import schedule
-import time
-from fuzzywuzzy import fuzz
-import redis
+from datetime import datetime
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain.chains import RetrievalQA
 
-class KnowledgeBase:
-    def __init__(self, file_path: str = "knowledge_base.json", backup_dir: str = "backups"):
-        self.file_path = file_path
-        self.backup_dir = backup_dir
-        self.knowledge: Dict[str, Any] = {}
-        self.lock = threading.Lock()
-        self.load_knowledge()
-        
-        logging.basicConfig(filename='knowledge_base.log', level=logging.INFO)
-        
-        # Redis connection for distributed storage
-        self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
-        
-        # Start backup scheduler
-        schedule.every().day.at("00:00").do(self.create_backup)
-        threading.Thread(target=self.run_scheduler, daemon=True).start()
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  
+logger = logging.getLogger(__name__) 
 
+# 加载环境变量
+load_dotenv()
+
+class KnowledgeBase:  
+    def __init__(self, config, api_client, file_path: str = "knowledge_base.json"):  
+        self.config = config  
+        self.api_client = api_client  
+        self.file_path = file_path  
+        self.knowledge: Dict[str, Any] = {}  
+        self.lock = threading.Lock()  
+        self.load_knowledge()  
+        
+        logging.basicConfig(filename='knowledge_base.log', level=logging.INFO)  
+        
+        # 使用配置中的 API 密钥和基础 URL  
+        self.openai_api_key = config.api_key  
+        self.openai_api_base = config.api_base  
+        
+        logging.info("Starting to create embeddings...")  
+        self.embeddings = OpenAIEmbeddings(  
+            openai_api_key=self.openai_api_key,  
+            openai_api_base=self.openai_api_base, 
+            timeout=60  # 设置60秒超时 
+        )  
+        logging.info("Embeddings created successfully.")  
+        
+        logging.info("Starting to initialize FAISS vector store...")  
+        self.vector_store = FAISS.from_texts(["Initial knowledge base"], embedding=self.embeddings)  
+        logging.info("FAISS vector store initialized successfully.")  
+        
+        logging.info("Initializing ChatOpenAI...")  
+        self.llm = ChatOpenAI(  
+            temperature=0,  
+            openai_api_key=self.openai_api_key,  
+            openai_api_base=self.openai_api_base  
+        )  
+        logging.info("ChatOpenAI initialized successfully.")  
+        
+        logging.info("Setting up RetrievalQA chain...")  
+        self.qa_chain = RetrievalQA.from_chain_type(  
+            llm=self.llm,  
+            chain_type="stuff",  
+            retriever=self.vector_store.as_retriever()  
+        )  
+        logging.info("RetrievalQA chain set up successfully.")  
+        
+        logging.info("KnowledgeBase initialization completed.")  
+        
     def load_knowledge(self):
         if os.path.exists(self.file_path):
             with self.lock:
@@ -41,64 +77,73 @@ class KnowledgeBase:
                 json.dump(self.knowledge, f, indent=2)
 
     def get(self, key: str) -> Any:
+        logger.info(f"KnowledgeBase: Getting key {key}") 
         with self.lock:
-            data = self.knowledge.get(key)
-            if data and self.is_data_expired(data):
-                del self.knowledge[key]
-                self.save_knowledge()
-                return None
-            return data
+            return self.knowledge.get(key)  
 
     def set(self, key: str, value: Any):
+        logger.info(f"KnowledgeBase: Setting key {key}") 
         with self.lock:
-            if not self.validate_data(value):
-                raise ValueError("Invalid data format")
-            value['timestamp'] = datetime.now().isoformat()
             self.knowledge[key] = value
             self.save_knowledge()
-            # Sync with Redis
-            self.redis_client.set(key, json.dumps(value))
+            self.vector_store.add_texts([value['content']], metadatas=[{"title": key}])
         logging.info(f"Added/Updated key: {key} at {datetime.now()}")
 
     def delete(self, key: str):
+        logging.info(f"KnowledgeBase: Deleting key {key}")
         with self.lock:
             if key in self.knowledge:
                 del self.knowledge[key]
                 self.save_knowledge()
-                # Remove from Redis
-                self.redis_client.delete(key)
                 logging.info(f"Deleted key: {key} at {datetime.now()}")
 
-    def search(self, query: str, threshold: int = 80) -> List[str]:
-        with self.lock:
-            return [key for key in self.knowledge if fuzz.partial_ratio(query.lower(), key.lower()) >= threshold]
+    def search(self, query: str) -> List[str]:
+        logging.info(f"KnowledgeBase: Searching for query: {query}")  
+        docs = self.vector_store.similarity_search(query)
+        return [doc.metadata.get('title', '') for doc in docs]
 
     def get_all_keys(self) -> List[str]:
+        logging.info("KnowledgeBase: Getting all keys") 
         with self.lock:
             return list(self.knowledge.keys())
 
-    def create_backup(self):
-        if not os.path.exists(self.backup_dir):
-            os.makedirs(self.backup_dir)
-        backup_file = os.path.join(self.backup_dir, f"knowledge_base_backup_{datetime.now().strftime('%Y%m%d%H%M%S')}.json")
-        shutil.copy2(self.file_path, backup_file)
-        logging.info(f"Backup created: {backup_file}")
+    def query(self, question: str) -> str:
+        logging.info(f"KnowledgeBase: Querying: {question}")
+        return self.qa_chain.run(question)
 
-    def run_scheduler(self):
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+    def fetch_wikipedia_content(self, topic: str) -> tuple[str, str]:
+        logging.info(f"KnowledgeBase: Fetching Wikipedia content for topic: {topic}")  
+        url = f"https://en.wikipedia.org/wiki/{topic.replace(' ', '_')}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            title = soup.find(id="firstHeading").text
+            content = ""
+            for p in soup.find(id="mw-content-text").find_all("p", class_=""):
+                content += p.text + "\n"
+            return title, content.strip()
+        return None, None
 
-    def validate_data(self, data: Any) -> bool:
-        # Implement your data validation logic here
-        return isinstance(data, dict) and 'content' in data
-
-    def is_data_expired(self, data: Dict[str, Any]) -> bool:
-        if 'timestamp' not in data:
-            return False
-        timestamp = datetime.fromisoformat(data['timestamp'])
-        return (datetime.now() - timestamp) > timedelta(days=30)  # Expire after 30 days
-
+    def add_wikipedia_entry(self, topic: str):
+        logging.info(f"KnowledgeBase: Adding Wikipedia entry for topic: {topic}")  
+        title, content = self.fetch_wikipedia_content(topic)
+        if title and content:
+            self.set(title, {"content": content, "source": f"https://en.wikipedia.org/wiki/{topic.replace(' ', '_')}"})
+            print(f"Added entry: {title}")
+        else:
+            print(f"Failed to fetch information about {topic}")
+            
+    def test_operation(self):  
+        logging.info("KnowledgeBase: Starting test operation")  
+        test_key = "test_entry"  
+        test_value = {"content": "This is a test entry", "source": "test"}  
+        self.set(test_key, test_value)  
+        retrieved_value = self.get(test_key)  
+        assert retrieved_value == test_value, "Test operation failed: set/get mismatch"  
+        self.delete(test_key)  
+        assert self.get(test_key) is None, "Test operation failed: delete failed"  
+        return "Knowledge base test operation successful"
+    
 class KnowledgeBaseManager:
     def __init__(self):
         self.kb = KnowledgeBase()
@@ -132,50 +177,14 @@ class KnowledgeBaseManager:
     def get_all_knowledge_keys(self) -> List[str]:
         return self.kb.get_all_keys()
 
-def integrate_knowledge_base():
-    import command_data
-    import commands
-    import help_info
-    
-    kb_manager = KnowledgeBaseManager()
-    
-    # Add KB-related commands
-    command_data.COMMANDS['kb_query'] = {
-        'function': lambda args: kb_manager.query(args[0]),
-        'description': 'Query the knowledge base'
-    }
-    command_data.COMMANDS['kb_add'] = {
-        'function': lambda args: kb_manager.add_or_update(args[0], {'content': args[1]}),
-        'description': 'Add or update an entry in the knowledge base'
-    }
-    command_data.COMMANDS['kb_search'] = {
-        'function': lambda args: kb_manager.search_knowledge(args[0]),
-        'description': 'Search the knowledge base'
-    }
-    
-    # Update help info
-    help_info.HELP_INFO['kb_query'] = 'Usage: kb_query <key>'
-    help_info.HELP_INFO['kb_add'] = 'Usage: kb_add <key> <value>'
-    help_info.HELP_INFO['kb_search'] = 'Usage: kb_search <query>'
-    
-    # Modify existing command processing in commands.py to use KB when appropriate
-    original_process_command = commands.process_command
-    def new_process_command(command, args):
-        if command in ['kb_query', 'kb_add', 'kb_search']:
-            return command_data.COMMANDS[command]['function'](args)
-        else:
-            # Check KB first before processing normally
-            kb_result = kb_manager.query(command)
-            if kb_result['found']:
-                return kb_result['data']['content']
-            else:
-                return original_process_command(command, args)
-    
-    commands.process_command = new_process_command
+    def ask_question(self, question: str) -> str:
+        return self.kb.query(question)
 
-# Usage example (can be commented out if not needed)
-if __name__ == "__main__":
-    kb_manager = KnowledgeBaseManager()
-    kb_manager.add_or_update("example_key", {"content": "This is an example value"})
-    print(kb_manager.query("example_key"))
-    print(kb_manager.search_knowledge("example"))
+    def add_wikipedia_entry(self, topic: str) -> Dict[str, bool]:
+        try:
+            self.kb.add_wikipedia_entry(topic)
+            return {"success": True}
+        except Exception as e:
+            logging.error(f"Error adding Wikipedia entry for {topic}: {str(e)}")
+            return {"success": False, "error": str(e)}
+

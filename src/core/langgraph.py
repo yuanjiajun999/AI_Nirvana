@@ -71,40 +71,62 @@ class LangGraph:
         self._agent = None  
         self._vector_store = None  
         self.qa_chain = None  
+        self.use_fallback = False
+        self.fallback_knowledge = {}
 
-        # 初始化核心组件  
-        self.llm = ChatOpenAI(  
-            temperature=APIConfig.TEMPERATURE,  
-            model_name=APIConfig.MODEL_NAME,  
-            openai_api_key=APIConfig.API_KEY,  
-            openai_api_base=APIConfig.API_BASE  
-        )  
-        self.embeddings = OpenAIEmbeddings(  
-            model="text-embedding-ada-002",  
-            openai_api_key=APIConfig.API_KEY,  
-            openai_api_base=APIConfig.API_BASE,    
-        )  
-        self._entity_extraction_chain = self._create_entity_extraction_chain()  
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)  
-        self.nlp = spacy.load("en_core_web_sm")  
-        self.graph = ExtendedNetworkxEntityGraph()  # 使用扩展的图形类
-        self._initialize_components()  
+        # 添加 similarity_threshold 属性，并设置一个默认值
+        self.similarity_threshold = 0.8  # 这个值可以根据需要进行调整
+        
+        try:
+            # 初始化核心组件  
+            self.llm = ChatOpenAI(  
+                temperature=APIConfig.TEMPERATURE,  
+                model_name=APIConfig.MODEL_NAME,  
+                openai_api_key=APIConfig.API_KEY,  
+                openai_api_base=APIConfig.API_BASE  
+            )  
+            self.embeddings = OpenAIEmbeddings(  
+                model="text-embedding-ada-002",  
+                openai_api_key=APIConfig.API_KEY,  
+                openai_api_base=APIConfig.API_BASE,    
+            )  
+            
+            # 使用一些实际的初始文本
+            initial_texts = ["北京是中国的首都", "北京有许多著名的历史古迹"]
+            self._vector_store = FAISS.from_texts(initial_texts, embedding=self.embeddings)
+            
+            self._entity_extraction_chain = self._create_entity_extraction_chain()  
+            self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)  
+            self.nlp = spacy.load("en_core_web_sm")  
+            self.graph = ExtendedNetworkxEntityGraph()  # 使用扩展的图形类
+            self._initialize_components()  
 
-        print("Testing embeddings...")  
-        test_embedding = self.embeddings.embed_query("Hello, world!")  
-        print(f"Embedding size: {len(test_embedding)}")  
+            print("Testing embeddings...")  
+            test_embedding = self.embeddings.embed_query("Hello, world!")  
+            print(f"Embedding size: {len(test_embedding)}")  
 
-    def _initialize_components(self):  
-        # 初始化其他组件  
-        self._inference_chain = self._setup_inference_chain()  
-        self._vector_store = FAISS.from_texts(["Your initial texts here"], embedding=self.embeddings)  
-        self.qa_chain = RetrievalQA.from_chain_type(  
-            llm=self.llm,  
-            chain_type="stuff",  
-            retriever=self._vector_store.as_retriever(),  
-            return_source_documents=True  
-        )  
-        self._agent = self._setup_agent()  
+            logging.info("LangGraph initialized successfully with FAISS.")
+        except Exception as e:
+            logging.error(f"Failed to initialize LangGraph: {e}")
+            self.use_fallback = True
+            logging.info("Using fallback mode.")
+            # 在fallback模式下，我们仍然需要初始化一些基本组件
+            self.fallback_knowledge = dict(zip(initial_texts, initial_texts))
+            
+    def _initialize_components(self):
+        try:
+            # 初始化其他组件  
+            self._inference_chain = self._setup_inference_chain()  
+            self.qa_chain = RetrievalQA.from_chain_type(  
+                llm=self.llm,  
+                chain_type="stuff",  
+                retriever=self._vector_store.as_retriever(),  
+                return_source_documents=True  
+            )  
+            self._agent = self._setup_agent()
+        except Exception as e:
+            logging.error(f"Error in _initialize_components: {e}")
+            self.use_fallback = True
 
     def _create_entity_extraction_chain(self):  
         prompt_template = PromptTemplate(  
@@ -209,31 +231,39 @@ class LangGraph:
 
     def retrieve_knowledge(self, query: str) -> Dict[str, Any]:
         try:
-            # 假设 _cached_run 方法返回一个包含结果和源文档的字典
-            response = self._cached_run(query)
+            # 首先尝试从向量存储中检索
+            results = self._vector_store.similarity_search_with_score(query, k=1)
+            if results and results[0][1] < self.similarity_threshold:
+                content, score = results[0]
+                return {
+                    "query": query,
+                    "result": content.page_content,
+                    "source": "Knowledge Base",
+                    "score": score
+                }
             
-            # 提取最相关的信息
-            result = response.get('result', '')
-            source_docs = response.get('source_documents', [])
+            # 如果没有找到相关信息，使用 AI 生成
+            ai_response = self.generate_ai_response(query)
+            if ai_response:
+                self.add_knowledge(query, ai_response)
+                return {
+                    "query": query,
+                    "result": ai_response,
+                    "source": "AI generated"
+                }
             
-            # 处理源文档
-            processed_docs = []
-            for doc in source_docs[:3]:  # 只取前三个最相关的文档
-                processed_docs.append({
-                    'content': doc.page_content[:100] + '...' if len(doc.page_content) > 100 else doc.page_content,
-                    'metadata': doc.metadata
-                })
-            
-            logger.info(f"成功检索知识: 查询='{query}'")
             return {
                 "query": query,
-                "result": result,
-                "source_documents": processed_docs,
-                "continue": True
+                "result": "抱歉，无法找到或生成相关信息。",
+                "source": "Not found"
             }
         except Exception as e:
-            logger.error(f"知识检索出错: {str(e)}")
-            return {"error": "知识检索失败", "continue": True}
+            logging.error(f"Error in retrieve_knowledge: {e}")
+            return {
+                "query": query,
+                "result": f"检索知识时发生错误: {str(e)}",
+                "source": "Error"
+            }
         
     def reason(self, context: str) -> str:  
         try:  
@@ -326,6 +356,61 @@ class LangGraph:
     
     def summary(self):  
         return self.graph.summary()
+
+    def add_knowledge(self, key: str, value: str) -> Dict[str, Any]:
+        try:
+            if not self.use_fallback:
+                self._vector_store.add_texts([f"{key}: {value}"])
+            self.fallback_knowledge[key] = value
+            logging.info(f"Knowledge added: {key}")
+            return {"success": True, "message": f"Knowledge '{key}' added successfully"}
+        except Exception as e:
+            logging.error(f"Error adding knowledge: {e}")
+            return {"success": False, "message": f"Error adding knowledge: {str(e)}"}
+
+    def query_knowledge(self, query: str) -> Dict[str, Any]:
+        try:
+            results = self._vector_store.similarity_search_with_score(query, k=1)
+            if results:
+                content, score = results[0]
+                return {"found": True, "content": content.page_content, "score": score}
+            return {"found": False, "message": "No relevant knowledge found"}
+        except Exception as e:
+            logger.error(f"Error querying knowledge: {str(e)}")
+            return {"error": f"Error querying knowledge: {str(e)}"}
+
+    def update_knowledge(self, key: str, value: str) -> Dict[str, Any]:
+        try:
+            # 首先删除旧的知识（如果存在）
+            self.delete_knowledge(key)
+            # 然后添加新的知识
+            return self.add_knowledge(key, value)
+        except Exception as e:
+            logger.error(f"Error updating knowledge: {str(e)}")
+            return {"success": False, "message": f"Error updating knowledge: {str(e)}"}
+
+    def delete_knowledge(self, key: str) -> Dict[str, Any]:
+        try:
+            # 从图中删除节点
+            self.graph.remove_node(key)
+            # 注意：从 FAISS 向量存储中删除特定项是不直接支持的
+            # 我们可以考虑重建向量存储，但这可能会很耗时
+            logger.info(f"Knowledge deleted: {key}")
+            return {"success": True, "message": f"Knowledge '{key}' deleted successfully"}
+        except Exception as e:
+            logger.error(f"Error deleting knowledge: {str(e)}")
+            return {"success": False, "message": f"Error deleting knowledge: {str(e)}"}
+
+    def list_all_knowledge(self) -> List[str]:
+        return list(self.graph.nodes())
+
+    def generate_ai_response(self, query: str) -> str:
+        try:
+            response = self.llm.invoke(query)
+            return response.content
+        except Exception as e:
+            logging.error(f"Error generating AI response: {e}")
+            return ""
         
 # 测试代码  
 if __name__ == "__main__":  
