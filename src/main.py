@@ -1,6 +1,6 @@
 import argparse  
 import os  
-from dotenv import load_dotenv  
+import json 
 import sys  
 import time  
 import atexit  
@@ -19,13 +19,14 @@ from src.core.language_model import LanguageModel
 logger = logging.getLogger(__name__)  
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')  
 
-load_dotenv()  
+# 读取 config.json 文件
+with open('config.json', 'r') as config_file:
+    config = json.load(config_file)
 
-# 打印 API 设置，用于调试  
-api_key = os.getenv("API_KEY")  
-api_base = os.getenv("API_BASE")  
-model_name = os.getenv("MODEL_NAME")  
-
+# 从配置中获取 API 设置，用于调试
+api_key = config.get("api_key")
+api_base = config.get("api_base")
+model_name = config.get("model")
 if api_key:  
     print(f"API Key loaded: {api_key[:5]}...{api_key[-5:]}")  
 else:  

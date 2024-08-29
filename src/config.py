@@ -1,38 +1,39 @@
 import json  
 import logging  
 import os  
-from typing import Any, Dict  
-from dotenv import load_dotenv  
+from typing import Any, Dict   
+from src.api_config import APIConfig
 
-load_dotenv()  
-
-class APIConfig:  
-    MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")  
-    API_KEY = os.getenv("API_KEY")  
-    API_BASE = os.getenv("API_BASE", "https://api.gptsapi.net/v1")  
-    TEMPERATURE = float(os.getenv("TEMPERATURE", "0.7"))  
-    MAX_TOKENS = int(os.getenv("MAX_TOKENS", "256"))  
 
 class Config:  
     def __init__(self, config_file: str = "config.json"):  
         self.logger = logging.getLogger(__name__)  
         self.config_file = os.path.abspath(config_file)  
         self.config = self.load_config()  
+        
+        # 从配置文件获取API键和基础URL
         self.api_key: str = self.config.get('api_key', '')  
-        self.api_base: str = self.config.get('api_base', APIConfig.API_BASE)  
-        self.openai_api_key = self.config.get('OPENAI_API_KEY') or os.getenv("OPENAI_API_KEY")  
+        self.api_base: str = self.config.get('api_base', "https://api.gptsapi.net/v1")  
+        
+        # 检查OPENAI_API_KEY，优先从config.json读取，否则从环境变量读取
+        self.openai_api_key = self.config.get('api_key') or os.getenv("API_KEY")  
         if not self.openai_api_key:  
             raise ValueError("OPENAI_API_KEY not found in config file or environment variables")  
-        self.model: str = self.config.get('model', APIConfig.MODEL_NAME)  
+        
+        # 模型名称，从配置文件或环境变量读取
+        self.model: str = self.config.get('model', "gpt-3.5-turbo-0125")  
+        
         if not self.validate_config():  
             self.logger.error("Configuration validation failed")  
             raise ValueError("Invalid configuration")  
+        
+        # 预定义的响应示例
         self.predefined_responses: Dict[str, str] = {  
             "introduce_yourself": "Hello, I am the AI assistant created for the AI Nirvana project. I'm here to help you with a variety of tasks.",  
             "how_are_you": "I'm doing well, thank you for asking.",  
             "what_can_you_do": "I can assist you with a wide range of tasks, such as answering questions, generating content, summarizing text, and performing sentiment analysis.",  
         }  
-
+        
     def load_config(self) -> Dict[str, Any]:  
         default_config = {  
             "model": APIConfig.MODEL_NAME,  

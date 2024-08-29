@@ -1,27 +1,22 @@
-import os  
-from typing import Any, Dict, List, Optional  
-import json  
-from src.core.model_interface import ModelInterface  
-from dotenv import load_dotenv  
-from openai import OpenAI  
+import json
+from typing import Any, Dict, List, Optional
+from src.core.model_interface import ModelInterface
+from openai import OpenAI
+from src.utils.error_handler import ModelError, error_handler, logger
 
-from src.utils.error_handler import ModelError, error_handler, logger  
-
-load_dotenv()  
-
-class LanguageModel(ModelInterface):  
-    def __init__(self, config, api_client, model_name: str = "gpt-3.5-turbo-0125"):  
+class LanguageModel(ModelInterface):
+    def __init__(self, config, api_client, model_name: str = "gpt-3.5-turbo-0125"):
         self.config = config
         self.api_client = api_client
-        self.model_name = model_name  
+        self.model_name = model_name
         self.api_key = config.api_key  # 从 config 获取 API key
-        self.client = OpenAI(api_key=self.api_key, base_url=config.api_base)  
-        logger.info(f"LanguageModel initialized with model: {self.model_name}") 
+        self.client = OpenAI(api_key=self.api_key, base_url=config.api_base)
+        logger.info(f"LanguageModel initialized with model: {self.model_name}")
 
     def switch_model(self, new_model_name: str):
         self.model_name = new_model_name
         logger.info(f"LanguageModel switched to model: {self.model_name}")
-        
+
     @error_handler  
     def generate_response(self, prompt: str, model: Optional[str] = None, context: Optional[str] = None) -> str:  
         model = model or self.model_name  

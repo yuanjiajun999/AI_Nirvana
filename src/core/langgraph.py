@@ -5,9 +5,8 @@ import spacy
 from functools import lru_cache  
 from typing import Any, Dict, List, Tuple  
 from unittest.mock import Mock  
-
-import networkx as nx  
-from dotenv import load_dotenv  
+import json
+import networkx as nx   
 from openai import OpenAIError  
 from langchain.chains import RetrievalQA, LLMChain  
 from langchain.agents import AgentType, AgentExecutor, create_react_agent  
@@ -22,20 +21,26 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # 配置日志记录
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-load_dotenv()  
+logger = logging.getLogger(__name__) 
 
 class APIConfig:  
-    MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo-0125")  
-    API_KEY = os.getenv("API_KEY")  
-    API_BASE = os.getenv("API_BASE", "https://api.gptsapi.net/v1")  
-    TEMPERATURE = float(os.getenv("TEMPERATURE", "0.7"))  
-    MAX_TOKENS = int(os.getenv("MAX_TOKENS", "256"))  
+    def __init__(self, config: Dict[str, Any]):
+        self.MODEL_NAME = config.get("model", "gpt-3.5-turbo-0125")
+        self.API_KEY = config.get("api_key")
+        self.API_BASE = config.get("api_base", "https://api.gptsapi.net/v1")
+        self.TEMPERATURE = float(config.get("temperature", "0.7"))
+        self.MAX_TOKENS = int(config.get("max_tokens", "256"))
 
-openai.api_base = APIConfig.API_BASE  
-openai.api_key = APIConfig.API_KEY  
+def load_config(file_path: str = "config.json") -> Dict[str, Any]:
+    with open(file_path, 'r') as f:
+        return json.load(f)
 
+config = load_config()  # 加载 config.json 中的配置
+
+api_config = APIConfig(config)
+
+openai.api_base = api_config.API_BASE  
+openai.api_key = api_config.API_KEY  
 class ExtendedNetworkxEntityGraph(NetworkxEntityGraph):  
     def __init__(self):  
         super().__init__()  
@@ -60,9 +65,9 @@ class ExtendedNetworkxEntityGraph(NetworkxEntityGraph):
 
 class LangGraph:  
     def __init__(self):  
-        print(f"API_KEY: {APIConfig.API_KEY[:5]}...{APIConfig.API_KEY[-5:]}")  
-        print(f"API_BASE: {APIConfig.API_BASE}")  
-        print(f"MODEL_NAME: {APIConfig.MODEL_NAME}")  
+        print(f"API_KEY: {api_config.API_KEY[:5]}...{api_config.API_KEY[-5:]}")  
+        print(f"API_BASE: {api_config.API_BASE}")  
+        print(f"MODEL_NAME: {api_config.MODEL_NAME}")  
 
         # 预先定义所有属性  
         self._entity_extraction_chain = None  
@@ -78,18 +83,18 @@ class LangGraph:
         self.similarity_threshold = 0.8  # 这个值可以根据需要进行调整
         
         try:
-            # 初始化核心组件  
+             # 初始化核心组件  
             self.llm = ChatOpenAI(  
-                temperature=APIConfig.TEMPERATURE,  
-                model_name=APIConfig.MODEL_NAME,  
-                openai_api_key=APIConfig.API_KEY,  
-                openai_api_base=APIConfig.API_BASE  
+                temperature=api_config.TEMPERATURE,  
+                model_name=api_config.MODEL_NAME,  
+                openai_api_key=api_config.API_KEY,  
+                openai_api_base=api_config.API_BASE  
             )  
             self.embeddings = OpenAIEmbeddings(  
                 model="text-embedding-ada-002",  
-                openai_api_key=APIConfig.API_KEY,  
-                openai_api_base=APIConfig.API_BASE,    
-            )  
+                openai_api_key=api_config.API_KEY,  
+                openai_api_base=api_config.API_BASE,    
+            )    
             
             # 使用一些实际的初始文本
             initial_texts = ["北京是中国的首都", "北京有许多著名的历史古迹"]

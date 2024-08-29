@@ -1,22 +1,18 @@
 import json
 import logging 
-import os
 from typing import Dict, Any, List
 import threading
 import logging
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')  
 logger = logging.getLogger(__name__) 
-
-# 加载环境变量
-load_dotenv()
 
 class KnowledgeBase:  
     def __init__(self, config, api_client, file_path: str = "knowledge_base.json"):  
