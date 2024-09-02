@@ -1,39 +1,45 @@
 import json  
 import logging  
 import os  
-from typing import Any, Dict   
-from src.api_config import APIConfig
-
+from typing import Any, Dict  
+from dotenv import load_dotenv  
+from src.api_config import APIConfig  
 
 class Config:  
     def __init__(self, config_file: str = "config.json"):  
         self.logger = logging.getLogger(__name__)  
         self.config_file = os.path.abspath(config_file)  
+        
+        # 加载 .env 文件  
+        load_dotenv()  
+        
         self.config = self.load_config()  
         
-        # 从配置文件获取API键和基础URL
-        self.api_key: str = self.config.get('api_key', '')  
+        # 从配置文件获取API键和基础URL，优先使用环境变量  
+        self.api_key: str = os.getenv('API_KEY') or self.config.get('api_key', '')  
         self.api_base: str = self.config.get('api_base', "https://api.gptsapi.net/v1")  
         
-        # 检查OPENAI_API_KEY，优先从config.json读取，否则从环境变量读取
-        self.openai_api_key = self.config.get('api_key') or os.getenv("API_KEY")  
-        if not self.openai_api_key:  
-            raise ValueError("OPENAI_API_KEY not found in config file or environment variables")  
+        # 检查API_KEY  
+        if not self.api_key:  
+            raise ValueError("API_KEY not found in .env file, config file, or environment variables")  
         
-        # 模型名称，从配置文件或环境变量读取
+        # 模型名称，从配置文件读取  
         self.model: str = self.config.get('model', "gpt-3.5-turbo-0125")  
+        
+        # LangSmith API Key  
+        self.langsmith_api_key: str = os.getenv('LANGSMITH_API_KEY') or self.config.get('langsmith_api_key', '')  
         
         if not self.validate_config():  
             self.logger.error("Configuration validation failed")  
             raise ValueError("Invalid configuration")  
         
-        # 预定义的响应示例
+        # 预定义的响应示例  
         self.predefined_responses: Dict[str, str] = {  
             "introduce_yourself": "Hello, I am the AI assistant created for the AI Nirvana project. I'm here to help you with a variety of tasks.",  
             "how_are_you": "I'm doing well, thank you for asking.",  
             "what_can_you_do": "I can assist you with a wide range of tasks, such as answering questions, generating content, summarizing text, and performing sentiment analysis.",  
         }  
-        
+
     def load_config(self) -> Dict[str, Any]:  
         default_config = {  
             "model": APIConfig.MODEL_NAME,  
@@ -57,14 +63,14 @@ class Config:
             return self.update_config_from_env(config)  
         except json.JSONDecodeError:  
             self.logger.error(f"Error decoding {self.config_file}. Creating default config.")  
-            return self.create_default_config(default_config) 
+            return self.create_default_config(default_config)
         
-    def create_default_config(self, default_config: Dict[str, Any]) -> Dict[str, Any]:
-        """创建默认配置并保存到文件"""
-        with open(self.config_file, "w") as f:
-            json.dump(default_config, f, indent=4)
-        logging.info(f"Created default config file: {self.config_file}")
-        return default_config
+    def create_default_config(self, default_config: Dict[str, Any]) -> Dict[str, Any]:  
+        """创建默认配置并保存到文件"""  
+        with open(self.config_file, "w") as f:  
+            json.dump(default_config, f, indent=4)  
+        logging.info(f"Created default config file: {self.config_file}")  
+        return default_config 
 
     def update_config_from_env(self, config: Dict[str, Any]) -> Dict[str, Any]:  
         """从环境变量更新配置"""  
@@ -83,7 +89,7 @@ class Config:
                     logging.warning("API key from environment variable is empty")  
                 else:  
                     config[config_key] = env_value  
-        return config
+        return config  
 
     def get(self, key: str, default: Any = None) -> Any:
         """获取配置值"""
@@ -108,9 +114,9 @@ class Config:
     def validate_config(self) -> bool:  
         self.logger.info("Validating configuration...")  
         print(f"Validating configuration...")  
-        print(f"API Key: {'*' * (len(self.openai_api_key) - 4) + self.openai_api_key[-4:] if self.openai_api_key else 'Not set'}")  
+        print(f"API Key: {'*' * (len(self.api_key) - 4) + self.api_key[-4:] if self.api_key else 'Not set'}")  
         print(f"API Base: {self.api_base}")  
-        print(f"Model: {self.config.get('model', 'Not set')}")  
+        print(f"Model: {self.model}")  
 
         required_keys = ["model", "log_level", "max_input_length", "api_base"]  
         for key in required_keys:  
@@ -119,9 +125,9 @@ class Config:
                 print(f"Validation failed: Missing {key}")  
                 return False  
 
-        if not self.openai_api_key:  
-            self.logger.error("OPENAI_API_KEY is missing or empty")  
-            print("Validation failed: OPENAI_API_KEY is missing or empty")  
+        if not self.api_key:  
+            self.logger.error("API_KEY is missing or empty")  
+            print("Validation failed: API_KEY is missing or empty")  
             return False  
 
         valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]  

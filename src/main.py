@@ -16,6 +16,10 @@ from src.core.model_factory import ModelFactory
 from src.core.language_model import LanguageModel  
 from fastapi import FastAPI  
 import uvicorn  
+from dotenv import load_dotenv  # 新添加的导入  
+
+# 加载 .env 文件  
+load_dotenv()  # 新添加的行  
 
 app = FastAPI()  
 
@@ -27,14 +31,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 with open('config.json', 'r') as config_file:  
     config = json.load(config_file)  
 
-# 从配置中获取 API 设置，用于调试  
-api_key = config.get("api_key")  
+# 从环境变量或配置中获取 API 设置，用于调试  
+api_key = os.getenv("API_KEY") or config.get("api_key")  # 修改的行  
 api_base = config.get("api_base")  
 model_name = config.get("model")  
 if api_key:  
     print(f"API Key loaded: {api_key[:5]}...{api_key[-5:]}")  
 else:  
-    print("API Key not found in environment variables")  
+    print("API Key not found in environment variables or config file")  # 修改的行  
 
 print(f"API Base URL: {api_base}")  
 print(f"Model Name: {model_name}")  
@@ -51,7 +55,7 @@ def initialize_system(config: Config) -> AINirvana:
         # 注册 LanguageModel  
         ModelFactory.register_model("LanguageModel", LanguageModel)  
         
-        # 创建 ApiClient 实例，只传递 config 对象
+        # 创建 ApiClient 实例，只传递 config 对象  
         api_client = ApiClient(config)  
         
         # 创建 AINirvana 实例，传入 config 和 api_client  
@@ -62,9 +66,8 @@ def initialize_system(config: Config) -> AINirvana:
         return ai_nirvana  
     except Exception as e:  
         logger.error(f"Error during AI Nirvana initialization: {str(e)}")  
-        raise
+        raise  
 
-    
 class AIServer:  
     def __init__(self, config: Config):  
         self.ai_nirvana = initialize_system(config)  
@@ -91,7 +94,7 @@ class AIServer:
 
 def run_server(config: Config):  
     server = AIServer(config)  
-    server.run()    
+    server.run()  
 
 def main(config_file: str, mode: str) -> None:  
     try:  
@@ -149,4 +152,4 @@ if __name__ == "__main__":
     finally:  
         cleanup()  
 
-    sys.exit(0)  
+    sys.exit(0)
