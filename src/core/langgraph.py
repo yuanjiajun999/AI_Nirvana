@@ -32,7 +32,9 @@ class APIConfig:
         self.MAX_TOKENS = int(config.get("max_tokens", "256"))
 
 def load_config(file_path: str = "config.json") -> Dict[str, Any]:
-    with open(file_path, 'r') as f:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(current_dir, '..', 'config.json')
+    with open(config_path, 'r') as f:
         return json.load(f)
 
 config = load_config()  # 加载 config.json 中的配置

@@ -2,11 +2,11 @@
   "model": "gpt-3.5-turbo-0125",
   "log_level": "INFO",
   "max_input_length": 100,
-  "api_key": "sk-5GReed036f1eaccca21f9ac54bcd62bc0cb55ba0093QbnfC",
+  "api_key": "",
   "api_base": "https://api.gptsapi.net/v1",
   "use_gpu": false,
   "system_prompt": "You are a helpful AI assistant.",
   "max_context_length": 5,
   "enable_digital_twin": true,
-  "langsmith_api_key": "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"
+  "langsmith_api_key": ""
 }

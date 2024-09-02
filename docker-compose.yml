@@ -2,14 +2,22 @@ version: '3.8'
 
 services:  
   app:  
-    build:   
+    image: your-project-dev:latest  
+    build:  
       context: .  
-      dockerfile: Dockerfile.base  # 指定 Dockerfile  
+      dockerfile: docker/dev.Dockerfile  
+    volumes:  
+      - ./src:/app/src  
+      - ./tests:/app/tests  
+      - ./config.json:/app/config.json  
     ports:  
       - "8000:8000"  
-    volumes:  
-      - .:/app  # 挂载当前目录为容器内的 /app  
     environment:  
-      - DOCKER_ENV=1  # 如果您的应用需要特定的环境变量  
-    tty: true  
-    stdin_open: true
+      - PYTHONPATH=/app
+      - ENV=development  
+      - API_KEY=${API_KEY}  
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}  
+    command: >  
+      sh -c "jq '.api_key = env.API_KEY | .langsmith_api_key = env.LANGSMITH_API_KEY' config.json > /tmp/config.json &&  
+             cat /tmp/config.json > config.json &&  
+             uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src"  

@@ -124,8 +124,14 @@ class AINirvana:
         self.model_name = model_name  # 更新 AINirvana 实例的 model_name
         print(f"模型已更改为 {model_name}。")
 
-    def kb_add(self, key: str, value: str) -> str:  
-        return self.knowledge_base.add(key, value)  
+    def add_knowledge(self, key: str, value: Any) -> dict:  
+        """添加知识到知识库"""  
+        if not key or not isinstance(key, str):  
+            logger.error("Invalid key provided for adding knowledge.")  
+            raise ValueError("Key must be a non-empty string.")  
+        self.knowledge[key] = value  
+        logger.info(f"Knowledge added: {key}")  
+        return {"message": f"Successfully added knowledge: {key}"}    
 
     def kb_query(self, key: str) -> str:  
         return self.knowledge_base.query(key)  
@@ -1179,7 +1185,7 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             key = input("请输入知识的键：")  
             value = input("请输入知识的值：")  
             result = ai_nirvana.add_knowledge(key, value)  
-            return {"message": f"添加结果：{result['message']}", "continue": True}  
+            return {"message": result["message"], "continue": True}  
 
         elif command == "kb_query":  
             query = input("请输入您的问题：")  

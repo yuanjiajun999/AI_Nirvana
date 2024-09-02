@@ -29,6 +29,7 @@ node_modules/
 # Project specific  
 .env  
 claude-assistant/  
+config.json
 
 # Large files and libraries  
 ai_nirvana_env/Lib/site-packages/torch/lib/*.lib  

@@ -1,6 +1,6 @@
 import argparse  
 import os  
-import json 
+import json  
 import sys  
 import time  
 import atexit  
@@ -14,19 +14,23 @@ from flask import Flask, jsonify, request
 import logging  
 from src.core.model_factory import ModelFactory  
 from src.core.language_model import LanguageModel  
+from fastapi import FastAPI  
+import uvicorn  
+
+app = FastAPI()  
 
 # 设置日志  
 logger = logging.getLogger(__name__)  
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')  
 
-# 读取 config.json 文件
-with open('config.json', 'r') as config_file:
-    config = json.load(config_file)
+# 读取 config.json 文件  
+with open('config.json', 'r') as config_file:  
+    config = json.load(config_file)  
 
-# 从配置中获取 API 设置，用于调试
-api_key = config.get("api_key")
-api_base = config.get("api_base")
-model_name = config.get("model")
+# 从配置中获取 API 设置，用于调试  
+api_key = config.get("api_key")  
+api_base = config.get("api_base")  
+model_name = config.get("model")  
 if api_key:  
     print(f"API Key loaded: {api_key[:5]}...{api_key[-5:]}")  
 else:  
@@ -64,30 +68,30 @@ def initialize_system(config: Config) -> AINirvana:
 class AIServer:  
     def __init__(self, config: Config):  
         self.ai_nirvana = initialize_system(config)  
-        self.app = Flask(__name__)  
+        self.app = FastAPI()  
         self.setup_routes()  
 
     def setup_routes(self):  
-        @self.app.route("/process", methods=["POST"])  
-        def process():  
+        @self.app.post("/process")  
+        async def process(request: dict):  
             try:  
-                input_text = request.json.get("input")  
+                input_text = request.get("input")  
                 if not input_text:  
-                    return jsonify({"error": "No input provided"}), 400  
+                    return {"error": "No input provided"}, 400  
 
                 result = handle_command(input_text, self.ai_nirvana)  
-                return jsonify(result)  
+                return result  
             except Exception as e:  
                 logger.error(f"Error processing request: {str(e)}")  
-                return jsonify({"error": "An internal error occurred"}), 500  
+                return {"error": "An internal error occurred"}, 500  
 
     def run(self):  
-        logger.info("Starting Flask server...")  
-        self.app.run(host="0.0.0.0", port=8000, use_reloader=False)  
+        logger.info("Starting FastAPI server...")  
+        uvicorn.run(self.app, host="0.0.0.0", port=8000)  
 
 def run_server(config: Config):  
     server = AIServer(config)  
-    server.run()  
+    server.run()    
 
 def main(config_file: str, mode: str) -> None:  
     try:  
@@ -145,4 +149,4 @@ if __name__ == "__main__":
     finally:  
         cleanup()  
 
-    sys.exit(0)
+    sys.exit(0)  

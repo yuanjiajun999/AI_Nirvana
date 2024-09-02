@@ -22,7 +22,6 @@ update_env
 .vscode
 
 # Test files
-tests
 .pytest_cache
 
 # Documentation
@@ -51,12 +50,8 @@ Dockerfile
 Dockerfile.base
 docker-compose.yml
 
-# Configuration files (if not needed in the image)
-config.json
-
 # Requirements files (keep only the ones you need)
 requirements-*.in
-poetry.lock
 
 # Scripts (if not needed at runtime)
 scripts

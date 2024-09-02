@@ -59,6 +59,14 @@ class KnowledgeBase:
         
         logging.info("KnowledgeBase initialization completed.")  
         
+    def add_knowledge(self, key: str, value: Any) -> None:
+        """添加知识到知识库"""
+        if not key or not isinstance(key, str):
+            logger.error("Invalid key provided for adding knowledge.")
+            raise ValueError("Key must be a non-empty string.")
+        self.knowledge[key] = value
+        logger.info(f"Knowledge added: {key}")
+
     def load_knowledge(self):
         if os.path.exists(self.file_path):
             with self.lock:

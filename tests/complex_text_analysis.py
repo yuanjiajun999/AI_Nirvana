@@ -36,3 +36,6 @@ def test_complex_text_analysis(ai_nirvana):
         except Exception as e:
             print(f"分析文本 '{sample}' 时发生错误: {str(e)}")
         print()
+
+    print("Complex text analysis test function")
+    return True    
