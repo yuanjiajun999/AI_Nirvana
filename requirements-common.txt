@@ -174,7 +174,7 @@ optree==0.12.1
 orbax-checkpoint==0.4.4
 orjson==3.10.6
 overrides==7.7.0
-packageurl-python==0.15.4
+packageurl-python==0.15.6
 packaging==24.1
 pandas==2.2.2
 pandocfilters==1.5.1
