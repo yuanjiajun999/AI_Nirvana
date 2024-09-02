@@ -111,9 +111,11 @@ class KnowledgeBase:
         with self.lock:
             return list(self.knowledge.keys())
 
-    def query(self, question: str) -> str:
-        logging.info(f"KnowledgeBase: Querying: {question}")
-        return self.qa_chain.run(question)
+    def query(self, question: str) -> str:  
+        logging.info(f"KnowledgeBase: Querying: {question}")  
+        result = self.qa_chain.run(question)  
+        logging.info(f"KnowledgeBase: Query result: {result}")  
+        return result
 
     def fetch_wikipedia_content(self, topic: str) -> tuple[str, str]:
         logging.info(f"KnowledgeBase: Fetching Wikipedia content for topic: {topic}")  

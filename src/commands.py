@@ -124,18 +124,29 @@ class AINirvana:
         self.model_name = model_name  # 更新 AINirvana 实例的 model_name
         print(f"模型已更改为 {model_name}。")
 
-    def add_knowledge(self, key: str, value: Any) -> dict:  
-        """添加知识到知识库"""  
-        if not key or not isinstance(key, str):  
-            logger.error("Invalid key provided for adding knowledge.")  
-            raise ValueError("Key must be a non-empty string.")  
-        self.knowledge[key] = value  
-        logger.info(f"Knowledge added: {key}")  
-        return {"message": f"Successfully added knowledge: {key}"}    
+    def add_knowledge(self, key: str, value: Any) -> dict:
+        """添加知识到知识库"""
+        if not key or not isinstance(key, str):
+            logger.error("Invalid key provided for adding knowledge.")
+            raise ValueError("Key must be a non-empty string.")
+        try:
+            self.knowledge_base.add_knowledge(key, value)
+            logger.info(f"Knowledge added: {key}")
+            return {"message": f"Successfully added knowledge: {key}"}
+        except Exception as e:
+            logger.error(f"Error adding knowledge: {str(e)}")
+            return {"message": f"Failed to add knowledge: {str(e)}"}  
 
-    def kb_query(self, key: str) -> str:  
-        return self.knowledge_base.query(key)  
-
+    def kb_query(self, key: str) -> dict:  
+        result = self.knowledge_base.query(key)  
+        logging.info(f"kb_query: Raw result: {result}")  
+        return {  
+            "found": bool(result),  
+            "content": result,  
+            "source": "Knowledge Base",  
+            "score": 1.0  
+        }
+        
     def kb_update(self, key: str, value: str) -> str:  
         return self.knowledge_base.update(key, value)  
 
@@ -1181,15 +1192,24 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             result = ai_nirvana.decrypt_sensitive_data(encrypted_data)
             print(result)
             return {"continue": True}
-        elif command == "kb_add":  
-            key = input("请输入知识的键：")  
-            value = input("请输入知识的值：")  
-            result = ai_nirvana.add_knowledge(key, value)  
-            return {"message": result["message"], "continue": True}  
+        elif command == "kb_add":
+            try:
+                key = input("请输入知识的键：")
+                value = input("请输入知识的值：")
+                result = ai_nirvana.add_knowledge(key, value)
+                logger.info(f"Command result: {result['message']}")
+                return {"message": result['message'], "continue": True}
+            except AttributeError as e:
+                logger.error(f"AttributeError in kb_add: {str(e)}")
+                return {"message": f"知识库未正确初始化: {str(e)}", "continue": True}
+            except Exception as e:
+                logger.error(f"Unexpected error in kb_add: {str(e)}")
+                return {"message": f"添加知识时出错：{str(e)}", "continue": True} 
 
         elif command == "kb_query":  
             query = input("请输入您的问题：")  
-            result = ai_nirvana.query_knowledge(query)  
+            result = ai_nirvana.kb_query(query)  
+            logging.info(f"Main: kb_query result: {result}")  
             if result.get("found", False):  
                 message = f"查询结果：{result['content']}"  
                 if result.get("source") == "AI generated":  
@@ -1198,7 +1218,8 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                     message += f"\n相似度得分：{result.get('score', 'N/A')}"  
             else:  
                 message = "未找到相关知识，且 AI 生成失败。"  
-            return {"message": message, "continue": True}  
+            logging.info(f"Main: Final message: {message}")  
+            return {"message": message, "continue": True} 
 
         elif command == "kb_update":  
             key = input("请输入要更新的知识键：")  
