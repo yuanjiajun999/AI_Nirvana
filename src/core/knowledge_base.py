@@ -157,6 +157,9 @@ class KnowledgeBase:
             return {"message": f"已更新知识：{key}", "old_value": old_value, "new_value": value}
         else:
             return {"message": f"未找到知识：{key}"}
+
+    def list_all(self) -> List[str]:
+        return list(self.knowledge.keys())    
         
 class KnowledgeBaseManager:
     def __init__(self):

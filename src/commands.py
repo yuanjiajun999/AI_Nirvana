@@ -1082,7 +1082,20 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
     try:
         command = command.lower().strip()  
         logger.info(f"Handling command: {command}") 
-        
+
+        if command == "kb_list":
+            keys = ai_nirvana.kb_list()
+            logger.debug(f"Knowledge base keys: {keys}")
+            if keys:
+                message = "知识库中的所有知识：\n"
+                for key in keys:
+                    value = ai_nirvana.knowledge_base.knowledge[key]
+                    message += f"- {key}: {value[:50]}...\n"  # 显示值的前50个字符
+            else:
+                message = "知识库当前为空。"
+            print(message)
+            return {"message": message, "continue": True}
+
         if command not in AVAILABLE_COMMANDS:
             response = ai_nirvana.process(command)
             print_user_input(command)
@@ -1236,11 +1249,6 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             key = input("请输入要删除的知识键：")  
             result = ai_nirvana.delete_knowledge(key)  
             return {"message": f"删除结果：{result['message']}", "continue": True}  
-
-        elif command == "kb_list":  
-            keys = ai_nirvana.list_all_knowledge()  
-            message = "知识库中的所有知识：\n" + "\n".join(f"- {key}" for key in keys)  
-            return {"message": message, "continue": True}  
 
         elif command == "extract_keywords":
             text = input("请输入要提取关键词的文本：")
