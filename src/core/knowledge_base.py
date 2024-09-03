@@ -1,3 +1,4 @@
+import re
 import json
 import logging 
 from typing import Dict, Any, List
@@ -59,43 +60,51 @@ class KnowledgeBase:
         
         logging.info("KnowledgeBase initialization completed.")  
         
-    def add_knowledge(self, key: str, value: Any) -> dict:
-        """添加知识到知识库"""
-        if not key or not isinstance(key, str):
-            logger.error("Invalid key provided for adding knowledge.")
-            return {"message": "Invalid key provided", "success": False}
-    
-        if not value:  # 检查值是否为空
-            logger.error("Invalid value provided for adding knowledge.")
-            return {"message": "Invalid value provided", "success": False}
-    
-        try:
-            logger.debug(f"Attempting to add knowledge with key: {key}")
-            logger.debug(f"Current keys in knowledge base: {list(self.knowledge.keys())}")
-        
-            if not key.isalnum():  # 检查键是否只包含字母和数字
-                logger.warning(f"Key '{key}' contains special characters.")
-                user_input = input("警告：键应该只包含字母和数字。是否继续？(y/n): ").strip().lower()
-                if user_input != 'y':
-                    logger.info(f"Operation cancelled for key: {key}")
-                    return {"message": "操作已取消。", "success": False}
-        
-            if key in self.knowledge:
-                logger.debug(f"Key '{key}' already exists. Prompting for overwrite.")
-                user_input = input(f"键 '{key}' 已存在。是否要覆盖？(y/n): ").strip().lower()
-                logger.debug(f"User input for overwrite: {user_input}")
-                if user_input != 'y':
-                    logger.info(f"Operation cancelled for key: {key}")
-                    return {"message": "操作已取消。", "success": False}
-        
-            logger.debug(f"Adding/updating knowledge for key: {key}")
-            self.knowledge[key] = value
-            logger.info(f"Knowledge added/updated: {key}")
-            return {"message": f"Successfully added/updated knowledge: {key}", "success": True}
-        except Exception as e:
-            logger.error(f"Error adding/updating knowledge: {str(e)}", exc_info=True)
-            return {"message": f"Failed to add/update knowledge: {str(e)}", "success": False}
+    def add_knowledge(self, key: str, value: Any) -> dict:  
+        """添加知识到知识库"""  
+        if not key or not isinstance(key, str):  
+            logger.error("Invalid key provided for adding knowledge.")  
+            return {"message": "Error: Invalid key. Please provide a non-empty string as the key.", "success": False}  
 
+        if not value:  # 检查值是否为空  
+            logger.error("Invalid value provided for adding knowledge.")  
+            return {"message": "Error: Empty value is not allowed. Please provide valid content.", "success": False}  
+
+        try:  
+            logger.debug(f"Attempting to add knowledge with key: {key}")  
+            logger.debug(f"Current keys in knowledge base: {list(self.knowledge.keys())}")  
+        
+            if not key.isalnum():  # 检查键是否只包含字母和数字  
+                logger.warning(f"Key '{key}' contains special characters.")  
+                user_input = input("Warning: The key contains special characters. Choose an action:\n"  
+                                   "1. Continue with the original key\n"  
+                                   "2. Automatically clean special characters\n"  
+                                   "3. Cancel operation\n"  
+                                   "Please select (1/2/3): ")  
+                if user_input == '2':  
+                    cleaned_key = re.sub(r'[^a-zA-Z0-9]', '', key)  
+                    logger.info(f"Cleaned key: {cleaned_key}")  
+                    key = cleaned_key  
+                elif user_input != '1':  
+                    logger.info(f"Operation cancelled for key: {key}")  
+                    return {"message": "Operation cancelled.", "success": False}  
+        
+            if key in self.knowledge:  
+                logger.debug(f"Key '{key}' already exists. Prompting for overwrite.")  
+                user_input = input(f"The key '{key}' already exists. Do you want to overwrite? (y/n): ").strip().lower()  
+                logger.debug(f"User input for overwrite: {user_input}")  
+                if user_input != 'y':  
+                    logger.info(f"Operation cancelled for key: {key}")  
+                    return {"message": "Operation cancelled.", "success": False}  
+        
+            logger.debug(f"Adding/updating knowledge for key: {key}")  
+            self.knowledge[key] = value  
+            logger.info(f"Knowledge added/updated: {key}")  
+            return {"message": f"Successfully added/updated knowledge: {key}", "success": True}  
+        except Exception as e:  
+            logger.error(f"Error adding/updating knowledge: {str(e)}", exc_info=True)  
+            return {"message": f"Failed to add/update knowledge: {str(e)}", "success": False}  
+        
     def load_knowledge(self):
         if os.path.exists(self.file_path):
             with self.lock:
