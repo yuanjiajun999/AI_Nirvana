@@ -1067,6 +1067,17 @@ def handle_sentiment(ai_nirvana):
             print(f"  {key}: {value:.2f}")
     return {"continue": True}
 
+def get_multiline_input(prompt):
+        print(prompt)
+        print("(输入一个单独的点号 '.' 来结束输入)")
+        lines = []
+        while True:
+            line = input()
+            if line.strip() == '.':
+                break
+            lines.append(line)
+        return '\n'.join(lines)
+    
 def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:  
     command = command.lower().strip()   
     try:
@@ -1198,14 +1209,12 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             result = ai_nirvana.decrypt_sensitive_data(encrypted_data)
             print(result)
             return {"continue": True}
+        
         elif command == "kb_add":
             key = input("请输入知识的键：").strip()
-            value = input("请输入知识的值：").strip()
+            value = get_multiline_input("请输入知识的值：")
             result = ai_nirvana.add_knowledge(key, value)
-            if result:  # 检查结果是否为None
-                print(result.get('message', "操作完成"))
-            else:
-                print("操作未返回预期结果")
+            print(result.get('message', "操作完成"))
             return {"continue": True}
 
         elif command == "kb_query":  

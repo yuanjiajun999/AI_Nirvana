@@ -65,9 +65,20 @@ class KnowledgeBase:
             logger.error("Invalid key provided for adding knowledge.")
             return {"message": "Invalid key provided", "success": False}
     
+        if not value:  # 检查值是否为空
+            logger.error("Invalid value provided for adding knowledge.")
+            return {"message": "Invalid value provided", "success": False}
+    
         try:
             logger.debug(f"Attempting to add knowledge with key: {key}")
             logger.debug(f"Current keys in knowledge base: {list(self.knowledge.keys())}")
+        
+            if not key.isalnum():  # 检查键是否只包含字母和数字
+                logger.warning(f"Key '{key}' contains special characters.")
+                user_input = input("警告：键应该只包含字母和数字。是否继续？(y/n): ").strip().lower()
+                if user_input != 'y':
+                    logger.info(f"Operation cancelled for key: {key}")
+                    return {"message": "操作已取消。", "success": False}
         
             if key in self.knowledge:
                 logger.debug(f"Key '{key}' already exists. Prompting for overwrite.")
@@ -75,7 +86,7 @@ class KnowledgeBase:
                 logger.debug(f"User input for overwrite: {user_input}")
                 if user_input != 'y':
                     logger.info(f"Operation cancelled for key: {key}")
-                    return {"message": "操作已取消。"}
+                    return {"message": "操作已取消。", "success": False}
         
             logger.debug(f"Adding/updating knowledge for key: {key}")
             self.knowledge[key] = value
