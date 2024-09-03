@@ -149,7 +149,15 @@ class KnowledgeBase:
         self.delete(test_key)  
         assert self.get(test_key) is None, "Test operation failed: delete failed"  
         return "Knowledge base test operation successful"
-    
+
+    def update(self, key: str, value: str) -> dict:
+        if key in self.knowledge:
+            old_value = self.knowledge[key]
+            self.knowledge[key] = value
+            return {"message": f"已更新知识：{key}", "old_value": old_value, "new_value": value}
+        else:
+            return {"message": f"未找到知识：{key}"}
+        
 class KnowledgeBaseManager:
     def __init__(self):
         self.kb = KnowledgeBase()

@@ -147,8 +147,11 @@ class AINirvana:
             "score": 1.0  
         }
         
-    def kb_update(self, key: str, value: str) -> str:  
-        return self.knowledge_base.update(key, value)  
+    def update_knowledge(self, key: str, value: str) -> dict:
+        print(f"Attempting to update knowledge: key={key}, value={value}")
+        result = self.knowledge_base.update(key, value)
+        print(f"Knowledge update result: {result}")
+        return result
 
     def kb_delete(self, key: str) -> str:  
         return self.knowledge_base.delete(key)  
@@ -1221,11 +1224,13 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             logging.info(f"Main: Final message: {message}")  
             return {"message": message, "continue": True} 
 
-        elif command == "kb_update":  
-            key = input("请输入要更新的知识键：")  
-            value = input("请输入新的知识值：")  
-            result = ai_nirvana.update_knowledge(key, value)  
-            return {"message": f"更新结果：{result['message']}", "continue": True}  
+        elif command == "kb_update":
+            key = input("请输入要更新的知识键：")
+            value = input("请输入新的知识值：")
+            print(f"Calling update_knowledge with key={key}, value={value}")
+            result = ai_nirvana.update_knowledge(key, value)
+            print(f"Update result: {result}")
+            return {"message": f"更新结果：{result['message']}", "continue": True}
 
         elif command == "kb_delete":  
             key = input("请输入要删除的知识键：")  
