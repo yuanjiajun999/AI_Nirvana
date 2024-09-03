@@ -125,18 +125,8 @@ class AINirvana:
         print(f"模型已更改为 {model_name}。")
 
     def add_knowledge(self, key: str, value: Any) -> dict:
-        """添加知识到知识库"""
-        if not key or not isinstance(key, str):
-            logger.error("Invalid key provided for adding knowledge.")
-            raise ValueError("Key must be a non-empty string.")
-        try:
-            self.knowledge_base.add_knowledge(key, value)
-            logger.info(f"Knowledge added: {key}")
-            return {"message": f"Successfully added knowledge: {key}"}
-        except Exception as e:
-            logger.error(f"Error adding knowledge: {str(e)}")
-            return {"message": f"Failed to add knowledge: {str(e)}"}  
-
+        return self.knowledge_base.add_knowledge(key, value)
+    
     def kb_query(self, key: str) -> dict:  
         result = self.knowledge_base.query(key)  
         logging.info(f"kb_query: Raw result: {result}")  
@@ -1209,18 +1199,14 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             print(result)
             return {"continue": True}
         elif command == "kb_add":
-            try:
-                key = input("请输入知识的键：")
-                value = input("请输入知识的值：")
-                result = ai_nirvana.add_knowledge(key, value)
-                logger.info(f"Command result: {result['message']}")
-                return {"message": result['message'], "continue": True}
-            except AttributeError as e:
-                logger.error(f"AttributeError in kb_add: {str(e)}")
-                return {"message": f"知识库未正确初始化: {str(e)}", "continue": True}
-            except Exception as e:
-                logger.error(f"Unexpected error in kb_add: {str(e)}")
-                return {"message": f"添加知识时出错：{str(e)}", "continue": True} 
+            key = input("请输入知识的键：").strip()
+            value = input("请输入知识的值：").strip()
+            result = ai_nirvana.add_knowledge(key, value)
+            if result:  # 检查结果是否为None
+                print(result.get('message', "操作完成"))
+            else:
+                print("操作未返回预期结果")
+            return {"continue": True}
 
         elif command == "kb_query":  
             query = input("请输入您的问题：")  

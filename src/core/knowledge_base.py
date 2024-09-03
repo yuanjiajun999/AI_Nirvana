@@ -59,13 +59,31 @@ class KnowledgeBase:
         
         logging.info("KnowledgeBase initialization completed.")  
         
-    def add_knowledge(self, key: str, value: Any) -> None:
+    def add_knowledge(self, key: str, value: Any) -> dict:
         """添加知识到知识库"""
         if not key or not isinstance(key, str):
             logger.error("Invalid key provided for adding knowledge.")
-            raise ValueError("Key must be a non-empty string.")
-        self.knowledge[key] = value
-        logger.info(f"Knowledge added: {key}")
+            return {"message": "Invalid key provided", "success": False}
+    
+        try:
+            logger.debug(f"Attempting to add knowledge with key: {key}")
+            logger.debug(f"Current keys in knowledge base: {list(self.knowledge.keys())}")
+        
+            if key in self.knowledge:
+                logger.debug(f"Key '{key}' already exists. Prompting for overwrite.")
+                user_input = input(f"键 '{key}' 已存在。是否要覆盖？(y/n): ").strip().lower()
+                logger.debug(f"User input for overwrite: {user_input}")
+                if user_input != 'y':
+                    logger.info(f"Operation cancelled for key: {key}")
+                    return {"message": "操作已取消。"}
+        
+            logger.debug(f"Adding/updating knowledge for key: {key}")
+            self.knowledge[key] = value
+            logger.info(f"Knowledge added/updated: {key}")
+            return {"message": f"Successfully added/updated knowledge: {key}", "success": True}
+        except Exception as e:
+            logger.error(f"Error adding/updating knowledge: {str(e)}", exc_info=True)
+            return {"message": f"Failed to add/update knowledge: {str(e)}", "success": False}
 
     def load_knowledge(self):
         if os.path.exists(self.file_path):
