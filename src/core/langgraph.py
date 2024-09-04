@@ -80,7 +80,9 @@ class LangGraph:
         self.qa_chain = None  
         self.use_fallback = False
         self.fallback_knowledge = {}
-
+        self._vector_store = None  # 初始化为 None 
+        self.initialize_vector_store() 
+        
         # 添加 similarity_threshold 属性，并设置一个默认值
         self.similarity_threshold = 0.8  # 这个值可以根据需要进行调整
         self.graph = ExtendedNetworkxEntityGraph()  # 使用扩展的图形类
@@ -136,6 +138,23 @@ class LangGraph:
             logging.error(f"Error in _initialize_components: {e}")
             self.use_fallback = True
 
+    def initialize_vector_store(self):  
+        try:  
+            # 使用适当的向量存储实现，例如 FAISS 或 Chroma  
+            from langchain.vectorstores import FAISS  
+            from langchain.embeddings import OpenAIEmbeddings  
+
+            # 初始化嵌入模型  
+            embeddings = OpenAIEmbeddings()  
+
+            # 创建一个空的向量存储  
+            self._vector_store = FAISS.from_texts(["初始化文档"], embeddings)  
+            
+            logging.info("Vector store initialized successfully")  
+        except Exception as e:  
+            logging.error(f"Error initializing vector store: {str(e)}", exc_info=True)  
+            self._vector_store = None  
+            
     def _create_entity_extraction_chain(self):  
         prompt_template = PromptTemplate(  
             input_variables=["text"],  
@@ -331,12 +350,33 @@ class LangGraph:
     def get_related_entities(self, entity: str) -> List[str]:
         return list(self.graph.get_networkx_graph().neighbors(entity))
 
-    def semantic_search(self, query: str, k: int = 5) -> List[Tuple[str, float]]:
-        try:
-            return self.vector_store.similarity_search_with_score(query, k=k)
-        except Exception as e:
-            print(f"Error in semantic_search: {str(e)}")
-            return []
+    def semantic_search(self, query: str, k: int = 5) -> List[Tuple[str, float]]:  
+        logging.info(f"Attempting semantic search with query: {query}, k: {k}")  
+        if self._vector_store is None:  
+            logging.error("Vector store is None. It may not have been initialized properly.")  
+            return []  
+        
+        try:  
+            results = self._vector_store.similarity_search_with_score(query, k=k)  
+            logging.info(f"Search completed. Found {len(results)} results.")  
+            logging.debug(f"Raw results: {results}")  
+            
+            # 添加安全检查  
+            safe_results = []  
+            for item in results:  
+                if isinstance(item, tuple) and len(item) == 2:  
+                    doc, score = item  
+                    if hasattr(doc, 'page_content'):  
+                        safe_results.append((doc.page_content, score))  
+                    else:  
+                        logging.warning(f"Unexpected document format: {doc}")  
+                else:  
+                    logging.warning(f"Unexpected result format: {item}")  
+            
+            return safe_results  
+        except Exception as e:  
+            logging.error(f"Error in semantic_search: {str(e)}", exc_info=True)  
+            return []    
 
     def run_agent(self, query):  
         if self._agent is None:  

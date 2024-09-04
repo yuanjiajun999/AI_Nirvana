@@ -98,9 +98,21 @@ class AINirvana:
         self.feature_engineer = None  # 初始化为 None
         self.digital_twin = None  # 初始时未创建
         self.lang_graph = LangGraph()
-        self.initialize_modules()  # 自动检测并初始化模块
-        print(f"AINirvana instance created with model: {self.model_name}")
+        self.initialize_modules()  # 自动检测并初始化模块  
+        
+        # 添加向量存储的检查  
+        self._check_vector_store()  
 
+        print(f"AINirvana instance created with model: {self.model_name}")  
+
+    def _check_vector_store(self):  
+        if not hasattr(self.lang_graph, '_vector_store') or self.lang_graph._vector_store is None:  
+            logging.error("Vector store is not initialized in LangGraph")  
+            print("Warning: Vector store is not initialized. Some functionalities may be limited.")  
+        else:  
+            logging.info("Vector store initialized successfully in LangGraph")  
+            print("Vector store is initialized and ready to use.")  
+            
     @error_handler
     def process(self, input_text: Any) -> str:
         try:
@@ -972,9 +984,27 @@ class AINirvana:
                 if follow_up.lower() != 'yes':
                     break
     
-    def semantic_search(self, query: str, k: int = 5):
-        results = self.lang_graph.semantic_search(query, k)
-        print(f"语义搜索结果: {results}")  
+    def semantic_search(self, query: str, k: int = 5):  
+        logging.info(f"AINirvana semantic_search called with query: {query}, k: {k}")  
+        if self.lang_graph._vector_store is None:  
+            logging.error("Vector store is None in LangGraph")  
+            print("搜索功能当前不可用，请稍后再试。")  
+            return []  
+        
+        try:  
+            results = self.lang_graph.semantic_search(query, k)  
+            logging.debug(f"Results from LangGraph: {results}")  # 添加这行来查看结果  
+            if results:  
+                print("语义搜索结果:")  
+                for content, score in results:  
+                    print(f"内容: {content}, 相似度: {score}")  
+            else:  
+                print("未找到相关结果")  
+            return results  
+        except Exception as e:  
+            logging.error(f"Error in AINirvana semantic_search: {str(e)}", exc_info=True)  
+            print("搜索过程中发生错误，请稍后再试。")  
+            return []  
 
     def add_relationship(self, entity1: str, entity2: str, relationship: str) -> None:  
         self.lang_graph.add_relationship(entity1, entity2, relationship)               
@@ -1023,7 +1053,35 @@ class AINirvana:
         except Exception as e:
             print(f"Error in run_agent: {str(e)}")
             return "An error occurred while running the agent."    
-    
+
+    def print_all_entities(self):  
+        """  
+        打印向量存储中的所有实体及其嵌入。  
+        """  
+        logging.info("Attempting to print all entities in the vector store")  
+        if not hasattr(self.lang_graph, '_vector_store') or self.lang_graph._vector_store is None:  
+            logging.error("Vector store is not initialized")  
+            print("Error: Vector store is not initialized.")  
+            return  
+
+        try:  
+            # 获取所有文档  
+            all_docs = self.lang_graph._vector_store.similarity_search("", k=1000)  # 使用空字符串查询所有文档  
+            
+            print("All entities in the vector store:")  
+            for i, doc in enumerate(all_docs, 1):  
+                print(f"{i}. Content: {doc.page_content}")  
+                if hasattr(doc, 'metadata') and doc.metadata:  
+                    print(f"   Metadata: {doc.metadata}")  
+                print(f"   Embedding: {doc.embedding[:5]}...")  # 只打印嵌入向量的前5个元素  
+                print("-" * 50)  
+            
+            print(f"Total number of entities: {len(all_docs)}")  
+            
+        except Exception as e:  
+            logging.error(f"Error while printing entities: {str(e)}")  
+            print(f"An error occurred while printing entities: {str(e)}")  
+            
 def load_data_for_active_learning():
     # 这里我们使用一个简单的合成数据集作为示例
     # 在实际应用中，您可能需要从文件或数据库加载真实数据
@@ -1709,7 +1767,14 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
         elif command == "semantic_search":
             query = input("请输入搜索内容：")
             k = int(input("请输入返回结果的数量："))
-            ai_nirvana.semantic_search(query, k)
+            try:
+                results = ai_nirvana.semantic_search(query, k)
+                # 不需要进一步处理结果，因为 semantic_search 已经打印了结果
+                logger.debug(f"Semantic search completed successfully")
+            except Exception as e:
+                logger.error(f"Error in semantic_search: {str(e)}")
+                print(f"执行语义搜索时发生错误：{str(e)}")
+            return {"continue": True}  # 确保返回一个字典
 
         elif command == "get_entity_info":
             entity = input("请输入实体名称：")
@@ -1743,5 +1808,7 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
             return {"message": response, "continue": True} 
 
     except Exception as e:  
+        logging.debug("handle_command function completed")
         logger.error(f"Error handling command '{command}': {str(e)}")  
         return {"message": "处理命令时发生错误，请重试或联系支持。", "continue": True}  
+        

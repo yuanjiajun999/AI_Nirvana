@@ -110,6 +110,10 @@ def main(config_file: str, mode: str) -> None:
     try:  
         config = Config(config_file)  
         ai_nirvana = initialize_system(config)  
+
+        # 添加这两行来打印所有实体  
+        logger.info("Printing all entities in vector store")  
+        ai_nirvana.print_all_entities()
         
         if mode == "cli":  
             print("欢迎使用 AI Nirvana 智能助手！")  

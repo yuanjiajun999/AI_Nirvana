@@ -1,8 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
-<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d0" for="edge" attr.name="relationship" attr.type="string"/>
-<graph edgedefault="undirected"><node id="Paris"/>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d1" for="edge" attr.name="relationship" attr.type="string"/>
+<key id="d0" for="node" attr.name="type" attr.type="string"/>
+<graph edgedefault="undirected"><node id="Paris">
+  <data key="d0">City</data>
+</node>
+<node id="New York City!@#">
+  <data key="d0">City</data>
+</node>
+<node id="ThisIsAVeryLongEntityNameThatMightCauseProblemsIfTheSystemIsNotHandlingLongStringsProperlyThisIsATestToEnsureRobustness">
+  <data key="d0">TestType</data>
+</node>
 <node id="France"/>
 <edge source="Paris" target="France">
-  <data key="d0">is capital of</data>
+  <data key="d1">is_capital_of</data>
 </edge>
 </graph></graphml>
