@@ -18,14 +18,19 @@ from fastapi import FastAPI
 import uvicorn  
 from dotenv import load_dotenv  # 新添加的导入  
 
+# 设置日志
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# 全局变量，用于跟踪重新加载
+RELOAD_TIMESTAMP = time.time()
+logger.info(f"Application initialized. Timestamp: {RELOAD_TIMESTAMP}")
+
+
 # 加载 .env 文件  
 load_dotenv()  # 新添加的行  
 
 app = FastAPI()  
-
-# 设置日志  
-logger = logging.getLogger(__name__)  
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')  
 
 # 读取 config.json 文件  
 with open('config.json', 'r') as config_file:  
@@ -74,8 +79,12 @@ class AIServer:
         self.app = FastAPI()  
         self.setup_routes()  
 
-    def setup_routes(self):  
-        @self.app.post("/process")  
+    def setup_routes(self):
+        @self.app.get("/version")
+        async def get_version():
+            return {"reload_timestamp": RELOAD_TIMESTAMP}
+
+        @self.app.post("/process")
         async def process(request: dict):  
             try:  
                 input_text = request.get("input")  
@@ -88,15 +97,16 @@ class AIServer:
                 logger.error(f"Error processing request: {str(e)}")  
                 return {"error": "An internal error occurred"}, 500  
 
-    def run(self):  
-        logger.info("Starting FastAPI server...")  
-        uvicorn.run(self.app, host="0.0.0.0", port=8000)  
+    def run(self):
+        logger.info(f"Starting FastAPI server with hot reload... Timestamp: {RELOAD_TIMESTAMP}")
+        uvicorn.run(self.app, host="0.0.0.0", port=8000, reload=True)  
 
 def run_server(config: Config):  
     server = AIServer(config)  
     server.run()  
 
 def main(config_file: str, mode: str) -> None:  
+    logger.info(f"Application initialized/reloaded. Timestamp: {RELOAD_TIMESTAMP}")
     try:  
         config = Config(config_file)  
         ai_nirvana = initialize_system(config)  

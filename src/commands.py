@@ -103,15 +103,25 @@ class AINirvana:
 
     @error_handler
     def process(self, input_text: Any) -> str:
-        if not isinstance(input_text, str):
-            raise ValueError("输入必须是字符串类型")
-        if not self.security_manager.is_safe_code(input_text):
-            raise AIAssistantException("检测到不安全的输入")
-        language = self.assistant.detect_language(input_text)
-        processed_input = self.multimodal_interface.process(input_text)
-        response = self.assistant.process_input(processed_input, language)
-        self.dialogue_manager.add_to_history(input_text, response)
-        return response
+        try:
+            if not isinstance(input_text, str):
+                raise ValueError("输入必须是字符串类型")
+            if not self.security_manager.is_safe_code(input_text):
+                raise AIAssistantException("检测到不安全的输入")
+            
+            language = self.assistant.detect_language(input_text)
+            processed_input = self.multimodal_interface.process(input_text)
+            response = self.assistant.process_input(processed_input, language)
+            
+            if response is None:
+                logger.warning("Assistant returned None response")
+                response = "抱歉，无法生成有效响应。"
+            
+            self.dialogue_manager.add_to_history(input_text, response)
+            return response
+        except Exception as e:
+            logger.error(f"处理输入时发生错误: {str(e)}")
+            return f"处理输入时发生错误: {str(e)}"
    
     def summarize(self, text: str) -> str:
         return self.assistant.summarize(text)
@@ -1099,10 +1109,16 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
 
         if command not in AVAILABLE_COMMANDS:
             response = ai_nirvana.process(command)
-            print_user_input(command)
-            print("\n回答：")
-            print_assistant_response(response)
-            print_dialogue_context(ai_nirvana.dialogue_manager.get_dialogue_context())
+            if response.startswith("处理输入时发生错误"):
+                logger.error(f"AI处理失败: {response}")
+                error_message = "抱歉，AI 无法处理您的输入。请重试或换一种方式提问。"
+                print("\n回答：")
+                print_assistant_response(error_message)
+            else:
+                print_user_input(command)
+                print("\n回答：")
+                print_assistant_response(response)
+                print_dialogue_context(ai_nirvana.dialogue_manager.get_dialogue_context())
             return {"continue": True}
 
         if command == "clear":
@@ -1614,13 +1630,13 @@ def handle_command(command: str, ai_nirvana: AINirvana) -> Dict[str, Any]:
                 print(result["message"])  
             return {"continue": True}
 
-        elif command == "add_entity":  
-            entity = input("请输入实体名称：")  
-            entity_type = input("请输入实体类型：")  
-            result = ai_nirvana.add_entity(entity, entity_type)  
-            print(f"实体添加结果：{result}")  
-            return {"continue": True}
-
+        elif command == "add_entity":
+            entity_name = input("请输入实体名称：").strip()
+            entity_type = input("请输入实体类型：").strip()
+            result = ai_nirvana.lang_graph.add_entity(entity_name, entity_type)
+            print(f"实体添加结果：{result}")
+            return {"message": result, "continue": True}
+        
         elif command == "update_entity":  
             entity = input("请输入实体名称：")  
             new_properties_str = input("请输入实体的新属性（字典格式）：")  

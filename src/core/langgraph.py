@@ -83,6 +83,8 @@ class LangGraph:
 
         # 添加 similarity_threshold 属性，并设置一个默认值
         self.similarity_threshold = 0.8  # 这个值可以根据需要进行调整
+        self.graph = ExtendedNetworkxEntityGraph()  # 使用扩展的图形类
+        logger.info(f"LangGraph initialized. Graph attribute exists: {hasattr(self, 'graph')}")
         
         try:
              # 初始化核心组件  
@@ -105,7 +107,6 @@ class LangGraph:
             self._entity_extraction_chain = self._create_entity_extraction_chain()  
             self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)  
             self.nlp = spacy.load("en_core_web_sm")  
-            self.graph = ExtendedNetworkxEntityGraph()  # 使用扩展的图形类
             self._initialize_components()  
 
             print("Testing embeddings...")  
@@ -299,11 +300,26 @@ class LangGraph:
         entities = [(ent.text, ent.label_) for ent in doc.ents]  
         return entities  
 
-    def add_entity(self, entity: str, entity_type: str):  
-        if entity not in self.graph.get_networkx_graph().nodes():  
-            self.graph.get_networkx_graph().add_node(entity, type=entity_type)  
-            return f"Entity '{entity}' of type '{entity_type}' added successfully."  
-        return f"Entity '{entity}' already exists."  
+    def add_entity(self, entity: str, entity_type: str):
+        try:
+            logger.info(f"Attempting to add entity: {entity} of type: {entity_type}")
+            if not hasattr(self, 'graph'):
+                logger.error("Graph attribute does not exist")
+                return "Error: Graph attribute does not exist"
+        
+            if entity not in self.graph.get_networkx_graph().nodes():
+                self.graph.get_networkx_graph().add_node(entity, type=entity_type)
+                logger.info(f"Entity '{entity}' of type '{entity_type}' added successfully.")
+                return f"Entity '{entity}' of type '{entity_type}' added successfully."
+            else:
+                logger.info(f"Entity '{entity}' already exists.")
+                return f"Entity '{entity}' already exists."
+        except AttributeError as e:
+            logger.error(f"AttributeError in add_entity: {str(e)}")
+            return f"Error: {str(e)}"
+        except Exception as e:
+            logger.error(f"Unexpected error in add_entity: {str(e)}")
+            return f"Error: An unexpected error occurred while adding the entity."
 
     def add_relationship(self, entity1: str, entity2: str, relationship: str):
         self.graph.add_edge(entity1, entity2, relationship=relationship)
